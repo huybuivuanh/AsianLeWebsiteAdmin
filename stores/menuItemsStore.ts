@@ -26,13 +26,15 @@ export const useMenuItemsStore = create<MenuItemsState>((set) => ({
           description: d.description as string | undefined,
           price: d.price as number | undefined,
           image: d.image as string | undefined,
+          categoryIds: d.categoryIds as string[] | undefined,
           createdAt: d.createdAt?.toDate?.() ?? undefined,
         };
       });
       set({ menuItems, loading: false });
     } catch (err) {
       set({
-        error: err instanceof Error ? err.message : "Failed to fetch menu items",
+        error:
+          err instanceof Error ? err.message : "Failed to fetch menu items",
         loading: false,
       });
     }
