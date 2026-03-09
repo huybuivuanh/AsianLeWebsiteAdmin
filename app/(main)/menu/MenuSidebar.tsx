@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const menuNavLinks = [
-  { href: "/menu/items", label: "Menu Item" },
   { href: "/menu/categories", label: "Food Category" },
+  { href: "/menu/items", label: "Menu Item" },
 ] as const;
 
 export function MenuSidebar() {
@@ -13,13 +13,10 @@ export function MenuSidebar() {
 
   return (
     <aside
-      className="shrink-0 w-full sm:w-52 border-r border-foreground/10 bg-foreground/[0.02] sm:min-h-[calc(100dvh-8rem)] rounded-lg sm:rounded-none"
+      className="shrink-0 w-52 border-r border-foreground/10 bg-foreground/[0.04] min-h-[calc(100dvh-3.5rem)] py-4 pl-4 pr-0"
       aria-label="Menu section navigation"
     >
-      <nav className="flex sm:flex-col gap-0.5 p-2 sm:py-2 overflow-x-auto sm:overflow-x-visible sm:sticky sm:top-4">
-        <span className="hidden sm:block px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-foreground/50">
-          Menu
-        </span>
+      <nav className="flex flex-col gap-0.5 sticky top-4">
         {menuNavLinks.map(({ href, label }) => {
           const isActive = pathname === href || pathname.startsWith(href + "/");
           return (
