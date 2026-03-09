@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 interface CategoriesState {
@@ -7,9 +7,10 @@ interface CategoriesState {
   loading: boolean;
   error: string | null;
   fetchCategories: () => Promise<void>;
+  addCategory: (name: string, description: string) => Promise<void>;
 }
 
-export const useCategoriesStore = create<CategoriesState>((set) => ({
+export const useCategoriesStore = create<CategoriesState>((set, get) => ({
   categories: [],
   loading: false,
   error: null,
@@ -34,6 +35,23 @@ export const useCategoriesStore = create<CategoriesState>((set) => ({
       set({
         error: err instanceof Error ? err.message : "Failed to fetch categories",
         loading: false,
+      });
+    }
+  },
+
+  addCategory: async (name: string, description: string) => {
+    set({ error: null });
+    try {
+      await addDoc(collection(db, "categories"), {
+        name: name.trim(),
+        description: (description ?? "").trim(),
+        order: Date.now(),
+        createdAt: serverTimestamp(),
+      });
+      await get().fetchCategories();
+    } catch (err) {
+      set({
+        error: err instanceof Error ? err.message : "Failed to add category",
       });
     }
   },

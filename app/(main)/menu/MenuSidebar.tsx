@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const menuNavLinks = [
-  { href: "/menu/categories", label: "Food Category" },
+  { href: "/menu/categories", label: "Categories" },
   { href: "/menu/items", label: "Menu Item" },
 ] as const;
 
