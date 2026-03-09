@@ -33,7 +33,7 @@ export default function LoginPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-[100dvh] min-h-screen flex items-center justify-center p-4">
         <p className="text-foreground/60">Loading…</p>
       </div>
     );
@@ -44,10 +44,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-sm space-y-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold text-foreground">
+    <div className="min-h-[100dvh] min-h-screen flex items-center justify-center p-4 py-6 sm:py-8">
+      <div className="w-full max-w-sm min-w-0 space-y-6">
+        <div className="text-center px-1">
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
             Asian Le Website Admin
           </h1>
           <p className="mt-1 text-sm text-foreground/60">Sign in to continue</p>
@@ -56,7 +56,7 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div
-              className="rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm px-3 py-2"
+              className="rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm px-3 py-2 break-words"
               role="alert"
             >
               {error}
@@ -77,7 +77,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full rounded-lg border border-foreground/20 bg-background px-3 py-2 text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+              className="w-full min-w-0 rounded-lg border border-foreground/20 bg-background px-3 py-2.5 text-foreground text-base placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
               placeholder="you@example.com"
             />
           </div>
@@ -96,14 +96,14 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full rounded-lg border border-foreground/20 bg-background px-3 py-2 text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+              className="w-full min-w-0 rounded-lg border border-foreground/20 bg-background px-3 py-2.5 text-foreground text-base placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
             />
           </div>
 
           <button
             type="submit"
             disabled={submitting}
-            className="w-full rounded-lg bg-foreground text-background py-2 font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full rounded-lg bg-foreground text-background py-3 font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50 disabled:cursor-not-allowed min-h-[2.75rem] touch-manipulation"
           >
             {submitting ? "Signing in…" : "Sign in"}
           </button>

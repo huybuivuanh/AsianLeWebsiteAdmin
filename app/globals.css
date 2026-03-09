@@ -3,17 +3,53 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --nav-bg: #1e293b;
+  --nav-foreground: #f1f5f9;
+  --nav-foreground-muted: #94a3b8;
+  --nav-border: #334155;
+  --nav-hover: rgba(255, 255, 255, 0.08);
+  --nav-active: rgba(255, 255, 255, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --nav-bg: #0f172a;
+    --nav-foreground: #f1f5f9;
+    --nav-foreground-muted: #94a3b8;
+    --nav-border: #1e293b;
+    --nav-hover: rgba(255, 255, 255, 0.06);
+    --nav-active: rgba(255, 255, 255, 0.1);
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-nav-bg: var(--nav-bg);
+  --color-nav-foreground: var(--nav-foreground);
+  --color-nav-foreground-muted: var(--nav-foreground-muted);
+  --color-nav-border: var(--nav-border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  min-height: 100dvh;
+  min-height: 100vh;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Avoid overflow on small viewports */
+main {
+  min-width: 0;
 }
