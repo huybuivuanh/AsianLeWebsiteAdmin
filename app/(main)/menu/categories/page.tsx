@@ -18,14 +18,19 @@ export default function CategoriesPage() {
     updateCategoryItemIds,
   } = useCategoriesStore();
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<FoodCategory | null>(null);
-  const [addItemsCategory, setAddItemsCategory] = useState<FoodCategory | null>(null);
+  const [editingCategory, setEditingCategory] = useState<FoodCategory | null>(
+    null,
+  );
+  const [addItemsCategory, setAddItemsCategory] = useState<FoodCategory | null>(
+    null,
+  );
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(
+    null,
+  );
 
   async function handleDelete(category: FoodCategory) {
-    if (
-      !window.confirm(`Delete “${category.name}”? This cannot be undone.`)
-    )
+    if (!window.confirm(`Delete “${category.name}”? This cannot be undone.`))
       return;
     setDeletingId(category.id);
     try {
@@ -40,7 +45,10 @@ export default function CategoriesPage() {
     void updateCategoryItemIds(category.id, next);
   }
 
-  async function handleSaveCategoryItems(categoryId: string, itemIds: string[]) {
+  async function handleSaveCategoryItems(
+    categoryId: string,
+    itemIds: string[],
+  ) {
     await updateCategoryItemIds(categoryId, itemIds);
     setAddItemsCategory(null);
   }
@@ -48,9 +56,6 @@ export default function CategoriesPage() {
   return (
     <div className="min-w-0">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
-          Food Category
-        </h1>
         <button
           type="button"
           onClick={() => setModalOpen(true)}
@@ -81,6 +86,10 @@ export default function CategoriesPage() {
               <CategoryRow
                 key={cat.id}
                 category={cat}
+                expanded={expandedCategoryId === cat.id}
+                onToggleExpand={() =>
+                  setExpandedCategoryId((id) => (id === cat.id ? null : cat.id))
+                }
                 onEdit={setEditingCategory}
                 onDelete={handleDelete}
                 onAddItems={setAddItemsCategory}

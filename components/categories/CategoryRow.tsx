@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useMenuItemsStore } from "@/stores/menuItemsStore";
 
 type CategoryRowProps = {
   category: FoodCategory;
+  expanded: boolean;
+  onToggleExpand: () => void;
   onEdit: (category: FoodCategory) => void;
   onDelete: (category: FoodCategory) => void;
   onAddItems: (category: FoodCategory) => void;
@@ -14,13 +16,14 @@ type CategoryRowProps = {
 
 export function CategoryRow({
   category,
+  expanded,
+  onToggleExpand,
   onEdit,
   onDelete,
   onAddItems,
   onRemoveItem,
   deleting = false,
 }: CategoryRowProps) {
-  const [expanded, setExpanded] = useState(false);
   const { menuItems } = useMenuItemsStore();
 
   const itemsInCategory = useMemo(() => {
@@ -35,7 +38,7 @@ export function CategoryRow({
       <div className="px-4 py-3 flex flex-wrap items-center justify-between gap-3">
         <button
           type="button"
-          onClick={() => setExpanded((e) => !e)}
+          onClick={onToggleExpand}
           className="flex items-center gap-2 min-w-0 text-left group"
           aria-expanded={expanded}
         >

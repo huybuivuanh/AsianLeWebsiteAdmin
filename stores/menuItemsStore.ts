@@ -9,7 +9,12 @@ import {
   serverTimestamp,
   deleteField,
 } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
 
 export type AddMenuItemInput = {
@@ -110,7 +115,10 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
     }
   },
 
-  updateMenuItem: async (id, { name, description, price, imageFile, removeImage }) => {
+  updateMenuItem: async (
+    id,
+    { name, description, price, imageFile, removeImage },
+  ) => {
     set({ error: null });
     try {
       const item = get().menuItems.find((m) => m.id === id);

@@ -28,7 +28,7 @@ export function MenuItemRow({
         />
       )}
       <div className="min-w-0 flex-1">
-        <span className="font-medium text-foreground">{item.name}</span>
+        <span className="font-bold text-foreground">{item.name}</span>
         {item.description && (
           <p className="mt-1 text-sm text-foreground/70 line-clamp-2">
             {item.description}
