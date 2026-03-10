@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useCategoriesStore } from "@/stores/categoriesStore";
-import { AddCategoryModal } from "@/components/AddCategoryModal";
+import { AddCategoryModal } from "@/components/categories/AddCategoryModal";
+import { CategoryRow } from "@/components/categories/CategoryRow";
 
 export default function CategoriesPage() {
-  const { categories, loading, error, addCategory } =
-    useCategoriesStore();
+  const { categories, loading, error, addCategory } = useCategoriesStore();
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
@@ -42,22 +42,7 @@ export default function CategoriesPage() {
             .slice()
             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
             .map((cat) => (
-              <li
-                key={cat.id}
-                className="rounded-lg border border-foreground/10 bg-foreground/[0.02] px-4 py-3"
-              >
-                <span className="font-bold text-foreground">{cat.name}</span>
-                {cat.description && (
-                  <p className="mt-1 text-sm text-foreground/70">
-                    {cat.description}
-                  </p>
-                )}
-                {cat.itemIds && cat.itemIds.length > 0 && (
-                  <p className="mt-1 text-xs text-foreground/50">
-                    {cat.itemIds.length} item(s)
-                  </p>
-                )}
-              </li>
+              <CategoryRow key={cat.id} category={cat} />
             ))}
         </ul>
       )}

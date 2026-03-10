@@ -2,19 +2,16 @@
 
 import { useState } from "react";
 import { useMenuItemsStore } from "@/stores/menuItemsStore";
-import { AddMenuItemModal } from "@/components/AddMenuItemModal";
+import { AddMenuItemModal } from "@/components/menu/AddMenuItemModal";
+import { MenuItemRow } from "@/components/menu/MenuItemRow";
 
 export default function MenuItemsPage() {
-  const { menuItems, loading, error, addMenuItem } =
-    useMenuItemsStore();
+  const { menuItems, loading, error, addMenuItem } = useMenuItemsStore();
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
     <div className="min-w-0">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
-          Menu Item
-        </h1>
         <button
           type="button"
           onClick={() => setModalOpen(true)}
@@ -39,29 +36,7 @@ export default function MenuItemsPage() {
       ) : (
         <ul className="space-y-2">
           {menuItems.map((item) => (
-            <li
-              key={item.id}
-              className="rounded-lg border border-foreground/10 bg-foreground/[0.02] px-4 py-3 flex flex-wrap items-start gap-3"
-            >
-              {item.image && (
-                <img
-                  src={item.image}
-                  alt=""
-                  className="w-16 h-16 object-cover rounded-md shrink-0"
-                />
-              )}
-              <div className="min-w-0 flex-1">
-                <span className="font-medium text-foreground">{item.name}</span>
-                {item.description && (
-                  <p className="mt-1 text-sm text-foreground/70 line-clamp-2">
-                    {item.description}
-                  </p>
-                )}
-                <p className="mt-1 text-sm font-medium text-foreground">
-                  ${Number(item.price ?? 0).toFixed(2)}
-                </p>
-              </div>
-            </li>
+            <MenuItemRow key={item.id} item={item} />
           ))}
         </ul>
       )}
