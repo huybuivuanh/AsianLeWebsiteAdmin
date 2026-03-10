@@ -37,6 +37,14 @@ export default function CategoriesPage() {
     setDeletingId(category.id);
     try {
       await deleteCategory(category.id);
+      for (const menuItem of menuItems) {
+        if (menuItem.categoryIds?.includes(category.id)) {
+          const nextCategoryIds = (menuItem.categoryIds ?? []).filter(
+            (cid) => cid !== category.id,
+          );
+          await updateMenuItemCategoryIds(menuItem.id, nextCategoryIds);
+        }
+      }
     } finally {
       setDeletingId(null);
     }

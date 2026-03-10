@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMenuItemsStore } from "@/stores/menuItemsStore";
+import { useCategoriesStore } from "@/stores/categoriesStore";
 import { AddMenuItemModal } from "@/components/menu/AddMenuItemModal";
 import { EditMenuItemModal } from "@/components/menu/EditMenuItemModal";
 import { MenuItemRow } from "@/components/menu/MenuItemRow";
@@ -9,6 +10,7 @@ import { MenuItemRow } from "@/components/menu/MenuItemRow";
 export default function MenuItemsPage() {
   const { menuItems, loading, error, addMenuItem, updateMenuItem, deleteMenuItem } =
     useMenuItemsStore();
+  const { categories, updateCategoryItemIds } = useCategoriesStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -18,6 +20,14 @@ export default function MenuItemsPage() {
     setDeletingId(item.id);
     try {
       await deleteMenuItem(item.id);
+      for (const category of categories) {
+        if ((category.itemIds ?? []).includes(item.id)) {
+          const nextItemIds = (category.itemIds ?? []).filter(
+            (id) => id !== item.id,
+          );
+          await updateCategoryItemIds(category.id, nextItemIds);
+        }
+      }
     } finally {
       setDeletingId(null);
     }
