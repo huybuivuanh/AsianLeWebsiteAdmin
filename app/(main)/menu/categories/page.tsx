@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useCategoriesStore } from "@/stores/categoriesStore";
+import { useMenuItemsStore } from "@/stores/menuItemsStore";
 import { AddCategoryModal } from "@/components/categories/AddCategoryModal";
 import { EditCategoryModal } from "@/components/categories/EditCategoryModal";
 import { AddCategoryItemsModal } from "@/components/categories/AddCategoryItemsModal";
@@ -17,6 +18,7 @@ export default function CategoriesPage() {
     deleteCategory,
     updateCategoryItemIds,
   } = useCategoriesStore();
+  const { menuItems, updateMenuItemCategoryIds } = useMenuItemsStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<FoodCategory | null>(
     null,
@@ -40,16 +42,48 @@ export default function CategoriesPage() {
     }
   }
 
-  function handleRemoveItem(category: FoodCategory, itemId: string) {
+  async function handleRemoveItem(category: FoodCategory, itemId: string) {
     const next = (category.itemIds ?? []).filter((id) => id !== itemId);
-    void updateCategoryItemIds(category.id, next);
+    await updateCategoryItemIds(category.id, next);
+    const item = menuItems.find((m) => m.id === itemId);
+    if (item) {
+      const nextCategoryIds = (item.categoryIds ?? []).filter(
+        (cid) => cid !== category.id,
+      );
+      await updateMenuItemCategoryIds(itemId, nextCategoryIds);
+    }
   }
 
   async function handleSaveCategoryItems(
     categoryId: string,
     itemIds: string[],
   ) {
+    const category = addItemsCategory ?? categories.find((c) => c.id === categoryId);
+    const previousItemIds = category?.itemIds ?? [];
+    const added = itemIds.filter((id) => !previousItemIds.includes(id));
+    const removed = previousItemIds.filter((id) => !itemIds.includes(id));
+
     await updateCategoryItemIds(categoryId, itemIds);
+
+    for (const itemId of removed) {
+      const item = menuItems.find((m) => m.id === itemId);
+      if (item) {
+        const nextCategoryIds = (item.categoryIds ?? []).filter(
+          (cid) => cid !== categoryId,
+        );
+        await updateMenuItemCategoryIds(itemId, nextCategoryIds);
+      }
+    }
+    for (const itemId of added) {
+      const item = menuItems.find((m) => m.id === itemId);
+      if (item) {
+        const nextCategoryIds = (item.categoryIds ?? []).includes(categoryId)
+          ? item.categoryIds!
+          : [...(item.categoryIds ?? []), categoryId];
+        await updateMenuItemCategoryIds(itemId, nextCategoryIds);
+      }
+    }
+
     setAddItemsCategory(null);
   }
 

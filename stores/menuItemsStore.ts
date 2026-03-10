@@ -42,6 +42,7 @@ interface MenuItemsState {
   addMenuItem: (input: AddMenuItemInput) => Promise<void>;
   updateMenuItem: (id: string, input: AddMenuItemInput) => Promise<void>;
   deleteMenuItem: (id: string) => Promise<void>;
+  updateMenuItemCategoryIds: (id: string, categoryIds: string[]) => Promise<void>;
   /** Clear cache on logout */
   reset: () => void;
 }
@@ -175,6 +176,19 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete menu item";
+      set({ error: message });
+      throw err;
+    }
+  },
+
+  updateMenuItemCategoryIds: async (id, categoryIds) => {
+    set({ error: null });
+    try {
+      await updateDoc(doc(db, "menuItems", id), { categoryIds });
+      await get().fetchMenuItems();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to update item categories";
       set({ error: message });
       throw err;
     }
