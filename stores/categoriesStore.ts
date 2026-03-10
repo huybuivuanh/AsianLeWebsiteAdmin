@@ -1,5 +1,13 @@
 import { create } from "zustand";
-import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  serverTimestamp,
+} from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 interface CategoriesState {
@@ -8,6 +16,8 @@ interface CategoriesState {
   error: string | null;
   fetchCategories: () => Promise<void>;
   addCategory: (name: string, description: string) => Promise<void>;
+  updateCategory: (id: string, name: string, description: string) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
   /** Clear cache on logout */
   reset: () => void;
 }
@@ -58,6 +68,35 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to add category";
+      set({ error: message });
+      throw err;
+    }
+  },
+
+  updateCategory: async (id, name, description) => {
+    set({ error: null });
+    try {
+      await updateDoc(doc(db, "categories", id), {
+        name: name.trim(),
+        description: (description ?? "").trim(),
+      });
+      await get().fetchCategories();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to update category";
+      set({ error: message });
+      throw err;
+    }
+  },
+
+  deleteCategory: async (id) => {
+    set({ error: null });
+    try {
+      await deleteDoc(doc(db, "categories", id));
+      await get().fetchCategories();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to delete category";
       set({ error: message });
       throw err;
     }

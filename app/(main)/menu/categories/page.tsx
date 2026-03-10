@@ -3,11 +3,34 @@
 import { useState } from "react";
 import { useCategoriesStore } from "@/stores/categoriesStore";
 import { AddCategoryModal } from "@/components/categories/AddCategoryModal";
+import { EditCategoryModal } from "@/components/categories/EditCategoryModal";
 import { CategoryRow } from "@/components/categories/CategoryRow";
 
 export default function CategoriesPage() {
-  const { categories, loading, error, addCategory } = useCategoriesStore();
+  const {
+    categories,
+    loading,
+    error,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+  } = useCategoriesStore();
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<FoodCategory | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function handleDelete(category: FoodCategory) {
+    if (
+      !window.confirm(`Delete “${category.name}”? This cannot be undone.`)
+    )
+      return;
+    setDeletingId(category.id);
+    try {
+      await deleteCategory(category.id);
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   return (
     <div className="min-w-0">
@@ -42,7 +65,13 @@ export default function CategoriesPage() {
             .slice()
             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
             .map((cat) => (
-              <CategoryRow key={cat.id} category={cat} />
+              <CategoryRow
+                key={cat.id}
+                category={cat}
+                onEdit={setEditingCategory}
+                onDelete={handleDelete}
+                deleting={deletingId === cat.id}
+              />
             ))}
         </ul>
       )}
@@ -51,6 +80,13 @@ export default function CategoriesPage() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onAdd={addCategory}
+      />
+
+      <EditCategoryModal
+        open={editingCategory != null}
+        category={editingCategory}
+        onClose={() => setEditingCategory(null)}
+        onSave={updateCategory}
       />
     </div>
   );
