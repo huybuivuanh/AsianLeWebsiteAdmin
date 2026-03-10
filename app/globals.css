@@ -11,7 +11,7 @@
   --nav-active: rgba(255, 255, 255, 0.12);
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;

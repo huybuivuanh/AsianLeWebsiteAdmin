@@ -50,9 +50,10 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
       });
       await get().fetchCategories();
     } catch (err) {
-      set({
-        error: err instanceof Error ? err.message : "Failed to add category",
-      });
+      const message =
+        err instanceof Error ? err.message : "Failed to add category";
+      set({ error: message });
+      throw err;
     }
   },
 }));
