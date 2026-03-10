@@ -21,12 +21,18 @@ interface MenuItemsState {
   error: string | null;
   fetchMenuItems: () => Promise<void>;
   addMenuItem: (input: AddMenuItemInput) => Promise<void>;
+  /** Clear cache on logout */
+  reset: () => void;
 }
 
 export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
   menuItems: [],
   loading: false,
   error: null,
+
+  reset: () => {
+    set({ menuItems: [], loading: false, error: null });
+  },
 
   fetchMenuItems: async () => {
     set({ loading: true, error: null });

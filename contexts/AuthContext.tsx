@@ -14,6 +14,8 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import { useCategoriesStore } from "@/stores/categoriesStore";
+import { useMenuItemsStore } from "@/stores/menuItemsStore";
 
 type AuthContextValue = {
   user: User | null;
@@ -35,6 +37,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
+
+      if (user) {
+        // Load once after login / session restore; kept in Zustand for all pages
+        void useCategoriesStore.getState().fetchCategories();
+        void useMenuItemsStore.getState().fetchMenuItems();
+      } else {
+        useCategoriesStore.getState().reset();
+        useMenuItemsStore.getState().reset();
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -61,6 +72,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     setError(null);
     await signOut(auth);
+    useCategoriesStore.getState().reset();
+    useMenuItemsStore.getState().reset();
   }, []);
 
   const clearError = useCallback(() => setError(null), []);

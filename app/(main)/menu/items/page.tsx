@@ -1,17 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMenuItemsStore } from "@/stores/menuItemsStore";
 import { AddMenuItemModal } from "@/components/AddMenuItemModal";
 
 export default function MenuItemsPage() {
-  const { menuItems, loading, error, fetchMenuItems, addMenuItem } =
+  const { menuItems, loading, error, addMenuItem } =
     useMenuItemsStore();
   const [modalOpen, setModalOpen] = useState(false);
-
-  useEffect(() => {
-    fetchMenuItems();
-  }, [fetchMenuItems]);
 
   return (
     <div className="min-w-0">

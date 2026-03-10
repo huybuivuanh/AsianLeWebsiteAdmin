@@ -8,12 +8,18 @@ interface CategoriesState {
   error: string | null;
   fetchCategories: () => Promise<void>;
   addCategory: (name: string, description: string) => Promise<void>;
+  /** Clear cache on logout */
+  reset: () => void;
 }
 
 export const useCategoriesStore = create<CategoriesState>((set, get) => ({
   categories: [],
   loading: false,
   error: null,
+
+  reset: () => {
+    set({ categories: [], loading: false, error: null });
+  },
 
   fetchCategories: async () => {
     set({ loading: true, error: null });

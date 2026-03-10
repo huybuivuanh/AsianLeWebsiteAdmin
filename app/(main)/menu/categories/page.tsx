@@ -1,17 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useCategoriesStore } from "@/stores/categoriesStore";
 import { AddCategoryModal } from "@/components/AddCategoryModal";
 
 export default function CategoriesPage() {
-  const { categories, loading, error, fetchCategories, addCategory } =
+  const { categories, loading, error, addCategory } =
     useCategoriesStore();
   const [modalOpen, setModalOpen] = useState(false);
-
-  useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
 
   return (
     <div className="min-w-0">
