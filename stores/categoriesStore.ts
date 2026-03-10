@@ -18,6 +18,7 @@ interface CategoriesState {
   addCategory: (name: string, description: string) => Promise<void>;
   updateCategory: (id: string, name: string, description: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
+  updateCategoryItemIds: (id: string, itemIds: string[]) => Promise<void>;
   /** Clear cache on logout */
   reset: () => void;
 }
@@ -97,6 +98,19 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete category";
+      set({ error: message });
+      throw err;
+    }
+  },
+
+  updateCategoryItemIds: async (id, itemIds) => {
+    set({ error: null });
+    try {
+      await updateDoc(doc(db, "categories", id), { itemIds });
+      await get().fetchCategories();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to update category items";
       set({ error: message });
       throw err;
     }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useCategoriesStore } from "@/stores/categoriesStore";
 import { AddCategoryModal } from "@/components/categories/AddCategoryModal";
 import { EditCategoryModal } from "@/components/categories/EditCategoryModal";
+import { AddCategoryItemsModal } from "@/components/categories/AddCategoryItemsModal";
 import { CategoryRow } from "@/components/categories/CategoryRow";
 
 export default function CategoriesPage() {
@@ -14,9 +15,11 @@ export default function CategoriesPage() {
     addCategory,
     updateCategory,
     deleteCategory,
+    updateCategoryItemIds,
   } = useCategoriesStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<FoodCategory | null>(null);
+  const [addItemsCategory, setAddItemsCategory] = useState<FoodCategory | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function handleDelete(category: FoodCategory) {
@@ -30,6 +33,16 @@ export default function CategoriesPage() {
     } finally {
       setDeletingId(null);
     }
+  }
+
+  function handleRemoveItem(category: FoodCategory, itemId: string) {
+    const next = (category.itemIds ?? []).filter((id) => id !== itemId);
+    void updateCategoryItemIds(category.id, next);
+  }
+
+  async function handleSaveCategoryItems(categoryId: string, itemIds: string[]) {
+    await updateCategoryItemIds(categoryId, itemIds);
+    setAddItemsCategory(null);
   }
 
   return (
@@ -70,6 +83,8 @@ export default function CategoriesPage() {
                 category={cat}
                 onEdit={setEditingCategory}
                 onDelete={handleDelete}
+                onAddItems={setAddItemsCategory}
+                onRemoveItem={handleRemoveItem}
                 deleting={deletingId === cat.id}
               />
             ))}
@@ -87,6 +102,13 @@ export default function CategoriesPage() {
         category={editingCategory}
         onClose={() => setEditingCategory(null)}
         onSave={updateCategory}
+      />
+
+      <AddCategoryItemsModal
+        open={addItemsCategory != null}
+        category={addItemsCategory}
+        onClose={() => setAddItemsCategory(null)}
+        onSave={handleSaveCategoryItems}
       />
     </div>
   );
