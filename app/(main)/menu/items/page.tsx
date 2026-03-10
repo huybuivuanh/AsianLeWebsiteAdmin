@@ -3,11 +3,25 @@
 import { useState } from "react";
 import { useMenuItemsStore } from "@/stores/menuItemsStore";
 import { AddMenuItemModal } from "@/components/menu/AddMenuItemModal";
+import { EditMenuItemModal } from "@/components/menu/EditMenuItemModal";
 import { MenuItemRow } from "@/components/menu/MenuItemRow";
 
 export default function MenuItemsPage() {
-  const { menuItems, loading, error, addMenuItem } = useMenuItemsStore();
+  const { menuItems, loading, error, addMenuItem, updateMenuItem, deleteMenuItem } =
+    useMenuItemsStore();
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function handleDelete(item: MenuItem) {
+    if (!window.confirm(`Delete “${item.name}”? This cannot be undone.`)) return;
+    setDeletingId(item.id);
+    try {
+      await deleteMenuItem(item.id);
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   return (
     <div className="min-w-0">
@@ -36,7 +50,13 @@ export default function MenuItemsPage() {
       ) : (
         <ul className="space-y-2">
           {menuItems.map((item) => (
-            <MenuItemRow key={item.id} item={item} />
+            <MenuItemRow
+              key={item.id}
+              item={item}
+              onEdit={setEditingItem}
+              onDelete={handleDelete}
+              deleting={deletingId === item.id}
+            />
           ))}
         </ul>
       )}
@@ -45,6 +65,13 @@ export default function MenuItemsPage() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onAdd={addMenuItem}
+      />
+
+      <EditMenuItemModal
+        open={editingItem != null}
+        item={editingItem}
+        onClose={() => setEditingItem(null)}
+        onSave={updateMenuItem}
       />
     </div>
   );
