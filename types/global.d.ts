@@ -39,6 +39,12 @@ declare global {
     startTime: Date;
     endTime: Date;
   }
+
+  interface GalleryItem {
+    id: string;
+    name: string;
+    url: string;
+  }
 }
 
 export {};

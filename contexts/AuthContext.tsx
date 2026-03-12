@@ -16,6 +16,7 @@ import {
 import { auth } from "@/lib/firebase";
 import { useCategoriesStore } from "@/stores/categoriesStore";
 import { useMenuItemsStore } from "@/stores/menuItemsStore";
+import { useGalleryStore } from "@/stores/galleryStore";
 
 type AuthContextValue = {
   user: User | null;
@@ -42,9 +43,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Load once after login / session restore; kept in Zustand for all pages
         void useCategoriesStore.getState().fetchCategories();
         void useMenuItemsStore.getState().fetchMenuItems();
+        void useGalleryStore.getState().fetchGallery();
       } else {
         useCategoriesStore.getState().reset();
         useMenuItemsStore.getState().reset();
+        useGalleryStore.getState().reset();
       }
     });
     return () => unsubscribe();
@@ -74,6 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signOut(auth);
     useCategoriesStore.getState().reset();
     useMenuItemsStore.getState().reset();
+    useGalleryStore.getState().reset();
   }, []);
 
   const clearError = useCallback(() => setError(null), []);
