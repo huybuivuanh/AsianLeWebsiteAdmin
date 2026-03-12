@@ -17,6 +17,7 @@ import { auth } from "@/lib/firebase";
 import { useCategoriesStore } from "@/stores/categoriesStore";
 import { useMenuItemsStore } from "@/stores/menuItemsStore";
 import { useGalleryStore } from "@/stores/galleryStore";
+import { useUpdatesStore } from "@/stores/updatesStore";
 
 type AuthContextValue = {
   user: User | null;
@@ -44,10 +45,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         void useCategoriesStore.getState().fetchCategories();
         void useMenuItemsStore.getState().fetchMenuItems();
         void useGalleryStore.getState().fetchGallery();
+        void useUpdatesStore.getState().fetchUpdates();
       } else {
         useCategoriesStore.getState().reset();
         useMenuItemsStore.getState().reset();
         useGalleryStore.getState().reset();
+        useUpdatesStore.getState().reset();
       }
     });
     return () => unsubscribe();
@@ -78,6 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useCategoriesStore.getState().reset();
     useMenuItemsStore.getState().reset();
     useGalleryStore.getState().reset();
+    useUpdatesStore.getState().reset();
   }, []);
 
   const clearError = useCallback(() => setError(null), []);

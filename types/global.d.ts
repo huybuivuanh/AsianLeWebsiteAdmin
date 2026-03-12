@@ -9,6 +9,7 @@ declare global {
   }
 
   interface ImageItem {
+    id?: string;
     name: string;
     url: string;
   }
@@ -38,12 +39,6 @@ declare global {
   interface TimeRange {
     startTime: Date;
     endTime: Date;
-  }
-
-  interface GalleryItem {
-    id: string;
-    name: string;
-    url: string;
   }
 }
 

@@ -2,19 +2,19 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { useGalleryStore } from "@/stores/galleryStore";
-import { AddGalleryItemModal } from "@/components/gallery/AddGalleryItemModal";
-import { EditGalleryItemModal } from "@/components/gallery/EditGalleryItemModal";
+import { useUpdatesStore } from "@/stores/updatesStore";
+import { AddUpdatesItemModal } from "@/components/updates/AddUpdatesItemModal";
+import { EditUpdatesItemModal } from "@/components/updates/EditUpdatesItemModal";
 
-export default function GalleryPage() {
+export default function UpdatesPage() {
   const {
     items,
     loading,
     error,
-    addGalleryItem,
-    updateGalleryItem,
-    deleteGalleryItem,
-  } = useGalleryStore();
+    addUpdatesItem,
+    updateUpdatesItem,
+    deleteUpdatesItem,
+  } = useUpdatesStore();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<
     (typeof items)[number] | null
@@ -25,7 +25,7 @@ export default function GalleryPage() {
       typeof window !== "undefined" &&
       window.confirm(`Delete "${item.name}"?`)
     ) {
-      void deleteGalleryItem(item.id as string);
+      void deleteUpdatesItem(item.id as string);
     }
   }
 
@@ -33,7 +33,7 @@ export default function GalleryPage() {
     <div className="min-w-0">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
-          Gallery
+          Updates
         </h1>
         <button
           type="button"
@@ -51,7 +51,7 @@ export default function GalleryPage() {
       )}
 
       {loading ? (
-        <p className="text-foreground/60 text-sm">Loading gallery…</p>
+        <p className="text-foreground/60 text-sm">Loading updates…</p>
       ) : items.length === 0 ? (
         <p className="text-foreground/70 text-sm sm:text-base">
           No images yet. Upload an image to get started.
@@ -98,16 +98,16 @@ export default function GalleryPage() {
         </ul>
       )}
 
-      <AddGalleryItemModal
+      <AddUpdatesItemModal
         open={addModalOpen}
         onClose={() => setAddModalOpen(false)}
-        onAdd={addGalleryItem}
+        onAdd={addUpdatesItem}
       />
-      <EditGalleryItemModal
+      <EditUpdatesItemModal
         open={!!editingItem}
         item={editingItem}
         onClose={() => setEditingItem(null)}
-        onSave={updateGalleryItem}
+        onSave={updateUpdatesItem}
       />
     </div>
   );

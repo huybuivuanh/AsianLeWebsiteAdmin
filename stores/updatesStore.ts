@@ -23,22 +23,22 @@ function deleteStorageByUrl(imageUrl: string): Promise<void> {
   return deleteObject(ref(storage, storagePath));
 }
 
-interface GalleryState {
+interface UpdatesState {
   items: ImageItem[];
   loading: boolean;
   error: string | null;
-  fetchGallery: () => Promise<void>;
-  addGalleryItem: (name: string, imageFile: File) => Promise<void>;
-  updateGalleryItem: (
+  fetchUpdates: () => Promise<void>;
+  addUpdatesItem: (name: string, imageFile: File) => Promise<void>;
+  updateUpdatesItem: (
     id: string,
     name: string,
     imageFile: File | null,
   ) => Promise<void>;
-  deleteGalleryItem: (id: string) => Promise<void>;
+  deleteUpdatesItem: (id: string) => Promise<void>;
   reset: () => void;
 }
 
-export const useGalleryStore = create<GalleryState>((set, get) => ({
+export const useUpdatesStore = create<UpdatesState>((set, get) => ({
   items: [],
   loading: false,
   error: null,
@@ -47,10 +47,10 @@ export const useGalleryStore = create<GalleryState>((set, get) => ({
     set({ items: [], loading: false, error: null });
   },
 
-  fetchGallery: async () => {
+  fetchUpdates: async () => {
     set({ loading: true, error: null });
     try {
-      const snapshot = await getDocs(collection(db, "gallery"));
+      const snapshot = await getDocs(collection(db, "updates"));
       const items: ImageItem[] = snapshot.docs.map((doc) => {
         const d = doc.data();
         return {
@@ -62,34 +62,34 @@ export const useGalleryStore = create<GalleryState>((set, get) => ({
       set({ items, loading: false });
     } catch (err) {
       set({
-        error: err instanceof Error ? err.message : "Failed to fetch gallery",
+        error: err instanceof Error ? err.message : "Failed to fetch updates",
         loading: false,
       });
     }
   },
 
-  addGalleryItem: async (name, imageFile) => {
+  addUpdatesItem: async (name, imageFile) => {
     set({ error: null });
     try {
       const safeName = imageFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const storageRef = ref(storage, `gallery/${Date.now()}_${safeName}`);
+      const storageRef = ref(storage, `updates/${Date.now()}_${safeName}`);
       await uploadBytes(storageRef, imageFile);
       const url = await getDownloadURL(storageRef);
 
-      await addDoc(collection(db, "gallery"), {
+      await addDoc(collection(db, "updates"), {
         name: name.trim(),
         url,
       });
-      await get().fetchGallery();
+      await get().fetchUpdates();
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Failed to add gallery item";
+        err instanceof Error ? err.message : "Failed to add update";
       set({ error: message });
       throw err;
     }
   },
 
-  updateGalleryItem: async (id, name, imageFile) => {
+  updateUpdatesItem: async (id, name, imageFile) => {
     set({ error: null });
     try {
       const item = get().items.find((i) => i.id === id);
@@ -103,25 +103,25 @@ export const useGalleryStore = create<GalleryState>((set, get) => ({
           // Ignore; upload new image anyway
         }
         const safeName = imageFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-        const storageRef = ref(storage, `gallery/${Date.now()}_${safeName}`);
+        const storageRef = ref(storage, `updates/${Date.now()}_${safeName}`);
         await uploadBytes(storageRef, imageFile);
         url = await getDownloadURL(storageRef);
       }
 
-      await updateDoc(doc(db, "gallery", id), {
+      await updateDoc(doc(db, "updates", id), {
         name: name.trim(),
         url,
       });
-      await get().fetchGallery();
+      await get().fetchUpdates();
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Failed to update gallery item";
+        err instanceof Error ? err.message : "Failed to update item";
       set({ error: message });
       throw err;
     }
   },
 
-  deleteGalleryItem: async (id) => {
+  deleteUpdatesItem: async (id) => {
     set({ error: null });
     try {
       const item = get().items.find((i) => i.id === id);
@@ -132,11 +132,11 @@ export const useGalleryStore = create<GalleryState>((set, get) => ({
           // Ignore; still delete the doc
         }
       }
-      await deleteDoc(doc(db, "gallery", id));
-      await get().fetchGallery();
+      await deleteDoc(doc(db, "updates", id));
+      await get().fetchUpdates();
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Failed to delete gallery item";
+        err instanceof Error ? err.message : "Failed to delete item";
       set({ error: message });
       throw err;
     }
