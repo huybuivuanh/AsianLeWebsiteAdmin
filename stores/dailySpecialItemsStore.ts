@@ -27,6 +27,10 @@ interface SpecialItemsState {
     options?: string[],
   ) => Promise<void>;
   deleteSpecialItem: (id: string) => Promise<void>;
+  updateSpecialItemDayOfWeekIds: (
+    id: string,
+    dayOfWeekIds: string[],
+  ) => Promise<void>;
   reset: () => void;
 }
 
@@ -122,6 +126,21 @@ export const useSpecialItemsStore = create<SpecialItemsState>((set, get) => ({
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete special item";
+      set({ error: message });
+      throw err;
+    }
+  },
+
+  updateSpecialItemDayOfWeekIds: async (id, dayOfWeekIds) => {
+    set({ error: null });
+    try {
+      await updateDoc(doc(db, "specialItems", id), { dayOfWeekIds });
+      await get().fetchSpecialItems();
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to update special item days";
       set({ error: message });
       throw err;
     }

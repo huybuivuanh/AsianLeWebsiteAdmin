@@ -39,6 +39,7 @@ interface DailySpecialsState {
     endTime: string,
   ) => Promise<void>;
   deleteDailySpecial: (id: string) => Promise<void>;
+  updateDailySpecialItemIds: (id: string, itemIds: string[]) => Promise<void>;
   reset: () => void;
 }
 
@@ -59,6 +60,10 @@ export const useDailySpecialsStore = create<DailySpecialsState>((set, get) => ({
         const d = docSnap.data();
         const startStr = (d.startTime as string) ?? "00:00";
         const endStr = (d.endTime as string) ?? "23:59";
+        const rawItemIds = d.itemIds;
+        const itemIds: string[] = Array.isArray(rawItemIds)
+          ? rawItemIds.filter((x): x is string => typeof x === "string")
+          : [];
         return {
           id: docSnap.id,
           dayOfWeek: (d.dayOfWeek as DayOfWeek) ?? "MONDAY",
@@ -66,7 +71,7 @@ export const useDailySpecialsStore = create<DailySpecialsState>((set, get) => ({
             startTime: parseTimeHHMM(startStr),
             endTime: parseTimeHHMM(endStr),
           },
-          items: undefined,
+          itemIds: itemIds.length ? itemIds : undefined,
           createdAt: d.createdAt?.toDate?.() ?? new Date(0),
         };
       });
@@ -123,6 +128,21 @@ export const useDailySpecialsStore = create<DailySpecialsState>((set, get) => ({
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete daily special";
+      set({ error: message });
+      throw err;
+    }
+  },
+
+  updateDailySpecialItemIds: async (id, itemIds) => {
+    set({ error: null });
+    try {
+      await updateDoc(doc(db, "dailySpecials", id), { itemIds });
+      await get().fetchDailySpecials();
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to update daily special items";
       set({ error: message });
       throw err;
     }

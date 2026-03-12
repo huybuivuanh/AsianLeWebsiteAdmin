@@ -37,7 +37,7 @@ declare global {
     id: string;
     dayOfWeek: DayOfWeek;
     timeRange: TimeRange;
-    items?: DailySpecialItem[];
+    itemIds?: string[];
     createdAt: Date;
   }
 

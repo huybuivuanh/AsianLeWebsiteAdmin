@@ -5,8 +5,11 @@ import {
   useDailySpecialsStore,
   formatTimeToHHMM,
 } from "@/stores/dailySpecialsStore";
+import { useSpecialItemsStore } from "@/stores/dailySpecialItemsStore";
 import { AddDayModal } from "@/components/daily-special/AddDayModal";
 import { EditDayModal } from "@/components/daily-special/EditDayModal";
+import { DailySpecialRow } from "@/components/daily-special/DailySpecialRow";
+import { AddDayItemsModal } from "@/components/daily-special/AddDayItemsModal";
 import type { DayOfWeek } from "@/types/enum";
 
 function dayLabel(value: DayOfWeek): string {
@@ -21,19 +24,79 @@ export default function DayOfWeekPage() {
     addDailySpecial,
     updateDailySpecial,
     deleteDailySpecial,
+    updateDailySpecialItemIds,
   } = useDailySpecialsStore();
+  const { items: specialItems, updateSpecialItemDayOfWeekIds } =
+    useSpecialItemsStore();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DailySpecial | null>(null);
+  const [addItemsSchedule, setAddItemsSchedule] =
+    useState<DailySpecial | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  function handleDelete(item: DailySpecial) {
+  async function handleDelete(schedule: DailySpecial) {
     if (
-      typeof window !== "undefined" &&
-      window.confirm(
-        `Delete ${dayLabel(item.dayOfWeek)} (${formatTimeToHHMM(item.timeRange.startTime)} – ${formatTimeToHHMM(item.timeRange.endTime)})?`,
+      !window.confirm(
+        `Delete ${dayLabel(schedule.dayOfWeek)} (${formatTimeToHHMM(schedule.timeRange.startTime)} – ${formatTimeToHHMM(schedule.timeRange.endTime)})?`,
       )
-    ) {
-      void deleteDailySpecial(item.id);
+    )
+      return;
+    setDeletingId(schedule.id);
+    try {
+      await deleteDailySpecial(schedule.id);
+      for (const item of specialItems) {
+        if (item.dayOfWeekIds?.includes(schedule.id)) {
+          const next = (item.dayOfWeekIds ?? []).filter(
+            (did) => did !== schedule.id,
+          );
+          await updateSpecialItemDayOfWeekIds(item.id, next);
+        }
+      }
+    } finally {
+      setDeletingId(null);
     }
+  }
+
+  async function handleRemoveItem(schedule: DailySpecial, itemId: string) {
+    const next = (schedule.itemIds ?? []).filter((id) => id !== itemId);
+    await updateDailySpecialItemIds(schedule.id, next);
+    const item = specialItems.find((m) => m.id === itemId);
+    if (item) {
+      const nextDayIds = (item.dayOfWeekIds ?? []).filter(
+        (did) => did !== schedule.id,
+      );
+      await updateSpecialItemDayOfWeekIds(itemId, nextDayIds);
+    }
+  }
+
+  async function handleSaveDayItems(scheduleId: string, itemIds: string[]) {
+    const schedule =
+      addItemsSchedule ?? dailySpecials.find((s) => s.id === scheduleId);
+    const previousItemIds = schedule?.itemIds ?? [];
+    const added = itemIds.filter((id) => !previousItemIds.includes(id));
+    const removed = previousItemIds.filter((id) => !itemIds.includes(id));
+
+    await updateDailySpecialItemIds(scheduleId, itemIds);
+
+    for (const itemId of removed) {
+      const item = specialItems.find((m) => m.id === itemId);
+      if (item) {
+        const next = (item.dayOfWeekIds ?? []).filter((did) => did !== scheduleId);
+        await updateSpecialItemDayOfWeekIds(itemId, next);
+      }
+    }
+    for (const itemId of added) {
+      const item = specialItems.find((m) => m.id === itemId);
+      if (item) {
+        const next = (item.dayOfWeekIds ?? []).includes(scheduleId)
+          ? item.dayOfWeekIds!
+          : [...(item.dayOfWeekIds ?? []), scheduleId];
+        await updateSpecialItemDayOfWeekIds(itemId, next);
+      }
+    }
+
+    setAddItemsSchedule(null);
   }
 
   return (
@@ -66,36 +129,19 @@ export default function DayOfWeekPage() {
       ) : (
         <ul className="space-y-2">
           {dailySpecials.map((s) => (
-            <li
+            <DailySpecialRow
               key={s.id}
-              className="rounded-lg border border-foreground/10 bg-foreground/[0.02] px-4 py-3 space-y-2"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-                <span className="font-medium text-foreground">
-                  {dayLabel(s.dayOfWeek)}
-                </span>
-                <span className="text-foreground/70 text-sm">
-                  {formatTimeToHHMM(s.timeRange.startTime)} –{" "}
-                  {formatTimeToHHMM(s.timeRange.endTime)}
-                </span>
-              </div>
-              <div className="flex gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setEditingItem(s)}
-                  className="rounded-lg border border-foreground/20 px-3 py-1.5 text-sm font-medium text-foreground hover:bg-foreground/5"
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(s)}
-                  className="rounded-lg border border-red-600 text-red-600 px-3 py-1.5 text-sm font-medium hover:bg-red-600 hover:text-white"
-                >
-                  Delete
-                </button>
-              </div>
-            </li>
+              schedule={s}
+              expanded={expandedId === s.id}
+              onToggleExpand={() =>
+                setExpandedId((id) => (id === s.id ? null : s.id))
+              }
+              onEdit={setEditingItem}
+              onDelete={handleDelete}
+              onAddItems={setAddItemsSchedule}
+              onRemoveItem={handleRemoveItem}
+              deleting={deletingId === s.id}
+            />
           ))}
         </ul>
       )}
@@ -110,6 +156,12 @@ export default function DayOfWeekPage() {
         item={editingItem}
         onClose={() => setEditingItem(null)}
         onSave={updateDailySpecial}
+      />
+      <AddDayItemsModal
+        open={addItemsSchedule != null}
+        schedule={addItemsSchedule}
+        onClose={() => setAddItemsSchedule(null)}
+        onSave={handleSaveDayItems}
       />
     </div>
   );

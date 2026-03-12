@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useSpecialItemsStore } from "@/stores/dailySpecialItemsStore";
+import { useDailySpecialsStore } from "@/stores/dailySpecialsStore";
 import { AddSpecialItemModal } from "@/components/daily-special/AddSpecialItemModal";
 import { EditSpecialItemModal } from "@/components/daily-special/EditSpecialItemModal";
 
@@ -14,15 +15,26 @@ export default function SpecialItemPage() {
     updateSpecialItem,
     deleteSpecialItem,
   } = useSpecialItemsStore();
+  const { dailySpecials, updateDailySpecialItemIds } = useDailySpecialsStore();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DailySpecialItem | null>(null);
 
-  function handleDelete(item: DailySpecialItem) {
+  async function handleDelete(item: DailySpecialItem) {
     if (
       typeof window !== "undefined" &&
-      window.confirm(`Delete "${item.name}"?`)
-    ) {
-      void deleteSpecialItem(item.id);
+      !window.confirm(`Delete "${item.name}"?`)
+    )
+      return;
+    try {
+      await deleteSpecialItem(item.id);
+      for (const schedule of dailySpecials) {
+        if (schedule.itemIds?.includes(item.id)) {
+          const next = (schedule.itemIds ?? []).filter((id) => id !== item.id);
+          await updateDailySpecialItemIds(schedule.id, next);
+        }
+      }
+    } catch {
+      // Error already set in store
     }
   }
 
