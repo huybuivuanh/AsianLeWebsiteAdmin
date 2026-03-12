@@ -121,8 +121,8 @@ export function EditMenuItemModal({
           {item.image && !imageFile && !removeImage && (
             <div className="flex items-center gap-3">
               <Image
-                src={item.image}
-                alt=""
+                src={item.image.url}
+                alt={item.image.name || ""}
                 width={64}
                 height={64}
                 sizes="64px"

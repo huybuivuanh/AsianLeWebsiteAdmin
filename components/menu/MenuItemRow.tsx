@@ -19,11 +19,11 @@ export function MenuItemRow({
     <li className="rounded-lg border border-foreground/10 bg-foreground/[0.02] px-4 py-3 flex flex-wrap items-start gap-3">
       {item.image && (
         <Image
-          src={item.image}
-          alt={item.name}
+          src={item.image.url}
+          alt={item.image.name || item.name}
           width={128}
           height={128}
-          sizes="64px"
+          sizes="256px"
           className="w-16 h-16 object-cover rounded-md shrink-0"
         />
       )}

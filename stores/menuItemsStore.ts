@@ -67,12 +67,26 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
           typeof rawPrice === "number" && Number.isFinite(rawPrice)
             ? rawPrice
             : 0;
+        const rawImage = d.image;
+        const image: ImageItem | undefined =
+          rawImage &&
+          typeof rawImage === "object" &&
+          "url" in rawImage &&
+          typeof (rawImage as ImageItem).url === "string"
+            ? {
+                name:
+                  typeof (rawImage as ImageItem).name === "string"
+                    ? (rawImage as ImageItem).name
+                    : "",
+                url: (rawImage as ImageItem).url,
+              }
+            : undefined;
         return {
           id: doc.id,
           name: (d.name as string) ?? "",
           description: d.description as string | undefined,
           price,
-          image: d.image as string | undefined,
+          image,
           categoryIds: d.categoryIds as string[] | undefined,
           createdAt: d.createdAt?.toDate?.() ?? undefined,
         };
@@ -90,12 +104,13 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
   addMenuItem: async ({ name, description, price, imageFile }) => {
     set({ error: null });
     try {
-      let imageUrl: string | undefined;
+      let image: ImageItem | undefined;
       if (imageFile && imageFile.size > 0) {
         const safeName = imageFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
         const storageRef = ref(storage, `menuItems/${Date.now()}_${safeName}`);
         await uploadBytes(storageRef, imageFile);
-        imageUrl = await getDownloadURL(storageRef);
+        const url = await getDownloadURL(storageRef);
+        image = { name: imageFile.name, url };
       }
 
       const payload: Record<string, unknown> = {
@@ -104,7 +119,7 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
         price: Number.isFinite(price) ? price : 0,
         createdAt: serverTimestamp(),
       };
-      if (imageUrl) payload.image = imageUrl;
+      if (image) payload.image = image;
 
       await addDoc(collection(db, "menuItems"), payload);
       await get().fetchMenuItems();
@@ -131,7 +146,7 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
 
       if (removeImage && item?.image) {
         try {
-          await deleteStorageImageByUrl(item.image);
+          await deleteStorageImageByUrl(item.image.url);
         } catch {
           // Ignore storage errors; still clear the field
         }
@@ -139,7 +154,7 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
       } else if (imageFile && imageFile.size > 0) {
         if (item?.image) {
           try {
-            await deleteStorageImageByUrl(item.image);
+            await deleteStorageImageByUrl(item.image.url);
           } catch {
             // Ignore; upload new image anyway
           }
@@ -147,7 +162,8 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
         const safeName = imageFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
         const storageRef = ref(storage, `menuItems/${Date.now()}_${safeName}`);
         await uploadBytes(storageRef, imageFile);
-        payload.image = await getDownloadURL(storageRef);
+        const url = await getDownloadURL(storageRef);
+        payload.image = { name: imageFile.name, url };
       }
 
       await updateDoc(doc(db, "menuItems", id), payload);
@@ -166,7 +182,7 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
       const item = get().menuItems.find((m) => m.id === id);
       if (item?.image) {
         try {
-          await deleteStorageImageByUrl(item.image);
+          await deleteStorageImageByUrl(item.image.url);
         } catch {
           // Ignore storage errors (e.g. file already gone); still delete the doc
         }

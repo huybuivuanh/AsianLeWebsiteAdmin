@@ -8,14 +8,36 @@ declare global {
     createdAt: Date;
   }
 
+  interface ImageItem {
+    name: string;
+    url: string;
+  }
+
   interface MenuItem {
     id: string;
     name: string;
     description?: string;
     price: number;
-    image?: string;
+    image?: ImageItem;
     categoryIds?: string[];
     createdAt: Date;
+  }
+
+  interface DailySpecialItem extends MenuItem {
+    options?: string[];
+  }
+
+  interface DailySpecial {
+    id: string;
+    dayOfWeek: number;
+    timeRange: TimeRange;
+    items: DailySpecialItem[];
+    createdAt: Date;
+  }
+
+  interface TimeRange {
+    startTime: Date;
+    endTime: Date;
   }
 }
 
