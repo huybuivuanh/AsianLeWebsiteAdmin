@@ -3,6 +3,9 @@ import {
   collection,
   getDocs,
   addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -29,6 +32,13 @@ interface DailySpecialsState {
     startTime: string,
     endTime: string,
   ) => Promise<void>;
+  updateDailySpecial: (
+    id: string,
+    dayOfWeek: DayOfWeek,
+    startTime: string,
+    endTime: string,
+  ) => Promise<void>;
+  deleteDailySpecial: (id: string) => Promise<void>;
   reset: () => void;
 }
 
@@ -83,6 +93,36 @@ export const useDailySpecialsStore = create<DailySpecialsState>((set, get) => ({
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to add daily special";
+      set({ error: message });
+      throw err;
+    }
+  },
+
+  updateDailySpecial: async (id, dayOfWeek, startTime, endTime) => {
+    set({ error: null });
+    try {
+      await updateDoc(doc(db, "dailySpecials", id), {
+        dayOfWeek,
+        startTime: startTime.trim(),
+        endTime: endTime.trim(),
+      });
+      await get().fetchDailySpecials();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to update daily special";
+      set({ error: message });
+      throw err;
+    }
+  },
+
+  deleteDailySpecial: async (id) => {
+    set({ error: null });
+    try {
+      await deleteDoc(doc(db, "dailySpecials", id));
+      await get().fetchDailySpecials();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to delete daily special";
       set({ error: message });
       throw err;
     }

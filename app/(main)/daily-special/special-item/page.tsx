@@ -3,10 +3,28 @@
 import { useState } from "react";
 import { useSpecialItemsStore } from "@/stores/dailySpecialItemsStore";
 import { AddSpecialItemModal } from "@/components/daily-special/AddSpecialItemModal";
+import { EditSpecialItemModal } from "@/components/daily-special/EditSpecialItemModal";
 
 export default function SpecialItemPage() {
-  const { items, loading, error, addSpecialItem } = useSpecialItemsStore();
-  const [modalOpen, setModalOpen] = useState(false);
+  const {
+    items,
+    loading,
+    error,
+    addSpecialItem,
+    updateSpecialItem,
+    deleteSpecialItem,
+  } = useSpecialItemsStore();
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<DailySpecialItem | null>(null);
+
+  function handleDelete(item: DailySpecialItem) {
+    if (
+      typeof window !== "undefined" &&
+      window.confirm(`Delete "${item.name}"?`)
+    ) {
+      void deleteSpecialItem(item.id);
+    }
+  }
 
   return (
     <div className="min-w-0">
@@ -16,10 +34,10 @@ export default function SpecialItemPage() {
         </h1>
         <button
           type="button"
-          onClick={() => setModalOpen(true)}
+          onClick={() => setAddModalOpen(true)}
           className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20"
         >
-          Add
+          Add Item
         </button>
       </div>
 
@@ -40,7 +58,7 @@ export default function SpecialItemPage() {
           {items.map((item: DailySpecialItem) => (
             <li
               key={item.id}
-              className="rounded-lg border border-foreground/10 bg-foreground/[0.02] px-4 py-3 space-y-1"
+              className="rounded-lg border border-foreground/10 bg-foreground/[0.02] px-4 py-3 space-y-2"
             >
               <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
                 <span className="font-medium text-foreground">{item.name}</span>
@@ -53,15 +71,37 @@ export default function SpecialItemPage() {
                   Options: {item.options.join(", ")}
                 </p>
               )}
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setEditingItem(item)}
+                  className="rounded-lg border border-foreground/20 px-3 py-1.5 text-sm font-medium text-foreground hover:bg-foreground/5"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(item)}
+                  className="rounded-lg border border-red-600 text-red-600 px-3 py-1.5 text-sm font-medium hover:bg-red-600 hover:text-white"
+                >
+                  Delete
+                </button>
+              </div>
             </li>
           ))}
         </ul>
       )}
 
       <AddSpecialItemModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        open={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
         onAdd={addSpecialItem}
+      />
+      <EditSpecialItemModal
+        open={!!editingItem}
+        item={editingItem}
+        onClose={() => setEditingItem(null)}
+        onSave={updateSpecialItem}
       />
     </div>
   );
