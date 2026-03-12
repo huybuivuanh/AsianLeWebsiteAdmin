@@ -18,6 +18,7 @@ import { useCategoriesStore } from "@/stores/categoriesStore";
 import { useMenuItemsStore } from "@/stores/menuItemsStore";
 import { useGalleryStore } from "@/stores/galleryStore";
 import { useUpdatesStore } from "@/stores/updatesStore";
+import { useDailySpecialsStore } from "@/stores/dailySpecialsStore";
 
 type AuthContextValue = {
   user: User | null;
@@ -46,11 +47,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         void useMenuItemsStore.getState().fetchMenuItems();
         void useGalleryStore.getState().fetchGallery();
         void useUpdatesStore.getState().fetchUpdates();
+        void useDailySpecialsStore.getState().fetchDailySpecials();
       } else {
         useCategoriesStore.getState().reset();
         useMenuItemsStore.getState().reset();
         useGalleryStore.getState().reset();
         useUpdatesStore.getState().reset();
+        useDailySpecialsStore.getState().reset();
       }
     });
     return () => unsubscribe();
@@ -82,6 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useMenuItemsStore.getState().reset();
     useGalleryStore.getState().reset();
     useUpdatesStore.getState().reset();
+    useDailySpecialsStore.getState().reset();
   }, []);
 
   const clearError = useCallback(() => setError(null), []);
