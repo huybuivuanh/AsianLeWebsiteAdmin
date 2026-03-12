@@ -40,8 +40,6 @@ declare global {
     itemIds?: string[];
     createdAt: Date;
   }
-
-  /** Time of day as "HH:mm". */
   interface TimeRange {
     startTime: string;
     endTime: string;

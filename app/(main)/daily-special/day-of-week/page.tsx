@@ -27,25 +27,25 @@ export default function DayOfWeekPage() {
     useSpecialItemsStore();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DailySpecial | null>(null);
-  const [addItemsSchedule, setAddItemsSchedule] =
+  const [addItemsDaySpecial, setAddItemsDaySpecial] =
     useState<DailySpecial | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  async function handleDelete(schedule: DailySpecial) {
+  async function handleDelete(daySpecial: DailySpecial) {
     if (
       !window.confirm(
-        `Delete ${dayLabel(schedule.dayOfWeek)} (${schedule.timeRange.startTime} – ${schedule.timeRange.endTime})?`,
+        `Delete ${dayLabel(daySpecial.dayOfWeek)} (${daySpecial.timeRange.startTime} – ${daySpecial.timeRange.endTime})?`,
       )
     )
       return;
-    setDeletingId(schedule.id);
+    setDeletingId(daySpecial.id);
     try {
-      await deleteDailySpecial(schedule.id);
+      await deleteDailySpecial(daySpecial.id);
       for (const item of specialItems) {
-        if (item.dayOfWeekIds?.includes(schedule.id)) {
+        if (item.dayOfWeekIds?.includes(daySpecial.id)) {
           const next = (item.dayOfWeekIds ?? []).filter(
-            (did) => did !== schedule.id,
+            (did) => did !== daySpecial.id,
           );
           await updateSpecialItemDayOfWeekIds(item.id, next);
         }
@@ -55,45 +55,47 @@ export default function DayOfWeekPage() {
     }
   }
 
-  async function handleRemoveItem(schedule: DailySpecial, itemId: string) {
-    const next = (schedule.itemIds ?? []).filter((id) => id !== itemId);
-    await updateDailySpecialItemIds(schedule.id, next);
+  async function handleRemoveItem(daySpecial: DailySpecial, itemId: string) {
+    const next = (daySpecial.itemIds ?? []).filter((id) => id !== itemId);
+    await updateDailySpecialItemIds(daySpecial.id, next);
     const item = specialItems.find((m) => m.id === itemId);
     if (item) {
       const nextDayIds = (item.dayOfWeekIds ?? []).filter(
-        (did) => did !== schedule.id,
+        (did) => did !== daySpecial.id,
       );
       await updateSpecialItemDayOfWeekIds(itemId, nextDayIds);
     }
   }
 
-  async function handleSaveDayItems(scheduleId: string, itemIds: string[]) {
-    const schedule =
-      addItemsSchedule ?? dailySpecials.find((s) => s.id === scheduleId);
-    const previousItemIds = schedule?.itemIds ?? [];
+  async function handleSaveDayItems(daySpecialId: string, itemIds: string[]) {
+    const daySpecial =
+      addItemsDaySpecial ?? dailySpecials.find((s) => s.id === daySpecialId);
+    const previousItemIds = daySpecial?.itemIds ?? [];
     const added = itemIds.filter((id) => !previousItemIds.includes(id));
     const removed = previousItemIds.filter((id) => !itemIds.includes(id));
 
-    await updateDailySpecialItemIds(scheduleId, itemIds);
+    await updateDailySpecialItemIds(daySpecialId, itemIds);
 
     for (const itemId of removed) {
       const item = specialItems.find((m) => m.id === itemId);
       if (item) {
-        const next = (item.dayOfWeekIds ?? []).filter((did) => did !== scheduleId);
+        const next = (item.dayOfWeekIds ?? []).filter(
+          (did) => did !== daySpecialId,
+        );
         await updateSpecialItemDayOfWeekIds(itemId, next);
       }
     }
     for (const itemId of added) {
       const item = specialItems.find((m) => m.id === itemId);
       if (item) {
-        const next = (item.dayOfWeekIds ?? []).includes(scheduleId)
+        const next = (item.dayOfWeekIds ?? []).includes(daySpecialId)
           ? item.dayOfWeekIds!
-          : [...(item.dayOfWeekIds ?? []), scheduleId];
+          : [...(item.dayOfWeekIds ?? []), daySpecialId];
         await updateSpecialItemDayOfWeekIds(itemId, next);
       }
     }
 
-    setAddItemsSchedule(null);
+    setAddItemsDaySpecial(null);
   }
 
   return (
@@ -125,19 +127,21 @@ export default function DayOfWeekPage() {
         </p>
       ) : (
         <ul className="space-y-2">
-          {dailySpecials.map((s) => (
+          {dailySpecials.map((daySpecial) => (
             <DailySpecialRow
-              key={s.id}
-              schedule={s}
-              expanded={expandedId === s.id}
+              key={daySpecial.id}
+              daySpecial={daySpecial}
+              expanded={expandedId === daySpecial.id}
               onToggleExpand={() =>
-                setExpandedId((id) => (id === s.id ? null : s.id))
+                setExpandedId((id) =>
+                  id === daySpecial.id ? null : daySpecial.id,
+                )
               }
               onEdit={setEditingItem}
               onDelete={handleDelete}
-              onAddItems={setAddItemsSchedule}
+              onAddItems={setAddItemsDaySpecial}
               onRemoveItem={handleRemoveItem}
-              deleting={deletingId === s.id}
+              deleting={deletingId === daySpecial.id}
             />
           ))}
         </ul>
@@ -155,9 +159,9 @@ export default function DayOfWeekPage() {
         onSave={updateDailySpecial}
       />
       <AddDayItemsModal
-        open={addItemsSchedule != null}
-        schedule={addItemsSchedule}
-        onClose={() => setAddItemsSchedule(null)}
+        open={addItemsDaySpecial != null}
+        daySpecial={addItemsDaySpecial}
+        onClose={() => setAddItemsDaySpecial(null)}
         onSave={handleSaveDayItems}
       />
     </div>

@@ -9,18 +9,18 @@ function dayLabel(value: DayOfWeek): string {
 }
 
 type DailySpecialRowProps = {
-  schedule: DailySpecial;
+  daySpecial: DailySpecial;
   expanded: boolean;
   onToggleExpand: () => void;
-  onEdit: (schedule: DailySpecial) => void;
-  onDelete: (schedule: DailySpecial) => void;
-  onAddItems: (schedule: DailySpecial) => void;
-  onRemoveItem: (schedule: DailySpecial, itemId: string) => void;
+  onEdit: (daySpecial: DailySpecial) => void;
+  onDelete: (daySpecial: DailySpecial) => void;
+  onAddItems: (daySpecial: DailySpecial) => void;
+  onRemoveItem: (daySpecial: DailySpecial, itemId: string) => void;
   deleting?: boolean;
 };
 
 export function DailySpecialRow({
-  schedule,
+  daySpecial,
   expanded,
   onToggleExpand,
   onEdit,
@@ -31,12 +31,12 @@ export function DailySpecialRow({
 }: DailySpecialRowProps) {
   const { items: specialItems } = useSpecialItemsStore();
 
-  const itemsInSchedule = useMemo(() => {
-    const ids = schedule.itemIds ?? [];
+  const itemsInTimeRange = useMemo(() => {
+    const ids = daySpecial.itemIds ?? [];
     return ids
       .map((id) => specialItems.find((m) => m.id === id))
       .filter((m): m is DailySpecialItem => m != null);
-  }, [schedule.itemIds, specialItems]);
+  }, [daySpecial.itemIds, specialItems]);
 
   return (
     <li className="rounded-lg border border-foreground/10 bg-foreground/[0.02] overflow-hidden">
@@ -56,22 +56,22 @@ export function DailySpecialRow({
             ▼
           </span>
           <span className="font-bold text-foreground truncate">
-            {dayLabel(schedule.dayOfWeek)}
+            {dayLabel(daySpecial.dayOfWeek)}
           </span>
           <span className="text-foreground/60 text-sm shrink-0">
-            {schedule.timeRange.startTime} – {schedule.timeRange.endTime}
+            {daySpecial.timeRange.startTime} – {daySpecial.timeRange.endTime}
           </span>
-          {schedule.itemIds && schedule.itemIds.length > 0 && (
+          {daySpecial.itemIds && daySpecial.itemIds.length > 0 && (
             <span className="text-xs text-foreground/50 shrink-0">
-              ({schedule.itemIds.length} item
-              {schedule.itemIds.length !== 1 ? "s" : ""})
+              ({daySpecial.itemIds.length} item
+              {daySpecial.itemIds.length !== 1 ? "s" : ""})
             </span>
           )}
         </button>
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
-            onClick={() => onEdit(schedule)}
+            onClick={() => onEdit(daySpecial)}
             disabled={deleting}
             className="rounded-md border border-foreground/20 px-3 py-1.5 text-sm text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
           >
@@ -79,7 +79,7 @@ export function DailySpecialRow({
           </button>
           <button
             type="button"
-            onClick={() => onDelete(schedule)}
+            onClick={() => onDelete(daySpecial)}
             disabled={deleting}
             className="rounded-md border border-red-500/30 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:opacity-50"
           >
@@ -90,13 +90,13 @@ export function DailySpecialRow({
 
       {expanded && (
         <div className="border-t border-foreground/10 bg-foreground/[0.02] px-4 py-3">
-          {itemsInSchedule.length === 0 ? (
+          {itemsInTimeRange.length === 0 ? (
             <p className="text-sm text-foreground/60 mb-3">
-              No items in this schedule.
+              No items in this time range.
             </p>
           ) : (
             <ul className="space-y-2 mb-3">
-              {itemsInSchedule.map((item) => (
+              {itemsInTimeRange.map((item) => (
                 <li
                   key={item.id}
                   className="flex items-center justify-between gap-2 py-1.5 border-b border-foreground/5 last:border-0"
@@ -114,7 +114,7 @@ export function DailySpecialRow({
                   </span>
                   <button
                     type="button"
-                    onClick={() => onRemoveItem(schedule, item.id)}
+                    onClick={() => onRemoveItem(daySpecial, item.id)}
                     className="rounded-md px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-500/20 shrink-0"
                   >
                     Remove
@@ -125,7 +125,7 @@ export function DailySpecialRow({
           )}
           <button
             type="button"
-            onClick={() => onAddItems(schedule)}
+            onClick={() => onAddItems(daySpecial)}
             className="rounded-lg border border-foreground/20 px-3 py-2 text-sm font-medium text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20"
           >
             + Add Items

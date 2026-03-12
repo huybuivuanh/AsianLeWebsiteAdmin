@@ -27,10 +27,10 @@ export default function SpecialItemPage() {
       return;
     try {
       await deleteSpecialItem(item.id);
-      for (const schedule of dailySpecials) {
-        if (schedule.itemIds?.includes(item.id)) {
-          const next = (schedule.itemIds ?? []).filter((id) => id !== item.id);
-          await updateDailySpecialItemIds(schedule.id, next);
+      for (const daySpecial of dailySpecials) {
+        if (daySpecial.itemIds?.includes(item.id)) {
+          const next = (daySpecial.itemIds ?? []).filter((id) => id !== item.id);
+          await updateDailySpecialItemIds(daySpecial.id, next);
         }
       }
     } catch {

@@ -10,14 +10,14 @@ function dayLabel(value: DayOfWeek): string {
 
 type AddDayItemsModalProps = {
   open: boolean;
-  schedule: DailySpecial | null;
+  daySpecial: DailySpecial | null;
   onClose: () => void;
-  onSave: (scheduleId: string, itemIds: string[]) => Promise<void>;
+  onSave: (daySpecialId: string, itemIds: string[]) => Promise<void>;
 };
 
 export function AddDayItemsModal({
   open,
-  schedule,
+  daySpecial,
   onClose,
   onSave,
 }: AddDayItemsModalProps) {
@@ -28,8 +28,8 @@ export function AddDayItemsModal({
   const { items: specialItems } = useSpecialItemsStore();
 
   useEffect(() => {
-    if (open && schedule) {
-      setSelectedIds(schedule.itemIds ?? []);
+    if (open && daySpecial) {
+      setSelectedIds(daySpecial.itemIds ?? []);
       setSearch("");
       setFormError(null);
       setSubmitting(false);
@@ -40,7 +40,7 @@ export function AddDayItemsModal({
       setFormError(null);
       setSubmitting(false);
     }
-  }, [open, schedule]);
+  }, [open, daySpecial]);
 
   const filteredItems = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -56,11 +56,11 @@ export function AddDayItemsModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!schedule) return;
+    if (!daySpecial) return;
     setFormError(null);
     setSubmitting(true);
     try {
-      await onSave(schedule.id, selectedIds);
+      await onSave(daySpecial.id, selectedIds);
       onClose();
     } catch {
       setFormError("Something went wrong. Try again.");
@@ -73,9 +73,9 @@ export function AddDayItemsModal({
     if (!submitting) onClose();
   }
 
-  if (!open || !schedule) return null;
+  if (!open || !daySpecial) return null;
 
-  const title = `${dayLabel(schedule.dayOfWeek)} (${schedule.timeRange.startTime} – ${schedule.timeRange.endTime})`;
+  const title = `${dayLabel(daySpecial.dayOfWeek)} (${daySpecial.timeRange.startTime} – ${daySpecial.timeRange.endTime})`;
 
   return (
     <div

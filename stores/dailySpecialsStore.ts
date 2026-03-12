@@ -79,8 +79,7 @@ export const useDailySpecialsStore = create<DailySpecialsState>((set, get) => ({
     try {
       await addDoc(collection(db, "dailySpecials"), {
         dayOfWeek,
-        startTime: startTime.trim(),
-        endTime: endTime.trim(),
+        timeRange: { startTime: startTime.trim(), endTime: endTime.trim() },
         createdAt: serverTimestamp(),
       });
       await get().fetchDailySpecials();
