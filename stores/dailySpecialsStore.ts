@@ -47,8 +47,8 @@ export const useDailySpecialsStore = create<DailySpecialsState>((set, get) => ({
       const snapshot = await getDocs(collection(db, "dailySpecials"));
       const dailySpecials: DailySpecial[] = snapshot.docs.map((docSnap) => {
         const d = docSnap.data();
-        const startStr = (d.startTime as string) ?? "00:00";
-        const endStr = (d.endTime as string) ?? "23:59";
+        const startStr = d.timeRange?.startTime ?? "00:00";
+        const endStr = d.timeRange?.endTime ?? "23:59";
         const rawItemIds = d.itemIds;
         const itemIds: string[] = Array.isArray(rawItemIds)
           ? rawItemIds.filter((x): x is string => typeof x === "string")

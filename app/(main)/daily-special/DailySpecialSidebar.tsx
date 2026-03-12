@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const dailySpecialNavLinks = [
-  { href: "/daily-special/day-of-week", label: "Day Of Week" },
+  { href: "/daily-special/day-special", label: "Day Special" },
   { href: "/daily-special/special-item", label: "Special Item" },
 ] as const;
 
