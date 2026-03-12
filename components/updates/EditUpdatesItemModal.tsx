@@ -5,7 +5,7 @@ import Image from "next/image";
 
 type EditUpdatesItemModalProps = {
   open: boolean;
-  item: UpdatesItem | null;
+  item: ImageItem | null;
   onClose: () => void;
   onSave: (id: string, name: string, imageFile: File | null) => Promise<void>;
 };
@@ -37,7 +37,7 @@ export function EditUpdatesItemModal({
       setSubmitting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
-  }, [open, item?.id]);
+  }, [open, item]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -50,7 +50,7 @@ export function EditUpdatesItemModal({
     }
     setSubmitting(true);
     try {
-      await onSave(item.id, trimmedName, imageFile);
+      await onSave(item.id ?? "", trimmedName, imageFile);
       onClose();
     } catch {
       setFormError("Something went wrong. Try again.");
@@ -86,10 +86,7 @@ export function EditUpdatesItemModal({
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           {formError && (
-            <p
-              className="text-red-600 dark:text-red-400 text-sm"
-              role="alert"
-            >
+            <p className="text-red-600 dark:text-red-400 text-sm" role="alert">
               {formError}
             </p>
           )}
