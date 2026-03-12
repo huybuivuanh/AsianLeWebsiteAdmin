@@ -17,7 +17,7 @@ export default function LoginPage() {
     }
   }, [user, loading, router]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     clearError();
     setSubmitting(true);

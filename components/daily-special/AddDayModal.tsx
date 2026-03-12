@@ -36,7 +36,7 @@ export function AddDayModal({ open, onClose, onAdd }: AddDayModalProps) {
     }
   }, [open]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setFormError(null);
     if (startTime >= endTime) {

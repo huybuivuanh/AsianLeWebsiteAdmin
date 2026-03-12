@@ -31,7 +31,7 @@ export function EditMenuItemModal({
       setName(item.name);
       setDescription(item.description ?? "");
       setPriceInput(
-        item.price != null && item.price !== 0 ? String(item.price) : ""
+        item.price != null && item.price !== 0 ? String(item.price) : "",
       );
       setImageFile(null);
       setRemoveImage(false);
@@ -58,7 +58,7 @@ export function EditMenuItemModal({
     return Number.isFinite(n) ? n : 0;
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!item) return;
     setFormError(null);
@@ -111,10 +111,7 @@ export function EditMenuItemModal({
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           {formError && (
-            <p
-              className="text-red-600 dark:text-red-400 text-sm"
-              role="alert"
-            >
+            <p className="text-red-600 dark:text-red-400 text-sm" role="alert">
               {formError}
             </p>
           )}

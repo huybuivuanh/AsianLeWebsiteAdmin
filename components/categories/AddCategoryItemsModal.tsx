@@ -45,11 +45,11 @@ export function AddCategoryItemsModal({
 
   function toggleItem(id: string) {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!category) return;
     setFormError(null);
@@ -123,7 +123,9 @@ export function AddCategoryItemsModal({
             )}
             {filteredItems.length === 0 ? (
               <p className="text-sm text-foreground/60 py-4">
-                {search.trim() ? "No items match your search." : "No menu items yet."}
+                {search.trim()
+                  ? "No items match your search."
+                  : "No menu items yet."}
               </p>
             ) : (
               <ul className="space-y-0 py-2">

@@ -68,7 +68,7 @@ export function EditSpecialItemModal({
     return Number.isFinite(n) ? n : 0;
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!item) return;
     setFormError(null);
@@ -116,10 +116,7 @@ export function EditSpecialItemModal({
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           {formError && (
-            <p
-              className="text-red-600 dark:text-red-400 text-sm"
-              role="alert"
-            >
+            <p className="text-red-600 dark:text-red-400 text-sm" role="alert">
               {formError}
             </p>
           )}

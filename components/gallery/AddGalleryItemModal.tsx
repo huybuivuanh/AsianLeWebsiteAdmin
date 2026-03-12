@@ -29,7 +29,7 @@ export function AddGalleryItemModal({
     }
   }, [open]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setFormError(null);
     const trimmedName = displayName.trim();
@@ -79,10 +79,7 @@ export function AddGalleryItemModal({
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           {formError && (
-            <p
-              className="text-red-600 dark:text-red-400 text-sm"
-              role="alert"
-            >
+            <p className="text-red-600 dark:text-red-400 text-sm" role="alert">
               {formError}
             </p>
           )}

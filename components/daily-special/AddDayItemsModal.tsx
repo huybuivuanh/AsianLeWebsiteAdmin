@@ -54,7 +54,7 @@ export function AddDayItemsModal({
     );
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!daySpecial) return;
     setFormError(null);

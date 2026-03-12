@@ -50,7 +50,7 @@ export function EditDayModal({
     }
   }, [open, item?.id]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!item) return;
     setFormError(null);

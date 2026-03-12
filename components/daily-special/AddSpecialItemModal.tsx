@@ -5,11 +5,7 @@ import { useState, useEffect } from "react";
 type AddSpecialItemModalProps = {
   open: boolean;
   onClose: () => void;
-  onAdd: (
-    name: string,
-    price: number,
-    options?: string[],
-  ) => Promise<void>;
+  onAdd: (name: string, price: number, options?: string[]) => Promise<void>;
 };
 
 export function AddSpecialItemModal({
@@ -56,7 +52,7 @@ export function AddSpecialItemModal({
     return Number.isFinite(n) ? n : 0;
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setFormError(null);
     const trimmedName = name.trim();
@@ -103,10 +99,7 @@ export function AddSpecialItemModal({
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           {formError && (
-            <p
-              className="text-red-600 dark:text-red-400 text-sm"
-              role="alert"
-            >
+            <p className="text-red-600 dark:text-red-400 text-sm" role="alert">
               {formError}
             </p>
           )}
