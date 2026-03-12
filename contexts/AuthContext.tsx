@@ -19,6 +19,7 @@ import { useMenuItemsStore } from "@/stores/menuItemsStore";
 import { useGalleryStore } from "@/stores/galleryStore";
 import { useUpdatesStore } from "@/stores/updatesStore";
 import { useDailySpecialsStore } from "@/stores/dailySpecialsStore";
+import { useSpecialItemsStore } from "@/stores/dailySpecialItemsStore";
 
 type AuthContextValue = {
   user: User | null;
@@ -48,12 +49,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         void useGalleryStore.getState().fetchGallery();
         void useUpdatesStore.getState().fetchUpdates();
         void useDailySpecialsStore.getState().fetchDailySpecials();
+        void useSpecialItemsStore.getState().fetchSpecialItems();
       } else {
         useCategoriesStore.getState().reset();
         useMenuItemsStore.getState().reset();
         useGalleryStore.getState().reset();
         useUpdatesStore.getState().reset();
         useDailySpecialsStore.getState().reset();
+        useSpecialItemsStore.getState().reset();
       }
     });
     return () => unsubscribe();
@@ -68,10 +71,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (err && typeof err === "object" && "code" in err) {
         const code = (err as { code: string }).code;
         if (code === "auth/invalid-email") message = "Invalid email address.";
-        else if (code === "auth/user-not-found") message = "No account with this email.";
-        else if (code === "auth/wrong-password") message = "Incorrect password.";
-        else if (code === "auth/invalid-credential") message = "Invalid email or password.";
-        else if (code === "auth/too-many-requests") message = "Too many attempts. Try again later.";
+        else if (code === "auth/user-not-found")
+          message = "No account with this email.";
+        else if (code === "auth/wrong-password")
+          message = "Incorrect password.";
+        else if (code === "auth/invalid-credential")
+          message = "Invalid email or password.";
+        else if (code === "auth/too-many-requests")
+          message = "Too many attempts. Try again later.";
       }
       setError(message);
       throw err;
@@ -86,6 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useGalleryStore.getState().reset();
     useUpdatesStore.getState().reset();
     useDailySpecialsStore.getState().reset();
+    useSpecialItemsStore.getState().reset();
   }, []);
 
   const clearError = useCallback(() => setError(null), []);
@@ -99,9 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearError,
   };
 
-  return (
-    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

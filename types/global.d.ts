@@ -25,11 +25,14 @@ declare global {
     categoryIds?: string[];
     createdAt: Date;
   }
-
-  interface DailySpecialItem extends MenuItem {
+  interface DailySpecialItem {
+    id: string;
+    name: string;
+    price: number;
     options?: string[];
+    dayOfWeekIds?: string[];
+    createdAt: Date;
   }
-
   interface DailySpecial {
     id: string;
     dayOfWeek: DayOfWeek;
