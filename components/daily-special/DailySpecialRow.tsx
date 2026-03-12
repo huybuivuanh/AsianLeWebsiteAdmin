@@ -39,12 +39,12 @@ export function DailySpecialRow({
   }, [daySpecial.itemIds, specialItems]);
 
   return (
-    <li className="rounded-lg border border-foreground/10 bg-foreground/[0.02] overflow-hidden">
+    <li className="rounded-2xl border border-foreground/10 bg-foreground/[0.02] overflow-hidden">
       <div className="px-4 py-3 flex flex-wrap items-center justify-between gap-3">
         <button
           type="button"
           onClick={onToggleExpand}
-          className="flex items-center gap-2 min-w-0 text-left group"
+          className="flex items-center gap-2 min-w-0 text-left group outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 rounded-xl -mx-1 px-1 py-1"
           aria-expanded={expanded}
         >
           <span
@@ -62,7 +62,7 @@ export function DailySpecialRow({
             {daySpecial.timeRange.startTime} – {daySpecial.timeRange.endTime}
           </span>
           {daySpecial.itemIds && daySpecial.itemIds.length > 0 && (
-            <span className="text-xs text-foreground/50 shrink-0">
+            <span className="text-xs text-foreground/50 shrink-0 rounded-full bg-foreground/5 px-2 py-0.5">
               ({daySpecial.itemIds.length} item
               {daySpecial.itemIds.length !== 1 ? "s" : ""})
             </span>
@@ -73,7 +73,7 @@ export function DailySpecialRow({
             type="button"
             onClick={() => onEdit(daySpecial)}
             disabled={deleting}
-            className="rounded-md border border-foreground/20 px-3 py-1.5 text-sm text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
+            className="rounded-xl border border-foreground/20 px-3.5 py-2 text-base font-semibold text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
           >
             Edit
           </button>
@@ -81,7 +81,7 @@ export function DailySpecialRow({
             type="button"
             onClick={() => onDelete(daySpecial)}
             disabled={deleting}
-            className="rounded-md border border-red-500/30 px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:opacity-50"
+            className="rounded-xl border border-red-500/30 px-3.5 py-2 text-base font-semibold text-red-600 dark:text-red-400 hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:opacity-50"
           >
             {deleting ? "…" : "Delete"}
           </button>
@@ -99,23 +99,39 @@ export function DailySpecialRow({
               {itemsInTimeRange.map((item) => (
                 <li
                   key={item.id}
-                  className="flex items-center justify-between gap-2 py-1.5 border-b border-foreground/5 last:border-0"
+                  className="rounded-xl border border-foreground/10 bg-background/40 px-3 py-2 flex items-start justify-between gap-3"
                 >
-                  <span className="text-sm text-foreground truncate">
-                    {item.name}
-                    <span className="text-foreground/60 ml-1">
-                      ${item.price.toFixed(2)}
-                    </span>
-                    {item.options && item.options.length > 0 && (
-                      <span className="text-foreground/50 text-xs ml-1">
-                        ({item.options.join(", ")})
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-medium font-semibold text-foreground truncate">
+                        {item.name}
                       </span>
+                      <span className="text-medium font-semibold text-foreground/80 rounded-full border border-foreground/15 bg-foreground/5 px-2 py-0.5">
+                        ${item.price.toFixed(2)}
+                      </span>
+                    </div>
+                    {item.options && item.options.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1.5">
+                        {item.options.slice(0, 4).map((opt) => (
+                          <span
+                            key={opt}
+                            className="text-medium leading-5 rounded-full border border-foreground/10 bg-foreground/[0.03] px-2 text-foreground/70"
+                          >
+                            {opt}
+                          </span>
+                        ))}
+                        {item.options.length > 4 && (
+                          <span className="text-[11px] leading-5 text-foreground/50">
+                            +{item.options.length - 4} more
+                          </span>
+                        )}
+                      </div>
                     )}
-                  </span>
+                  </div>
                   <button
                     type="button"
                     onClick={() => onRemoveItem(daySpecial, item.id)}
-                    className="rounded-md px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-500/20 shrink-0"
+                    className="rounded-xl border border-red-500/30 px-3 py-1.5 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-500/10 focus:outline-none focus:ring-2 focus:ring-red-500/20 shrink-0"
                   >
                     Remove
                   </button>
@@ -126,7 +142,7 @@ export function DailySpecialRow({
           <button
             type="button"
             onClick={() => onAddItems(daySpecial)}
-            className="rounded-lg border border-foreground/20 px-3 py-2 text-sm font-medium text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+            className="rounded-xl border border-foreground/20 px-3 py-2 text-sm font-semibold text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20"
           >
             + Add Items
           </button>

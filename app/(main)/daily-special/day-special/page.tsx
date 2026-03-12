@@ -100,14 +100,11 @@ export default function DaySpecial() {
 
   return (
     <div className="min-w-0">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
-          Day Of Week
-        </h1>
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
         <button
           type="button"
           onClick={() => setAddModalOpen(true)}
-          className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+          className="rounded-xl bg-foreground text-background px-4 py-2 text-sm font-semibold hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20"
         >
           Add Day
         </button>
@@ -122,11 +119,16 @@ export default function DaySpecial() {
       {loading ? (
         <p className="text-foreground/60 text-sm">Loading…</p>
       ) : dailySpecials.length === 0 ? (
-        <p className="text-foreground/70 text-sm sm:text-base">
-          No days configured. Add a day and time range to get started.
-        </p>
+        <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.02] p-6">
+          <p className="text-foreground text-sm font-medium">
+            No day specials yet.
+          </p>
+          <p className="mt-1 text-foreground/60 text-sm">
+            Add a day, time range, then attach special items.
+          </p>
+        </div>
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           {dailySpecials.map((daySpecial) => (
             <DailySpecialRow
               key={daySpecial.id}

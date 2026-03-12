@@ -46,7 +46,7 @@ export const useSpecialItemsStore = create<SpecialItemsState>((set, get) => ({
   fetchSpecialItems: async () => {
     set({ loading: true, error: null });
     try {
-      const snapshot = await getDocs(collection(db, "specialItems"));
+      const snapshot = await getDocs(collection(db, "dailySpecialItems"));
       const items: DailySpecialItem[] = snapshot.docs.map((docSnap) => {
         const d = docSnap.data();
         const rawPrice = d.price;
@@ -83,7 +83,7 @@ export const useSpecialItemsStore = create<SpecialItemsState>((set, get) => ({
       const optionsList = Array.isArray(options)
         ? options.map((o) => String(o).trim()).filter(Boolean)
         : [];
-      await addDoc(collection(db, "specialItems"), {
+      await addDoc(collection(db, "dailySpecialItems"), {
         name: name.trim(),
         price: Number.isFinite(price) ? price : 0,
         options: optionsList,
@@ -104,7 +104,7 @@ export const useSpecialItemsStore = create<SpecialItemsState>((set, get) => ({
       const optionsList = Array.isArray(options)
         ? options.map((o) => String(o).trim()).filter(Boolean)
         : [];
-      await updateDoc(doc(db, "specialItems", id), {
+      await updateDoc(doc(db, "dailySpecialItems", id), {
         name: name.trim(),
         price: Number.isFinite(price) ? price : 0,
         options: optionsList,
@@ -121,7 +121,7 @@ export const useSpecialItemsStore = create<SpecialItemsState>((set, get) => ({
   deleteSpecialItem: async (id) => {
     set({ error: null });
     try {
-      await deleteDoc(doc(db, "specialItems", id));
+      await deleteDoc(doc(db, "dailySpecialItems", id));
       await get().fetchSpecialItems();
     } catch (err) {
       const message =
@@ -134,7 +134,7 @@ export const useSpecialItemsStore = create<SpecialItemsState>((set, get) => ({
   updateSpecialItemDayOfWeekIds: async (id, dayOfWeekIds) => {
     set({ error: null });
     try {
-      await updateDoc(doc(db, "specialItems", id), { dayOfWeekIds });
+      await updateDoc(doc(db, "dailySpecialItems", id), { dayOfWeekIds });
       await get().fetchSpecialItems();
     } catch (err) {
       const message =
