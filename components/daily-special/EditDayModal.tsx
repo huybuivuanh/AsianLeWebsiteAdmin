@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { DayOfWeek } from "@/types/enum";
-import { formatTimeToHHMM } from "@/stores/dailySpecialsStore";
 
 const DAY_OPTIONS = Object.values(DayOfWeek);
 
@@ -37,8 +36,8 @@ export function EditDayModal({
   useEffect(() => {
     if (open && item) {
       setDayOfWeek(item.dayOfWeek);
-      setStartTime(formatTimeToHHMM(item.timeRange.startTime));
-      setEndTime(formatTimeToHHMM(item.timeRange.endTime));
+      setStartTime(item.timeRange.startTime);
+      setEndTime(item.timeRange.endTime);
       setFormError(null);
       setSubmitting(false);
     }

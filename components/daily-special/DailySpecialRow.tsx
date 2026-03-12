@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 import { useSpecialItemsStore } from "@/stores/dailySpecialItemsStore";
-import { formatTimeToHHMM } from "@/stores/dailySpecialsStore";
 import type { DayOfWeek } from "@/types/enum";
 
 function dayLabel(value: DayOfWeek): string {
@@ -60,8 +59,7 @@ export function DailySpecialRow({
             {dayLabel(schedule.dayOfWeek)}
           </span>
           <span className="text-foreground/60 text-sm shrink-0">
-            {formatTimeToHHMM(schedule.timeRange.startTime)} –{" "}
-            {formatTimeToHHMM(schedule.timeRange.endTime)}
+            {schedule.timeRange.startTime} – {schedule.timeRange.endTime}
           </span>
           {schedule.itemIds && schedule.itemIds.length > 0 && (
             <span className="text-xs text-foreground/50 shrink-0">

@@ -1,10 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  useDailySpecialsStore,
-  formatTimeToHHMM,
-} from "@/stores/dailySpecialsStore";
+import { useDailySpecialsStore } from "@/stores/dailySpecialsStore";
 import { useSpecialItemsStore } from "@/stores/dailySpecialItemsStore";
 import { AddDayModal } from "@/components/daily-special/AddDayModal";
 import { EditDayModal } from "@/components/daily-special/EditDayModal";
@@ -38,7 +35,7 @@ export default function DayOfWeekPage() {
   async function handleDelete(schedule: DailySpecial) {
     if (
       !window.confirm(
-        `Delete ${dayLabel(schedule.dayOfWeek)} (${formatTimeToHHMM(schedule.timeRange.startTime)} – ${formatTimeToHHMM(schedule.timeRange.endTime)})?`,
+        `Delete ${dayLabel(schedule.dayOfWeek)} (${schedule.timeRange.startTime} – ${schedule.timeRange.endTime})?`,
       )
     )
       return;

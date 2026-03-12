@@ -11,17 +11,6 @@ import {
 import { db } from "@/lib/firebase";
 import type { DayOfWeek } from "@/types/enum";
 
-function parseTimeHHMM(s: string): Date {
-  const [h, m] = s.split(":").map(Number);
-  return new Date(1970, 0, 1, h ?? 0, m ?? 0);
-}
-
-function formatTimeToHHMM(date: Date): string {
-  const h = date.getHours();
-  const m = date.getMinutes();
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-}
-
 interface DailySpecialsState {
   dailySpecials: DailySpecial[];
   loading: boolean;
@@ -68,8 +57,8 @@ export const useDailySpecialsStore = create<DailySpecialsState>((set, get) => ({
           id: docSnap.id,
           dayOfWeek: (d.dayOfWeek as DayOfWeek) ?? "MONDAY",
           timeRange: {
-            startTime: parseTimeHHMM(startStr),
-            endTime: parseTimeHHMM(endStr),
+            startTime: startStr,
+            endTime: endStr,
           },
           itemIds: itemIds.length ? itemIds : undefined,
           createdAt: d.createdAt?.toDate?.() ?? new Date(0),
@@ -148,5 +137,3 @@ export const useDailySpecialsStore = create<DailySpecialsState>((set, get) => ({
     }
   },
 }));
-
-export { formatTimeToHHMM };

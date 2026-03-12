@@ -41,9 +41,10 @@ declare global {
     createdAt: Date;
   }
 
+  /** Time of day as "HH:mm". */
   interface TimeRange {
-    startTime: Date;
-    endTime: Date;
+    startTime: string;
+    endTime: string;
   }
 }
 

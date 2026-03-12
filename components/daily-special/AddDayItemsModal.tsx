@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useSpecialItemsStore } from "@/stores/dailySpecialItemsStore";
-import { formatTimeToHHMM } from "@/stores/dailySpecialsStore";
 import type { DayOfWeek } from "@/types/enum";
 
 function dayLabel(value: DayOfWeek): string {
@@ -76,7 +75,7 @@ export function AddDayItemsModal({
 
   if (!open || !schedule) return null;
 
-  const title = `${dayLabel(schedule.dayOfWeek)} (${formatTimeToHHMM(schedule.timeRange.startTime)} – ${formatTimeToHHMM(schedule.timeRange.endTime)})`;
+  const title = `${dayLabel(schedule.dayOfWeek)} (${schedule.timeRange.startTime} – ${schedule.timeRange.endTime})`;
 
   return (
     <div
