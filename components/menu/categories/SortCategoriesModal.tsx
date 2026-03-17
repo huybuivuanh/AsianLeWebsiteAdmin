@@ -93,8 +93,8 @@ export function SortCategoriesModal({
         onClick={handleBackdropClose}
         aria-hidden="true"
       />
-      <div className="relative w-full max-w-2xl max-h-[85dvh] flex flex-col rounded-2xl bg-background border border-foreground/10 shadow-xl">
-        <div className="px-6 py-4 border-b border-foreground/10 flex items-center justify-between gap-4 shrink-0">
+      <div className="relative w-full max-w-4xl max-h-[85dvh] flex flex-col rounded-2xl bg-background border border-foreground/10 shadow-xl">
+        <div className="px-8 py-5 border-b border-foreground/10 flex items-center justify-between gap-4 shrink-0">
           <h2
             id="sort-categories-title"
             className="text-lg font-semibold text-foreground"
@@ -112,7 +112,7 @@ export function SortCategoriesModal({
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-          <div className="px-6 pt-4 pb-3 shrink-0">
+          <div className="px-8 pt-5 pb-4 shrink-0">
             <p className="text-sm text-foreground/70">
               Drag categories to change their display order.
             </p>
@@ -126,7 +126,7 @@ export function SortCategoriesModal({
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto px-6 pb-4 min-h-0">
+          <div className="flex-1 overflow-y-auto px-8 pb-5 min-h-0">
             {items.length === 0 ? (
               <p className="text-sm text-foreground/60 py-6">
                 No categories to sort.
@@ -139,7 +139,7 @@ export function SortCategoriesModal({
                     draggable
                     onDragStart={() => handleDragStart(index)}
                     onDragOver={(e) => handleDragOver(e, index)}
-                    className="flex items-center gap-3 rounded-xl border border-foreground/15 bg-foreground/[0.02] px-3 py-2 cursor-move select-none"
+                    className="flex items-center gap-4 rounded-xl border border-foreground/15 bg-foreground/[0.02] px-4 py-3 cursor-move select-none"
                   >
                     <span className="text-foreground/40 text-xs font-mono w-6 text-center">
                       {index + 1}
@@ -161,7 +161,7 @@ export function SortCategoriesModal({
             )}
           </div>
 
-          <div className="px-6 py-4 border-t border-foreground/10 flex justify-end gap-2 shrink-0">
+          <div className="px-8 py-4 border-t border-foreground/10 flex justify-end gap-3 shrink-0">
             <button
               type="button"
               onClick={handleBackdropClose}
