@@ -16,6 +16,7 @@ import {
   deleteObject,
 } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
+import { sortAlphabetically } from "@/lib/utils";
 
 export type AddMenuItemInput = {
   name: string;
@@ -43,7 +44,10 @@ interface MenuItemsState {
   addMenuItem: (input: AddMenuItemInput) => Promise<void>;
   updateMenuItem: (id: string, input: AddMenuItemInput) => Promise<void>;
   deleteMenuItem: (id: string) => Promise<void>;
-  updateMenuItemCategoryIds: (id: string, categoryIds: string[]) => Promise<void>;
+  updateMenuItemCategoryIds: (
+    id: string,
+    categoryIds: string[],
+  ) => Promise<void>;
   /** Clear cache on logout */
   reset: () => void;
 }
@@ -97,7 +101,11 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
           createdAt: d.createdAt?.toDate?.() ?? undefined,
         };
       });
-      set({ menuItems, loading: false });
+      const sortedMenuItems = sortAlphabetically<MenuItem>(
+        menuItems,
+        (item) => item.name,
+      );
+      set({ menuItems: sortedMenuItems, loading: false });
     } catch (err) {
       set({
         error:
@@ -150,7 +158,8 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
         description: (description ?? "").trim(),
         price: Number.isFinite(price) ? price : 0,
       };
-      if (options !== undefined) payload.options = options?.length ? options : [];
+      if (options !== undefined)
+        payload.options = options?.length ? options : [];
 
       if (removeImage && item?.image) {
         try {
