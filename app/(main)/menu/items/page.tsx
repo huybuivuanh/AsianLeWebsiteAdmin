@@ -3,13 +3,19 @@
 import { useMemo, useState } from "react";
 import { useMenuItemsStore } from "@/stores/menuItemsStore";
 import { useCategoriesStore } from "@/stores/categoriesStore";
-import { AddMenuItemModal } from "@/components/menu/AddMenuItemModal";
-import { EditMenuItemModal } from "@/components/menu/EditMenuItemModal";
-import { MenuItemRow } from "@/components/menu/MenuItemRow";
+import { AddMenuItemModal } from "@/components/menu/items/AddMenuItemModal";
+import { EditMenuItemModal } from "@/components/menu/items/EditMenuItemModal";
+import { MenuItemRow } from "@/components/menu/items/MenuItemRow";
 
 export default function MenuItemsPage() {
-  const { menuItems, loading, error, addMenuItem, updateMenuItem, deleteMenuItem } =
-    useMenuItemsStore();
+  const {
+    menuItems,
+    loading,
+    error,
+    addMenuItem,
+    updateMenuItem,
+    deleteMenuItem,
+  } = useMenuItemsStore();
   const { categories, updateCategoryItemIds } = useCategoriesStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -23,7 +29,8 @@ export default function MenuItemsPage() {
   }, [menuItems, query]);
 
   async function handleDelete(item: MenuItem) {
-    if (!window.confirm(`Delete “${item.name}”? This cannot be undone.`)) return;
+    if (!window.confirm(`Delete “${item.name}”? This cannot be undone.`))
+      return;
     setDeletingId(item.id);
     try {
       await deleteMenuItem(item.id);

@@ -3,10 +3,10 @@
 import { useMemo, useState } from "react";
 import { useCategoriesStore } from "@/stores/categoriesStore";
 import { useMenuItemsStore } from "@/stores/menuItemsStore";
-import { AddCategoryModal } from "@/components/categories/AddCategoryModal";
-import { EditCategoryModal } from "@/components/categories/EditCategoryModal";
-import { AddCategoryItemsModal } from "@/components/categories/AddCategoryItemsModal";
-import { CategoryRow } from "@/components/categories/CategoryRow";
+import { AddCategoryModal } from "@/components/menu/categories/AddCategoryModal";
+import { EditCategoryModal } from "@/components/menu/categories/EditCategoryModal";
+import { AddCategoryItemsModal } from "@/components/menu/categories/AddCategoryItemsModal";
+import { CategoryRow } from "@/components/menu/categories/CategoryRow";
 
 export default function CategoriesPage() {
   const {
@@ -73,7 +73,8 @@ export default function CategoriesPage() {
     categoryId: string,
     itemIds: string[],
   ) {
-    const category = addItemsCategory ?? categories.find((c) => c.id === categoryId);
+    const category =
+      addItemsCategory ?? categories.find((c) => c.id === categoryId);
     const previousItemIds = category?.itemIds ?? [];
     const added = itemIds.filter((id) => !previousItemIds.includes(id));
     const removed = previousItemIds.filter((id) => !itemIds.includes(id));
