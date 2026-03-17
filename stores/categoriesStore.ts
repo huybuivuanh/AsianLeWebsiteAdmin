@@ -7,9 +7,9 @@ import {
   deleteDoc,
   doc,
   serverTimestamp,
+  writeBatch,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { sortAlphabetically } from "@/lib/utils";
 
 interface CategoriesState {
   categories: FoodCategory[];
@@ -24,6 +24,7 @@ interface CategoriesState {
   ) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   updateCategoryItemIds: (id: string, itemIds: string[]) => Promise<void>;
+  reorderCategories: (orderedIds: string[]) => Promise<void>;
   /** Clear cache on logout */
   reset: () => void;
 }
@@ -52,11 +53,10 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
           createdAt: d.createdAt?.toDate?.() ?? undefined,
         };
       });
-      const sortedCategories = sortAlphabetically<FoodCategory>(
-        categories,
-        (category) => category.name,
+      categories.sort(
+        (a, b) => (a.order ?? 0) - (b.order ?? 0) || a.name.localeCompare(b.name),
       );
-      set({ categories: sortedCategories, loading: false });
+      set({ categories, loading: false });
     } catch (err) {
       set({
         error:
@@ -121,6 +121,24 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to update category items";
+      set({ error: message });
+      throw err;
+    }
+  },
+
+  reorderCategories: async (orderedIds) => {
+    set({ error: null });
+    try {
+      const batch = writeBatch(db);
+      orderedIds.forEach((id, index) => {
+        const ref = doc(db, "categories", id);
+        batch.update(ref, { order: index });
+      });
+      await batch.commit();
+      await get().fetchCategories();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to reorder categories";
       set({ error: message });
       throw err;
     }

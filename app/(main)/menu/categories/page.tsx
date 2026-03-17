@@ -7,6 +7,7 @@ import { AddCategoryModal } from "@/components/menu/categories/AddCategoryModal"
 import { EditCategoryModal } from "@/components/menu/categories/EditCategoryModal";
 import { AddCategoryItemsModal } from "@/components/menu/categories/AddCategoryItemsModal";
 import { CategoryRow } from "@/components/menu/categories/CategoryRow";
+import { SortCategoriesModal } from "@/components/menu/categories/SortCategoriesModal";
 
 export default function CategoriesPage() {
   const {
@@ -17,6 +18,7 @@ export default function CategoriesPage() {
     updateCategory,
     deleteCategory,
     updateCategoryItemIds,
+    reorderCategories,
   } = useCategoriesStore();
   const { menuItems, updateMenuItemCategoryIds } = useMenuItemsStore();
   const [modalOpen, setModalOpen] = useState(false);
@@ -31,6 +33,7 @@ export default function CategoriesPage() {
     new Set(),
   );
   const [query, setQuery] = useState("");
+  const [sortModalOpen, setSortModalOpen] = useState(false);
 
   const filteredCategories = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -105,7 +108,7 @@ export default function CategoriesPage() {
 
   return (
     <div className="min-w-0">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+      <div className="flex flex-wrap items-center gap-4 mb-4">
         <button
           type="button"
           onClick={() => setModalOpen(true)}
@@ -113,6 +116,15 @@ export default function CategoriesPage() {
         >
           Add Category
         </button>
+        {categories.length > 1 && (
+          <button
+            type="button"
+            onClick={() => setSortModalOpen(true)}
+            className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+          >
+            Sort Category
+          </button>
+        )}
       </div>
       <div className="mb-4">
         <input
@@ -191,6 +203,12 @@ export default function CategoriesPage() {
         category={addItemsCategory}
         onClose={() => setAddItemsCategory(null)}
         onSave={handleSaveCategoryItems}
+      />
+      <SortCategoriesModal
+        open={sortModalOpen}
+        categories={categories}
+        onClose={() => setSortModalOpen(false)}
+        onSave={reorderCategories}
       />
     </div>
   );
