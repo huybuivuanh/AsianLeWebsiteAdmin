@@ -39,22 +39,32 @@ export function CategoryRow({
         <button
           type="button"
           onClick={onToggleExpand}
-          className="flex items-center gap-2 min-w-0 text-left group"
+          className="min-w-0 text-left group"
           aria-expanded={expanded}
         >
-          <span
-            className={`shrink-0 text-foreground/60 transition-transform ${
-              expanded ? "rotate-180" : ""
-            }`}
-            aria-hidden
-          >
-            ▼
-          </span>
-          <span className="font-bold text-foreground truncate">{category.name}</span>
-          {category.itemIds && category.itemIds.length > 0 && (
-            <span className="text-xs text-foreground/50 shrink-0">
-              ({category.itemIds.length} item{category.itemIds.length !== 1 ? "s" : ""})
+          <div className="flex items-center gap-2 min-w-0">
+            <span
+              className={`shrink-0 text-foreground/60 transition-transform ${
+                expanded ? "rotate-180" : ""
+              }`}
+              aria-hidden
+            >
+              ▼
             </span>
+            <span className="font-bold text-foreground truncate">
+              {category.name}
+            </span>
+            {category.itemIds && category.itemIds.length > 0 && (
+              <span className="text-xs text-foreground/50 shrink-0">
+                ({category.itemIds.length} item
+                {category.itemIds.length !== 1 ? "s" : ""})
+              </span>
+            )}
+          </div>
+          {category.description && (
+            <p className="mt-1 text-sm text-foreground/70 line-clamp-2">
+              {category.description}
+            </p>
           )}
         </button>
         <div className="flex items-center gap-2 shrink-0">
