@@ -22,6 +22,7 @@ export type AddMenuItemInput = {
   description: string;
   price: number;
   imageFile: File | null;
+  options?: string[];
   /** When updating: remove existing image from Storage and clear image field */
   removeImage?: boolean;
 };
@@ -81,12 +82,17 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
                 url: (rawImage as ImageItem).url,
               }
             : undefined;
+        const rawOptions = d.options;
+        const options: string[] | undefined = Array.isArray(rawOptions)
+          ? rawOptions.filter((x): x is string => typeof x === "string")
+          : undefined;
         return {
           id: doc.id,
           name: (d.name as string) ?? "",
           description: d.description as string | undefined,
           price,
           image,
+          options: options?.length ? options : undefined,
           categoryIds: d.categoryIds as string[] | undefined,
           createdAt: d.createdAt?.toDate?.() ?? undefined,
         };
@@ -101,7 +107,7 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
     }
   },
 
-  addMenuItem: async ({ name, description, price, imageFile }) => {
+  addMenuItem: async ({ name, description, price, imageFile, options }) => {
     set({ error: null });
     try {
       let image: ImageItem | undefined;
@@ -120,6 +126,7 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
         createdAt: serverTimestamp(),
       };
       if (image) payload.image = image;
+      if (options?.length) payload.options = options;
 
       await addDoc(collection(db, "menuItems"), payload);
       await get().fetchMenuItems();
@@ -133,7 +140,7 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
 
   updateMenuItem: async (
     id,
-    { name, description, price, imageFile, removeImage },
+    { name, description, price, imageFile, removeImage, options },
   ) => {
     set({ error: null });
     try {
@@ -143,6 +150,7 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
         description: (description ?? "").trim(),
         price: Number.isFinite(price) ? price : 0,
       };
+      if (options !== undefined) payload.options = options?.length ? options : [];
 
       if (removeImage && item?.image) {
         try {

@@ -22,6 +22,7 @@ declare global {
     description?: string;
     price: number;
     image?: ImageItem;
+    options?: string[];
     categoryIds?: string[];
     createdAt: Date;
   }

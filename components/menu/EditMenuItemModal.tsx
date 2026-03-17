@@ -22,6 +22,7 @@ export function EditMenuItemModal({
   const [priceInput, setPriceInput] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
+  const [options, setOptions] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -35,6 +36,7 @@ export function EditMenuItemModal({
       );
       setImageFile(null);
       setRemoveImage(false);
+      setOptions(item.options?.length ? [...item.options] : []);
       setFormError(null);
       setSubmitting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -45,11 +47,28 @@ export function EditMenuItemModal({
       setPriceInput("");
       setImageFile(null);
       setRemoveImage(false);
+      setOptions([]);
       setFormError(null);
       setSubmitting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
-  }, [open, item?.id]);
+  }, [open, item]);
+
+  function addOption() {
+    setOptions((prev) => [...prev, ""]);
+  }
+
+  function updateOption(index: number, value: string) {
+    setOptions((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+  }
+
+  function removeOption(index: number) {
+    setOptions((prev) => prev.filter((_, i) => i !== index));
+  }
 
   function parsePrice(): number {
     const s = priceInput.trim();
@@ -69,12 +88,14 @@ export function EditMenuItemModal({
     }
     setSubmitting(true);
     try {
+      const optionsList = options.map((o) => o.trim()).filter(Boolean);
       await onSave(item.id, {
         name: trimmedName,
         description,
         price: parsePrice(),
         imageFile,
         removeImage: removeImage || undefined,
+        options: optionsList,
       });
       onClose();
     } catch {
@@ -202,6 +223,43 @@ export function EditMenuItemModal({
               onChange={(e) => setPriceInput(e.target.value)}
               className="w-full rounded-lg border border-foreground/20 bg-background px-3 py-2 text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
             />
+          </div>
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <span className="text-sm font-medium text-foreground">
+                Options
+              </span>
+              <button
+                type="button"
+                onClick={addOption}
+                className="rounded-lg border border-foreground/20 px-3 py-1.5 text-sm font-medium text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+              >
+                Add Option
+              </button>
+            </div>
+            {options.length > 0 && (
+              <ul className="space-y-2">
+                {options.map((value, index) => (
+                  <li key={index} className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value={value}
+                      onChange={(e) => updateOption(index, e.target.value)}
+                      placeholder="e.g. medium, large"
+                      className="flex-1 rounded-lg border border-foreground/20 bg-background px-3 py-2 text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20 text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeOption(index)}
+                      className="shrink-0 rounded-lg border border-foreground/20 px-2 py-1.5 text-sm font-medium text-foreground hover:bg-foreground/5 focus:outline-none"
+                      aria-label="Remove option"
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           <div>
             <label
