@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useCategoriesStore } from "@/stores/categoriesStore";
 import { useMenuItemsStore } from "@/stores/menuItemsStore";
 import { AddCategoryModal } from "@/components/categories/AddCategoryModal";
@@ -30,6 +30,13 @@ export default function CategoriesPage() {
   const [expandedCategoryIds, setExpandedCategoryIds] = useState<Set<string>>(
     new Set(),
   );
+  const [query, setQuery] = useState("");
+
+  const filteredCategories = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return categories;
+    return categories.filter((c) => (c.name ?? "").toLowerCase().includes(q));
+  }, [categories, query]);
 
   async function handleDelete(category: FoodCategory) {
     if (!window.confirm(`Delete “${category.name}”? This cannot be undone.`))
@@ -106,6 +113,15 @@ export default function CategoriesPage() {
           Add Category
         </button>
       </div>
+      <div className="mb-4">
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search categories…"
+          className="w-full rounded-xl border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+          aria-label="Search categories"
+        />
+      </div>
 
       {error && (
         <p className="text-red-600 dark:text-red-400 text-sm mb-4" role="alert">
@@ -119,9 +135,18 @@ export default function CategoriesPage() {
         <p className="text-foreground/70 text-sm sm:text-base">
           No categories yet. Add data in Firestore to see them here.
         </p>
+      ) : filteredCategories.length === 0 ? (
+        <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.02] p-6">
+          <p className="text-foreground text-sm font-medium">
+            No categories match “{query.trim()}”.
+          </p>
+          <p className="mt-1 text-foreground/60 text-sm">
+            Try a different search.
+          </p>
+        </div>
       ) : (
         <ul className="space-y-2">
-          {categories
+          {filteredCategories
             .slice()
             .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
             .map((cat) => (

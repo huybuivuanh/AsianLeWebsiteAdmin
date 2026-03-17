@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMenuItemsStore } from "@/stores/menuItemsStore";
 import { useCategoriesStore } from "@/stores/categoriesStore";
 import { AddMenuItemModal } from "@/components/menu/AddMenuItemModal";
@@ -14,6 +14,13 @@ export default function MenuItemsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+
+  const filteredMenuItems = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return menuItems;
+    return menuItems.filter((m) => (m.name ?? "").toLowerCase().includes(q));
+  }, [menuItems, query]);
 
   async function handleDelete(item: MenuItem) {
     if (!window.confirm(`Delete “${item.name}”? This cannot be undone.`)) return;
@@ -44,6 +51,15 @@ export default function MenuItemsPage() {
           Add Item
         </button>
       </div>
+      <div className="mb-4">
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search menu items…"
+          className="w-full rounded-xl border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+          aria-label="Search menu items"
+        />
+      </div>
 
       {error && (
         <p className="text-red-600 dark:text-red-400 text-sm mb-4" role="alert">
@@ -62,9 +78,18 @@ export default function MenuItemsPage() {
             Add your first menu item, then assign it to categories.
           </p>
         </div>
+      ) : filteredMenuItems.length === 0 ? (
+        <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.02] p-6">
+          <p className="text-foreground text-sm font-medium">
+            No menu items match “{query.trim()}”.
+          </p>
+          <p className="mt-1 text-foreground/60 text-sm">
+            Try a different search.
+          </p>
+        </div>
       ) : (
         <ul className="grid grid-cols-1 lg:grid-cols-1 gap-3">
-          {menuItems.map((item) => (
+          {filteredMenuItems.map((item) => (
             <MenuItemRow
               key={item.id}
               item={item}

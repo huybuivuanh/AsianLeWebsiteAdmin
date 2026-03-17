@@ -9,6 +9,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { sortAlphabetically } from "@/lib/utils";
 
 interface CategoriesState {
   categories: FoodCategory[];
@@ -16,7 +17,11 @@ interface CategoriesState {
   error: string | null;
   fetchCategories: () => Promise<void>;
   addCategory: (name: string, description: string) => Promise<void>;
-  updateCategory: (id: string, name: string, description: string) => Promise<void>;
+  updateCategory: (
+    id: string,
+    name: string,
+    description: string,
+  ) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   updateCategoryItemIds: (id: string, itemIds: string[]) => Promise<void>;
   /** Clear cache on logout */
@@ -47,10 +52,15 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
           createdAt: d.createdAt?.toDate?.() ?? undefined,
         };
       });
-      set({ categories, loading: false });
+      const sortedCategories = sortAlphabetically<FoodCategory>(
+        categories,
+        (category) => category.name,
+      );
+      set({ categories: sortedCategories, loading: false });
     } catch (err) {
       set({
-        error: err instanceof Error ? err.message : "Failed to fetch categories",
+        error:
+          err instanceof Error ? err.message : "Failed to fetch categories",
         loading: false,
       });
     }
