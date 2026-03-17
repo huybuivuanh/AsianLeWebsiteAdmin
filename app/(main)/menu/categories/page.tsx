@@ -27,8 +27,8 @@ export default function CategoriesPage() {
     null,
   );
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(
-    null,
+  const [expandedCategoryIds, setExpandedCategoryIds] = useState<Set<string>>(
+    new Set(),
   );
 
   async function handleDelete(category: FoodCategory) {
@@ -128,9 +128,14 @@ export default function CategoriesPage() {
               <CategoryRow
                 key={cat.id}
                 category={cat}
-                expanded={expandedCategoryId === cat.id}
+                expanded={expandedCategoryIds.has(cat.id)}
                 onToggleExpand={() =>
-                  setExpandedCategoryId((id) => (id === cat.id ? null : cat.id))
+                  setExpandedCategoryIds((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(cat.id)) next.delete(cat.id);
+                    else next.add(cat.id);
+                    return next;
+                  })
                 }
                 onEdit={setEditingCategory}
                 onDelete={handleDelete}

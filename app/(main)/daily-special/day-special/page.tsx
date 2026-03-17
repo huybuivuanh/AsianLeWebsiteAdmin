@@ -30,7 +30,7 @@ export default function DaySpecial() {
   const [addItemsDaySpecial, setAddItemsDaySpecial] =
     useState<DailySpecial | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
   async function handleDelete(daySpecial: DailySpecial) {
     if (
@@ -133,11 +133,14 @@ export default function DaySpecial() {
             <DailySpecialRow
               key={daySpecial.id}
               daySpecial={daySpecial}
-              expanded={expandedId === daySpecial.id}
+              expanded={expandedIds.has(daySpecial.id)}
               onToggleExpand={() =>
-                setExpandedId((id) =>
-                  id === daySpecial.id ? null : daySpecial.id,
-                )
+                setExpandedIds((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(daySpecial.id)) next.delete(daySpecial.id);
+                  else next.add(daySpecial.id);
+                  return next;
+                })
               }
               onEdit={setEditingItem}
               onDelete={handleDelete}
