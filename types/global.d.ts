@@ -45,6 +45,12 @@ declare global {
     startTime: string;
     endTime: string;
   }
+  interface StoreHour {
+    id: string;
+    days: string;
+    time: string;
+    order: number;
+  }
 }
 
 export {};
