@@ -16,7 +16,7 @@ interface OptionGroupsState {
   error: string | null;
   fetchOptionGroups: () => Promise<void>;
   addOptionGroup: (data: Omit<OptionGroup, "id" | "createdAt">) => Promise<string>;
-  updateOptionGroup: (id: string, data: Partial<Omit<OptionGroup, "id" | "createdAt">>) => Promise<void>;
+  updateOptionGroup: (id: string, data: Record<string, unknown>) => Promise<void>;
   deleteOptionGroup: (id: string) => Promise<void>;
   reset: () => void;
 }

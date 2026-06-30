@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
 import { MenuSidebar } from "@/app/(main)/menu/MenuSidebar";
 import { DailySpecialSidebar } from "@/app/(main)/daily-special/DailySpecialSidebar";
+import { DemoMenuSidebar } from "@/app/(main)/demo-menu/DemoMenuSidebar";
 
 export default function MainLayout({
   children,
@@ -15,6 +16,7 @@ export default function MainLayout({
   const pathname = usePathname();
   const isMenuSection = pathname?.startsWith("/menu");
   const isDailySpecialSection = pathname?.startsWith("/daily-special");
+  const isDemoMenuSection = pathname?.startsWith("/demo-menu");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -40,6 +42,20 @@ export default function MainLayout({
         <Navbar />
         <div className="flex min-w-0 flex-1">
           <MenuSidebar />
+          <main className="min-w-0 flex-1 px-4 sm:px-6 py-4 sm:py-6">
+            {children}
+          </main>
+        </div>
+      </>
+    );
+  }
+
+  if (isDemoMenuSection) {
+    return (
+      <>
+        <Navbar />
+        <div className="flex min-w-0 flex-1">
+          <DemoMenuSidebar />
           <main className="min-w-0 flex-1 px-4 sm:px-6 py-4 sm:py-6">
             {children}
           </main>
