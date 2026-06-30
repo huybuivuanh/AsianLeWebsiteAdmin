@@ -1,4 +1,4 @@
-import type { DayOfWeek } from "@/types/enum";
+import type { DayOfWeek, KitchenType } from "@/types/enum";
 
 declare global {
   interface FoodCategory {
@@ -50,6 +50,74 @@ declare global {
     days: string;
     time: string;
     order: number;
+  }
+
+  interface OptionGroupId {
+    optionGroupId: string;
+    order: number;
+  }
+
+  interface MenuItemAvailability {
+    enabled: boolean;
+  }
+
+  interface DemoMenuItem {
+    id: string;
+    name: string;
+    description?: string;
+    price: number;
+    image?: ImageItem;
+    optionGroupIds?: OptionGroupId[];
+    categoryIds?: string[];
+    kitchenType: KitchenType;
+    availability: MenuItemAvailability;
+    isSoldOut: boolean;
+    createdAt: Date;
+  }
+
+  interface OptionGroup {
+    id: string;
+    name: string;
+    minSelection: number;
+    maxSelection: number;
+    multipleOptionQuantity: boolean;
+    optionIds?: string[];
+    itemIds?: string[];
+    defaultOptionId?: string;
+    createdAt: Date;
+  }
+
+  interface ItemOption {
+    id: string;
+    name: string;
+    price: number;
+    groupIds?: string[];
+    createdAt: Date;
+  }
+
+  interface DayHours {
+    isOpen: boolean;
+    open: string;
+    close: string;
+  }
+
+  interface StoreSettings {
+    pauseOrdering: boolean;
+    timezone: string;
+    hours: {
+      mon: DayHours;
+      tue: DayHours;
+      wed: DayHours;
+      thu: DayHours;
+      fri: DayHours;
+      sat: DayHours;
+      sun: DayHours;
+    };
+  }
+
+  interface MenuVersion {
+    version: number;
+    lastUpdated: Date | null;
   }
 }
 
