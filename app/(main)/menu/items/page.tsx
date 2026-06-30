@@ -6,6 +6,7 @@ import { useCategoriesStore } from "@/stores/categoriesStore";
 import { AddMenuItemModal } from "@/components/menu/items/AddMenuItemModal";
 import { EditMenuItemModal } from "@/components/menu/items/EditMenuItemModal";
 import { MenuItemRow } from "@/components/menu/items/MenuItemRow";
+import { PublishMenuButton } from "@/components/menu/PublishMenuButton";
 
 export default function MenuItemsPage() {
   const {
@@ -49,6 +50,7 @@ export default function MenuItemsPage() {
 
   return (
     <div className="min-w-0">
+      <PublishMenuButton />
       <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
         <button
           type="button"
