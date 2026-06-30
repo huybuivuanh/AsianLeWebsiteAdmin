@@ -20,6 +20,11 @@ import { useGalleryStore } from "@/stores/galleryStore";
 import { useUpdatesStore } from "@/stores/updatesStore";
 import { useDailySpecialsStore } from "@/stores/dailySpecialsStore";
 import { useSpecialItemsStore } from "@/stores/dailySpecialItemsStore";
+import { useOptionGroupsStore } from "@/stores/optionGroupsStore";
+import { useOptionsStore } from "@/stores/optionsStore";
+import { useMenuVersionStore } from "@/stores/menuVersionStore";
+import { useStoreSettingsStore } from "@/stores/storeSettingsStore";
+import { useDemoMenuItemsStore } from "@/stores/demoMenuItemsStore";
 
 type AuthContextValue = {
   user: User | null;
@@ -50,6 +55,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         void useUpdatesStore.getState().fetchUpdates();
         void useDailySpecialsStore.getState().fetchDailySpecials();
         void useSpecialItemsStore.getState().fetchSpecialItems();
+        void useOptionGroupsStore.getState().fetchOptionGroups();
+        void useOptionsStore.getState().fetchOptions();
+        void useMenuVersionStore.getState().fetchMenuVersion();
+        void useStoreSettingsStore.getState().fetchStoreSettings();
+        void useDemoMenuItemsStore.getState().fetchDemoMenuItems();
       } else {
         useCategoriesStore.getState().reset();
         useMenuItemsStore.getState().reset();
@@ -57,6 +67,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         useUpdatesStore.getState().reset();
         useDailySpecialsStore.getState().reset();
         useSpecialItemsStore.getState().reset();
+        useOptionGroupsStore.getState().reset();
+        useOptionsStore.getState().reset();
+        useMenuVersionStore.getState().reset();
+        useStoreSettingsStore.getState().reset();
+        useDemoMenuItemsStore.getState().reset();
       }
     });
     return () => unsubscribe();
@@ -94,6 +109,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useUpdatesStore.getState().reset();
     useDailySpecialsStore.getState().reset();
     useSpecialItemsStore.getState().reset();
+    useOptionGroupsStore.getState().reset();
+    useOptionsStore.getState().reset();
+    useMenuVersionStore.getState().reset();
+    useStoreSettingsStore.getState().reset();
+    useDemoMenuItemsStore.getState().reset();
   }, []);
 
   const clearError = useCallback(() => setError(null), []);
