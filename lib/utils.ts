@@ -24,6 +24,12 @@ export function formatDayOfWeekLabel(day: string): string {
   return day.charAt(0).toUpperCase() + day.slice(1).toLowerCase();
 }
 
+export function matchesQuery(q: string, ...fields: string[]): boolean {
+  if (!q.trim()) return true;
+  const term = q.trim().toLowerCase();
+  return fields.some((f) => f.toLowerCase().includes(term));
+}
+
 /**
  * Returns a new array sorted alphabetically by a key.
  * Defaults to case-insensitive comparison with numeric sorting.
