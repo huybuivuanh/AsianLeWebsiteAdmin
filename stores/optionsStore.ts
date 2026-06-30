@@ -16,7 +16,7 @@ interface OptionsState {
   error: string | null;
   fetchOptions: () => Promise<void>;
   addOption: (data: Omit<ItemOption, "id" | "createdAt">) => Promise<string>;
-  updateOption: (id: string, data: Partial<Omit<ItemOption, "id" | "createdAt">>) => Promise<void>;
+  updateOption: (id: string, data: Record<string, unknown>) => Promise<void>;
   deleteOption: (id: string) => Promise<void>;
   reset: () => void;
 }
