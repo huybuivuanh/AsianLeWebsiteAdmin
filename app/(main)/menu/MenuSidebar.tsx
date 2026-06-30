@@ -5,7 +5,9 @@ import { usePathname } from "next/navigation";
 
 const menuNavLinks = [
   { href: "/menu/categories", label: "Categories" },
-  { href: "/menu/items", label: "Menu Item" },
+  { href: "/menu/items", label: "Menu Items" },
+  { href: "/menu/option-groups", label: "Option Groups" },
+  { href: "/menu/options", label: "Options" },
 ] as const;
 
 export function MenuSidebar() {
