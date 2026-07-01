@@ -5,7 +5,6 @@ import { useDemoMenuItemsStore } from "@/stores/demoMenuItemsStore";
 import { DemoMenuItemRow } from "@/components/demo-menu/DemoMenuItemRow";
 import { AddDemoMenuItemModal } from "@/components/demo-menu/AddDemoMenuItemModal";
 import { EditDemoMenuItemModal } from "@/components/demo-menu/EditDemoMenuItemModal";
-import { normalizeMenuItemOptionGroupIds } from "@/lib/menu-item-option-groups";
 
 export default function DemoMenuItemsPage() {
   const {
@@ -36,10 +35,6 @@ export default function DemoMenuItemsPage() {
     } finally {
       setDeletingId(null);
     }
-  }
-
-  function getOptionGroupCount(item: DemoMenuItem): number {
-    return normalizeMenuItemOptionGroupIds(item.optionGroupIds)?.length ?? 0;
   }
 
   return (
@@ -91,7 +86,6 @@ export default function DemoMenuItemsPage() {
             <DemoMenuItemRow
               key={item.id}
               item={item}
-              optionGroupCount={getOptionGroupCount(item)}
               onEdit={setEditingItem}
               onDelete={handleDelete}
               deleting={deletingId === item.id}
