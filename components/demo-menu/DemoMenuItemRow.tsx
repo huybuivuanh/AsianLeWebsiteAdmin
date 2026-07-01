@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { formatPriceCAD } from "@/lib/utils";
+import { formatPriceCAD, formatTimeHHmmTo12h } from "@/lib/utils";
 
 type DemoMenuItemRowProps = {
   item: DemoMenuItem;
@@ -46,15 +46,15 @@ export function DemoMenuItemRow({
             {item.kitchenType}
           </span>
 
-          {!item.availability.enabled && (
+          {item.availability && (
             <span className="text-xs rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 font-medium text-amber-700">
-              Unavailable
+              {formatTimeHHmmTo12h(item.availability.start)}–{formatTimeHHmmTo12h(item.availability.end)}
             </span>
           )}
 
-          {item.isSoldOut && (
+          {item.soldOut && (
             <span className="text-xs rounded-full border border-red-300 bg-red-50 px-2 py-0.5 font-medium text-red-700">
-              Sold out
+              Sold out{item.soldOut.indefinite ? "" : ` · ${item.soldOut.hours}h`}
             </span>
           )}
 

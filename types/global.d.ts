@@ -58,8 +58,17 @@ declare global {
   }
 
   interface MenuItemAvailability {
-    enabled: boolean;
+    start: string; // "11:00" — 24h HH:mm, daily window (e.g. lunch specials)
+    end: string; // "14:00"
   }
+
+  interface MenuItemSoldOut {
+    since: Date;
+    hours?: number;
+    indefinite: boolean;
+  }
+
+  type DemoCategory = FoodCategory;
 
   interface DemoMenuItem {
     id: string;
@@ -70,8 +79,8 @@ declare global {
     optionGroupIds?: OptionGroupId[];
     categoryIds?: string[];
     kitchenType: KitchenType;
-    availability: MenuItemAvailability;
-    isSoldOut: boolean;
+    availability?: MenuItemAvailability;
+    soldOut?: MenuItemSoldOut;
     createdAt: Date;
   }
 
@@ -92,6 +101,8 @@ declare global {
     name: string;
     price: number;
     groupIds?: string[];
+    availability?: MenuItemAvailability;
+    soldOut?: MenuItemSoldOut;
     createdAt: Date;
   }
 
@@ -103,8 +114,8 @@ declare global {
 
   interface Holiday {
     id: string;
-    from: string;  // YYYY-MM-DD
-    to?: string;   // YYYY-MM-DD — if absent, single day
+    from: string; // YYYY-MM-DD
+    to?: string; // YYYY-MM-DD — if absent, single day
   }
 
   interface StoreSettings {

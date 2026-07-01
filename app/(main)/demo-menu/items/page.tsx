@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { useDemoMenuItemsStore } from "@/stores/demoMenuItemsStore";
-import { useOptionGroupsStore } from "@/stores/optionGroupsStore";
 import { DemoMenuItemRow } from "@/components/demo-menu/DemoMenuItemRow";
 import { AddDemoMenuItemModal } from "@/components/demo-menu/AddDemoMenuItemModal";
 import { EditDemoMenuItemModal } from "@/components/demo-menu/EditDemoMenuItemModal";
@@ -17,7 +16,6 @@ export default function DemoMenuItemsPage() {
     updateDemoMenuItem,
     deleteDemoMenuItem,
   } = useDemoMenuItemsStore();
-  const { optionGroups } = useOptionGroupsStore();
 
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DemoMenuItem | null>(null);

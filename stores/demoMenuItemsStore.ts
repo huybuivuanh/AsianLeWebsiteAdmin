@@ -24,8 +24,8 @@ export type DemoMenuItemInput = {
   price: number;
   imageFile: File | null;
   kitchenType: KitchenType;
-  availability: MenuItemAvailability;
-  isSoldOut: boolean;
+  availability?: MenuItemAvailability;
+  soldOut?: MenuItemSoldOut;
   categoryIds?: string[];
   removeImage?: boolean;
 };
@@ -65,6 +65,9 @@ export const useDemoMenuItemsStore = create<DemoMenuItemsState>((set, get) => ({
       const snapshot = await getDocs(collection(db, "demoMenuItems"));
       const items: DemoMenuItem[] = snapshot.docs.map((doc) => {
         const d = doc.data();
+        const rawSoldOut = d.soldOut as
+          | { since?: { toDate?: () => Date }; hours?: number; indefinite?: boolean }
+          | undefined;
         return {
           id: doc.id,
           name: (d.name as string) ?? "",
@@ -74,8 +77,14 @@ export const useDemoMenuItemsStore = create<DemoMenuItemsState>((set, get) => ({
           optionGroupIds: d.optionGroupIds as DemoMenuItem["optionGroupIds"] | undefined,
           categoryIds: d.categoryIds as string[] | undefined,
           kitchenType: (d.kitchenType as KitchenType) ?? KitchenType.Other,
-          availability: (d.availability as DemoMenuItem["availability"]) ?? { enabled: true },
-          isSoldOut: (d.isSoldOut as boolean) ?? false,
+          availability: d.availability as DemoMenuItem["availability"] | undefined,
+          soldOut: rawSoldOut
+            ? {
+                since: rawSoldOut.since?.toDate?.() ?? new Date(),
+                hours: rawSoldOut.hours,
+                indefinite: !!rawSoldOut.indefinite,
+              }
+            : undefined,
           createdAt: d.createdAt?.toDate?.() ?? new Date(),
         };
       });
@@ -88,7 +97,7 @@ export const useDemoMenuItemsStore = create<DemoMenuItemsState>((set, get) => ({
     }
   },
 
-  addDemoMenuItem: async ({ name, description, price, imageFile, kitchenType, availability, isSoldOut, categoryIds }) => {
+  addDemoMenuItem: async ({ name, description, price, imageFile, kitchenType, availability, soldOut, categoryIds }) => {
     set({ error: null });
     try {
       let image: ImageItem | undefined;
@@ -105,12 +114,12 @@ export const useDemoMenuItemsStore = create<DemoMenuItemsState>((set, get) => ({
         description: (description ?? "").trim(),
         price: Number.isFinite(price) ? price : 0,
         kitchenType,
-        availability,
-        isSoldOut,
         createdAt: serverTimestamp(),
       };
       if (image) payload.image = image;
       if (categoryIds?.length) payload.categoryIds = categoryIds;
+      if (availability) payload.availability = availability;
+      if (soldOut) payload.soldOut = soldOut;
 
       await addDoc(collection(db, "demoMenuItems"), payload);
       await get().fetchDemoMenuItems();
@@ -121,7 +130,7 @@ export const useDemoMenuItemsStore = create<DemoMenuItemsState>((set, get) => ({
     }
   },
 
-  updateDemoMenuItem: async (id, { name, description, price, imageFile, removeImage, kitchenType, availability, isSoldOut, categoryIds }) => {
+  updateDemoMenuItem: async (id, { name, description, price, imageFile, removeImage, kitchenType, availability, soldOut, categoryIds }) => {
     set({ error: null });
     try {
       const item = get().items.find((m) => m.id === id);
@@ -130,8 +139,8 @@ export const useDemoMenuItemsStore = create<DemoMenuItemsState>((set, get) => ({
         description: (description ?? "").trim(),
         price: Number.isFinite(price) ? price : 0,
         kitchenType,
-        availability,
-        isSoldOut,
+        availability: availability ?? deleteField(),
+        soldOut: soldOut ?? deleteField(),
       };
       if (categoryIds !== undefined) payload.categoryIds = categoryIds;
 

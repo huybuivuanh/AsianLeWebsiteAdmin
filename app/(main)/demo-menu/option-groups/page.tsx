@@ -7,7 +7,6 @@ import { useDemoMenuItemsStore } from "@/stores/demoMenuItemsStore";
 import { OptionGroupRow } from "@/components/menu/option-groups/OptionGroupRow";
 import { AddOptionGroupModal } from "@/components/menu/option-groups/AddOptionGroupModal";
 import { itemReferencesOptionGroup, removeOptionGroupRef } from "@/lib/menu-item-option-groups";
-import { patchClearDefaultIfOptionRemoved } from "@/lib/option-group-updates";
 import { PublishMenuButton } from "@/components/menu/PublishMenuButton";
 
 export default function OptionGroupsPage() {
@@ -20,7 +19,7 @@ export default function OptionGroupsPage() {
     deleteOptionGroup,
   } = useOptionGroupsStore();
   const { options, addOption, updateOption } = useOptionsStore();
-  const { items: demoItems, updateDemoMenuItem } = useDemoMenuItemsStore();
+  const { items: demoItems, updateDemoMenuItemField } = useDemoMenuItemsStore();
   const [addModalOpen, setAddModalOpen] = useState(false);
 
   async function handleDeleteGroup(group: OptionGroup) {
@@ -30,7 +29,7 @@ export default function OptionGroupsPage() {
         ...demoItems
           .filter((item) => itemReferencesOptionGroup(item, group.id))
           .map((item) =>
-            updateDemoMenuItem(item.id, {
+            updateDemoMenuItemField(item.id, {
               optionGroupIds: removeOptionGroupRef(item, group.id),
             }),
           ),

@@ -4,7 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const demoMenuNavLinks = [
+  { href: "/demo-menu/categories", label: "Categories" },
   { href: "/demo-menu/items", label: "Demo Items" },
+  { href: "/demo-menu/option-groups", label: "Option Groups" },
+  { href: "/demo-menu/options", label: "Options" },
 ] as const;
 
 export function DemoMenuSidebar() {

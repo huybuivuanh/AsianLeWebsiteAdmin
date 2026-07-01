@@ -25,6 +25,7 @@ import { useOptionsStore } from "@/stores/optionsStore";
 import { useMenuVersionStore } from "@/stores/menuVersionStore";
 import { useStoreSettingsStore } from "@/stores/storeSettingsStore";
 import { useDemoMenuItemsStore } from "@/stores/demoMenuItemsStore";
+import { useDemoCategoriesStore } from "@/stores/demoCategoriesStore";
 
 type AuthContextValue = {
   user: User | null;
@@ -60,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         void useMenuVersionStore.getState().fetchMenuVersion();
         void useStoreSettingsStore.getState().fetchStoreSettings();
         void useDemoMenuItemsStore.getState().fetchDemoMenuItems();
+        void useDemoCategoriesStore.getState().fetchDemoCategories();
       } else {
         useCategoriesStore.getState().reset();
         useMenuItemsStore.getState().reset();
@@ -72,6 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         useMenuVersionStore.getState().reset();
         useStoreSettingsStore.getState().reset();
         useDemoMenuItemsStore.getState().reset();
+        useDemoCategoriesStore.getState().reset();
       }
     });
     return () => unsubscribe();
@@ -114,6 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useMenuVersionStore.getState().reset();
     useStoreSettingsStore.getState().reset();
     useDemoMenuItemsStore.getState().reset();
+    useDemoCategoriesStore.getState().reset();
   }, []);
 
   const clearError = useCallback(() => setError(null), []);
