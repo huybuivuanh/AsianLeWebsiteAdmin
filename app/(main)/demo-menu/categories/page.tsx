@@ -8,6 +8,7 @@ import { EditDemoCategoryModal } from "@/components/demo-menu/categories/EditDem
 import { AddDemoCategoryItemsModal } from "@/components/demo-menu/categories/AddDemoCategoryItemsModal";
 import { DemoCategoryRow } from "@/components/demo-menu/categories/DemoCategoryRow";
 import { SortDemoCategoriesModal } from "@/components/demo-menu/categories/SortDemoCategoriesModal";
+import { PublishMenuButton } from "@/components/menu/PublishMenuButton";
 
 export default function DemoCategoriesPage() {
   const {
@@ -108,13 +109,13 @@ export default function DemoCategoriesPage() {
 
   return (
     <div className="min-w-0">
-      <div className="flex flex-wrap items-center gap-4 mb-4">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-foreground/10 bg-background px-4 py-3 mb-4">
         <button
           type="button"
           onClick={() => setModalOpen(true)}
           className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20"
         >
-          Add Category
+          + Add Category
         </button>
         {categories.length > 1 && (
           <button
@@ -125,6 +126,7 @@ export default function DemoCategoriesPage() {
             Sort Category
           </button>
         )}
+        <PublishMenuButton />
       </div>
       <div className="mb-4">
         <input

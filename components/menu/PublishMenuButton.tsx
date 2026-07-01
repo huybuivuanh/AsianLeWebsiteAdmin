@@ -29,20 +29,7 @@ export function PublishMenuButton() {
     : null;
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-foreground/10 bg-foreground/[0.02] px-4 py-3 mb-4">
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-foreground">
-          Menu Version {version?.version ?? "—"}
-        </p>
-        {lastUpdated ? (
-          <p className="text-xs text-foreground/50">Last published {lastUpdated}</p>
-        ) : (
-          <p className="text-xs text-foreground/50">Never published</p>
-        )}
-        {error && (
-          <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">{error}</p>
-        )}
-      </div>
+    <>
       <button
         type="button"
         onClick={handlePublish}
@@ -51,6 +38,25 @@ export function PublishMenuButton() {
       >
         {publishing ? "Publishing…" : "Publish Menu"}
       </button>
-    </div>
+      <span className="flex flex-wrap items-center gap-1.5 min-w-0 text-xs text-foreground/60">
+        <span className="shrink-0 rounded-full border border-foreground/15 bg-foreground/5 px-2 py-0.5 text-xs font-semibold text-foreground/80">
+          v{version?.version ?? "—"}
+        </span>
+        {lastUpdated ? (
+          <>
+            <span aria-hidden="true">·</span>
+            <span>
+              Last published{" "}
+              <span className="font-medium text-foreground">{lastUpdated}</span>
+            </span>
+          </>
+        ) : (
+          <span>Never published</span>
+        )}
+      </span>
+      {error && (
+        <span className="text-xs text-red-600 dark:text-red-400">{error}</span>
+      )}
+    </>
   );
 }

@@ -1,91 +1,73 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { matchesQuery, formatPriceCAD } from "@/lib/utils";
-
-type Mode = "new" | "existing";
+import { useState, useEffect, useMemo } from "react";
+import { formatPriceCAD } from "@/lib/utils";
 
 type AddOptionToGroupModalProps = {
   open: boolean;
   group: OptionGroup | null;
-  existingOptions: ItemOption[];
+  options: ItemOption[];
   onClose: () => void;
-  onCreateAndLink: (group: OptionGroup, name: string, price: number) => Promise<void>;
-  onLinkExisting: (group: OptionGroup, option: ItemOption) => Promise<void>;
+  onSave: (groupId: string, optionIds: string[]) => Promise<void>;
 };
 
 export function AddOptionToGroupModal({
   open,
   group,
-  existingOptions,
+  options,
   onClose,
-  onCreateAndLink,
-  onLinkExisting,
+  onSave,
 }: AddOptionToGroupModalProps) {
-  const [mode, setMode] = useState<Mode>("new");
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [search, setSearch] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!open) {
-      setMode("new");
-      setName("");
-      setPrice("");
-      setSearchQuery("");
+    if (open && group) {
+      setSelectedIds(group.optionIds ?? []);
+      setSearch("");
       setFormError(null);
       setSubmitting(false);
     }
-  }, [open]);
+    if (!open) {
+      setSearch("");
+      setSelectedIds([]);
+      setFormError(null);
+      setSubmitting(false);
+    }
+  }, [open, group]);
+
+  const filteredOptions = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return options;
+    return options.filter((o) => o.name.toLowerCase().includes(q));
+  }, [options, search]);
+
+  function toggleOption(id: string) {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!group) return;
+    setFormError(null);
+    setSubmitting(true);
+    try {
+      await onSave(group.id, selectedIds);
+      onClose();
+    } catch {
+      setFormError("Something went wrong. Try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   function handleBackdropClose() {
     if (!submitting) onClose();
   }
-
-  async function handleCreateSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!group) return;
-    setFormError(null);
-    if (!name.trim()) {
-      setFormError("Name is required.");
-      return;
-    }
-    const parsedPrice = parseFloat(price);
-    if (isNaN(parsedPrice) || parsedPrice < 0) {
-      setFormError("Price must be a valid number ≥ 0.");
-      return;
-    }
-    setSubmitting(true);
-    try {
-      await onCreateAndLink(group, name.trim(), parsedPrice);
-      onClose();
-    } catch {
-      setFormError("Something went wrong. Try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  async function handleLinkExisting(option: ItemOption) {
-    if (!group || submitting) return;
-    setSubmitting(true);
-    setFormError(null);
-    try {
-      await onLinkExisting(group, option);
-      onClose();
-    } catch {
-      setFormError("Something went wrong. Try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  const alreadyInGroup = new Set(group?.optionIds ?? []);
-  const availableOptions = existingOptions.filter(
-    (o) => !alreadyInGroup.has(o.id) && matchesQuery(searchQuery, o.name),
-  );
 
   if (!open || !group) return null;
 
@@ -96,139 +78,99 @@ export function AddOptionToGroupModal({
       role="dialog"
       aria-labelledby="add-option-to-group-title"
     >
-      <div className="absolute inset-0" onClick={handleBackdropClose} aria-hidden="true" />
-      <div className="relative w-full max-w-md rounded-xl bg-background border border-foreground/10 shadow-lg p-6">
-        <h2 id="add-option-to-group-title" className="text-lg font-semibold text-foreground mb-1">
-          Add Option
-        </h2>
-        <p className="text-sm text-foreground/60 mb-4">
-          Group: <span className="font-medium text-foreground">{group.name}</span>
-        </p>
-
-        {/* Mode tabs */}
-        <div className="flex gap-1 mb-4 rounded-lg border border-foreground/10 p-1">
+      <div
+        className="absolute inset-0"
+        onClick={handleBackdropClose}
+        aria-hidden="true"
+      />
+      <div className="relative w-full max-w-3xl max-h-[85dvh] flex flex-col rounded-2xl bg-background border border-foreground/10 shadow-xl">
+        <div className="px-6 py-4 border-b border-foreground/10 flex items-center justify-between gap-4 shrink-0">
+          <h2
+            id="add-option-to-group-title"
+            className="text-lg font-semibold text-foreground truncate"
+          >
+            Add Options to {group.name}
+          </h2>
           <button
             type="button"
-            onClick={() => { setMode("new"); setFormError(null); }}
-            className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              mode === "new"
-                ? "bg-foreground text-background"
-                : "text-foreground/70 hover:text-foreground"
-            }`}
+            onClick={handleBackdropClose}
+            className="shrink-0 rounded p-1 text-foreground/70 hover:bg-foreground/10 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+            aria-label="Close"
           >
-            Create new
-          </button>
-          <button
-            type="button"
-            onClick={() => { setMode("existing"); setFormError(null); }}
-            className={`flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              mode === "existing"
-                ? "bg-foreground text-background"
-                : "text-foreground/70 hover:text-foreground"
-            }`}
-          >
-            Add existing
+            ×
           </button>
         </div>
 
-        {formError && (
-          <p className="text-red-600 dark:text-red-400 text-sm mb-3" role="alert">{formError}</p>
-        )}
-
-        {mode === "new" ? (
-          <form onSubmit={handleCreateSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="new-option-name" className="block text-sm font-medium text-foreground mb-1">
-                Name <span className="text-red-500">*</span>
-              </label>
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="px-6 pt-4 pb-3 shrink-0 flex flex-col gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <input
-                id="new-option-name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                autoFocus
-                className="w-full rounded-lg border border-foreground/20 bg-background px-3 py-2 text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
-                placeholder="e.g. Extra Spicy"
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search options…"
+                className="w-full sm:w-80 rounded-xl border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+                aria-label="Search options"
               />
+              <span className="text-xs text-foreground/60">
+                {selectedIds.length} selected
+              </span>
             </div>
-            <div>
-              <label htmlFor="new-option-price" className="block text-sm font-medium text-foreground mb-1">
-                Price (CAD) <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="new-option-price"
-                type="number"
-                min={0}
-                step={0.01}
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                required
-                className="w-full rounded-lg border border-foreground/20 bg-background px-3 py-2 text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
-                placeholder="0.00"
-              />
-            </div>
-            <div className="flex gap-2 justify-end pt-2">
-              <button
-                type="button"
-                onClick={handleBackdropClose}
-                disabled={submitting}
-                className="rounded-lg border border-foreground/20 px-4 py-2 text-sm font-medium text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
+            {formError && (
+              <p
+                className="text-red-600 dark:text-red-400 text-sm"
+                role="alert"
               >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
-              >
-                {submitting ? "Saving…" : "Create & Add"}
-              </button>
-            </div>
-          </form>
-        ) : (
-          <div className="space-y-3">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search options…"
-              className="w-full rounded-lg border border-foreground/20 bg-background px-3 py-2 text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
-            />
-            <div className="max-h-60 overflow-y-auto space-y-1">
-              {availableOptions.length === 0 ? (
-                <p className="text-sm text-foreground/50 py-2">
-                  {existingOptions.length === 0
-                    ? "No options created yet."
-                    : "All options are already in this group."}
-                </p>
-              ) : (
-                availableOptions.map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    disabled={submitting}
-                    onClick={() => handleLinkExisting(option)}
-                    className="w-full flex items-center justify-between rounded-lg border border-foreground/10 px-3 py-2.5 text-sm hover:bg-foreground/5 disabled:opacity-50 text-left"
-                  >
-                    <span className="font-medium text-foreground">{option.name}</span>
-                    <span className="text-foreground/60">{formatPriceCAD(option.price)}</span>
-                  </button>
-                ))
-              )}
-            </div>
-            <div className="flex justify-end pt-1">
-              <button
-                type="button"
-                onClick={handleBackdropClose}
-                disabled={submitting}
-                className="rounded-lg border border-foreground/20 px-4 py-2 text-sm font-medium text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
-              >
-                Cancel
-              </button>
-            </div>
+                {formError}
+              </p>
+            )}
           </div>
-        )}
+
+          <div className="flex-1 overflow-y-auto px-6 pb-4 min-h-0">
+            {filteredOptions.length === 0 ? (
+              <p className="text-sm text-foreground/60 py-6">
+                {search.trim()
+                  ? "No options match your search."
+                  : "No options created yet."}
+              </p>
+            ) : (
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 py-1">
+                {filteredOptions.map((option) => (
+                  <li key={option.id}>
+                    <label className="flex items-center gap-3 py-2.5 px-3 rounded-xl border border-foreground/10 hover:bg-foreground/5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(option.id)}
+                        onChange={() => toggleOption(option.id)}
+                        className="rounded border-foreground/30 text-foreground focus:ring-foreground/20"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-medium text-foreground truncate">
+                            {option.name}
+                          </span>
+                          <span className="text-xs font-semibold text-foreground/80 rounded-full border border-foreground/15 bg-foreground/5 px-2 py-0.5 shrink-0">
+                            {formatPriceCAD(option.price)}
+                          </span>
+                        </div>
+                      </div>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="px-6 py-4 border-t border-foreground/10 flex justify-end shrink-0">
+            <button
+              type="submit"
+              disabled={submitting}
+              className="rounded-xl bg-foreground text-background px-5 py-2.5 text-sm font-semibold hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
+            >
+              {submitting ? "Saving…" : "Save Selection"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

@@ -12,8 +12,7 @@ type OptionGroupRowProps = {
   options: ItemOption[];
   onUpdate: (id: string, data: Record<string, unknown>) => Promise<void>;
   onDelete: (group: OptionGroup) => Promise<void>;
-  onCreateAndLinkOption: (group: OptionGroup, name: string, price: number) => Promise<void>;
-  onLinkExistingOption: (group: OptionGroup, option: ItemOption) => Promise<void>;
+  onSaveGroupOptions: (groupId: string, optionIds: string[]) => Promise<void>;
   onUpdateOption: (id: string, data: Record<string, unknown>) => Promise<void>;
 };
 
@@ -22,8 +21,7 @@ export function OptionGroupRow({
   options,
   onUpdate,
   onDelete,
-  onCreateAndLinkOption,
-  onLinkExistingOption,
+  onSaveGroupOptions,
   onUpdateOption,
 }: OptionGroupRowProps) {
   const [expanded, setExpanded] = useState(false);
@@ -70,21 +68,28 @@ export function OptionGroupRow({
     <>
       <li className="rounded-lg border border-foreground/10 bg-foreground/[0.02]">
         {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-          <button
-            type="button"
-            onClick={() => setExpanded((v) => !v)}
-            className="flex items-center gap-2 min-w-0 text-left"
-          >
-            <span className="text-foreground/40 text-xs select-none">{expanded ? "▼" : "▶"}</span>
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => setExpanded((v) => !v)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setExpanded((v) => !v);
+            }
+          }}
+          aria-expanded={expanded}
+          className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 hover:bg-foreground/[0.03]"
+        >
+          <div className="flex items-center gap-2 min-w-0">
             <span className="text-sm font-medium text-foreground truncate">{group.name}</span>
             {isUnused && (
               <span className="shrink-0 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
                 Unused
               </span>
             )}
-          </button>
-          <div className="flex gap-2 shrink-0">
+          </div>
+          <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
             <button
               type="button"
               onClick={() => setEditOpen(true)}
@@ -154,7 +159,7 @@ export function OptionGroupRow({
               onClick={() => setAddOptionOpen(true)}
               className="mt-1 rounded-lg border border-foreground/20 px-3 py-1.5 text-sm font-medium text-foreground hover:bg-foreground/5"
             >
-              + Add Option
+              + Add Options
             </button>
           </div>
         )}
@@ -169,10 +174,9 @@ export function OptionGroupRow({
       <AddOptionToGroupModal
         open={addOptionOpen}
         group={group}
-        existingOptions={options}
+        options={options}
         onClose={() => setAddOptionOpen(false)}
-        onCreateAndLink={onCreateAndLinkOption}
-        onLinkExisting={onLinkExistingOption}
+        onSave={onSaveGroupOptions}
       />
     </>
   );

@@ -10,7 +10,10 @@ import {
   getOrderedOptionGroupRefs,
   removeOptionGroupRef,
 } from "@/lib/menu-item-option-groups";
-import { patchClearDefaultIfOptionRemoved } from "@/lib/option-group-updates";
+import {
+  patchClearDefaultIfOptionRemoved,
+  patchClearDefaultIfNotInOptionIds,
+} from "@/lib/option-group-updates";
 import { AddOptionToGroupModal } from "@/components/menu/option-groups/AddOptionToGroupModal";
 import { AddItemOptionGroupsModal } from "@/components/demo-menu/AddItemOptionGroupsModal";
 import { SortItemOptionGroupsModal } from "@/components/demo-menu/SortItemOptionGroupsModal";
@@ -29,7 +32,7 @@ export function DemoMenuItemRow({
   deleting = false,
 }: DemoMenuItemRowProps) {
   const { optionGroups, updateOptionGroup } = useOptionGroupsStore();
-  const { options, addOption, updateOption } = useOptionsStore();
+  const { options, updateOption } = useOptionsStore();
   const { updateDemoMenuItemField } = useDemoMenuItemsStore();
 
   const [expanded, setExpanded] = useState(false);
@@ -74,22 +77,33 @@ export function DemoMenuItemRow({
     }
   }
 
-  async function handleCreateAndLinkOption(group: OptionGroup, name: string, price: number) {
-    const optionId = await addOption({ name, price, groupIds: [group.id] });
-    await updateOptionGroup(group.id, {
-      optionIds: [...(group.optionIds ?? []), optionId],
-    });
-  }
+  async function handleSaveGroupOptions(groupId: string, optionIds: string[]) {
+    const group = optionGroups.find((g) => g.id === groupId);
+    const previousOptionIds = group?.optionIds ?? [];
+    const added = optionIds.filter((id) => !previousOptionIds.includes(id));
+    const removed = previousOptionIds.filter((id) => !optionIds.includes(id));
 
-  async function handleLinkExistingOption(group: OptionGroup, option: ItemOption) {
-    await Promise.all([
-      updateOptionGroup(group.id, {
-        optionIds: [...(group.optionIds ?? []), option.id],
-      }),
-      updateOption(option.id, {
-        groupIds: [...(option.groupIds ?? []), group.id],
-      }),
-    ]);
+    await updateOptionGroup(groupId, {
+      optionIds,
+      ...(group ? patchClearDefaultIfNotInOptionIds(group, optionIds) : {}),
+    });
+
+    for (const optionId of removed) {
+      const option = options.find((o) => o.id === optionId);
+      if (option) {
+        const nextGroupIds = (option.groupIds ?? []).filter((id) => id !== groupId);
+        await updateOption(optionId, { groupIds: nextGroupIds });
+      }
+    }
+    for (const optionId of added) {
+      const option = options.find((o) => o.id === optionId);
+      if (option) {
+        const nextGroupIds = (option.groupIds ?? []).includes(groupId)
+          ? option.groupIds!
+          : [...(option.groupIds ?? []), groupId];
+        await updateOption(optionId, { groupIds: nextGroupIds });
+      }
+    }
   }
 
   async function handleSaveOptionGroups(optionGroupIds: OptionGroupId[]) {
@@ -110,7 +124,19 @@ export function DemoMenuItemRow({
 
   return (
     <li className="rounded-2xl border border-foreground/10 bg-foreground/[0.02] overflow-hidden">
-      <div className="px-4 py-3 flex flex-wrap items-start gap-3">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setExpanded((v) => !v)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setExpanded((v) => !v);
+          }
+        }}
+        aria-expanded={expanded}
+        className="px-4 py-3 flex flex-wrap items-start gap-3 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 hover:bg-foreground/[0.03]"
+      >
         <Image
           src={item.image?.url ?? "/Soup Bowl Icon.jpg"}
           alt={item.name}
@@ -120,27 +146,16 @@ export function DemoMenuItemRow({
           className="w-16 h-16 object-cover rounded-md shrink-0"
         />
 
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          className="min-w-0 flex-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 rounded-xl -mx-1 px-1 py-1"
-          aria-expanded={expanded}
-        >
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span
-              className={`shrink-0 text-foreground/60 transition-transform ${expanded ? "rotate-180" : ""}`}
-              aria-hidden
-            >
-              ▼
-            </span>
             <span className="font-bold text-foreground">{item.name}</span>
             <span className="text-sm font-semibold text-foreground/80 rounded-full border border-foreground/15 bg-foreground/5 px-2 py-0.5">
               {formatPriceCAD(item.price)}
             </span>
           </div>
 
-          {item.description && (
-            <p className="mt-1 text-sm text-foreground/70 line-clamp-2">{item.description}</p>
+          {expanded && item.description && (
+            <p className="mt-1 text-sm text-foreground/70">{item.description}</p>
           )}
 
           <div className="flex flex-wrap gap-1.5 mt-2">
@@ -166,9 +181,9 @@ export function DemoMenuItemRow({
               </span>
             )}
           </div>
-        </button>
+        </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
           <button
             type="button"
             onClick={() => onEdit(item)}
@@ -271,10 +286,9 @@ export function DemoMenuItemRow({
       <AddOptionToGroupModal
         open={addOptionForGroup != null}
         group={addOptionForGroup}
-        existingOptions={options}
+        options={options}
         onClose={() => setAddOptionForGroup(null)}
-        onCreateAndLink={handleCreateAndLinkOption}
-        onLinkExisting={handleLinkExistingOption}
+        onSave={handleSaveGroupOptions}
       />
       <AddItemOptionGroupsModal
         open={addGroupsOpen}

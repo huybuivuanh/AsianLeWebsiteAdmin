@@ -5,6 +5,7 @@ import { useDemoMenuItemsStore } from "@/stores/demoMenuItemsStore";
 import { DemoMenuItemRow } from "@/components/demo-menu/DemoMenuItemRow";
 import { AddDemoMenuItemModal } from "@/components/demo-menu/AddDemoMenuItemModal";
 import { EditDemoMenuItemModal } from "@/components/demo-menu/EditDemoMenuItemModal";
+import { PublishMenuButton } from "@/components/menu/PublishMenuButton";
 
 export default function DemoMenuItemsPage() {
   const {
@@ -39,17 +40,15 @@ export default function DemoMenuItemsPage() {
 
   return (
     <div className="min-w-0">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
-          Demo Items
-        </h1>
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-foreground/10 bg-background px-4 py-3 mb-4">
         <button
           type="button"
           onClick={() => setAddModalOpen(true)}
           className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20"
         >
-          Add Item
+          + Add Item
         </button>
+        <PublishMenuButton />
       </div>
 
       <div className="mb-4">

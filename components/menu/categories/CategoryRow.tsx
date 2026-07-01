@@ -35,22 +35,21 @@ export function CategoryRow({
 
   return (
     <li className="rounded-2xl border border-foreground/10 bg-foreground/[0.02] overflow-hidden">
-      <div className="px-4 py-3 flex flex-wrap items-start justify-between gap-3">
-        <button
-          type="button"
-          onClick={onToggleExpand}
-          className="min-w-0 text-left group outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 rounded-xl -mx-1 px-1 py-1"
-          aria-expanded={expanded}
-        >
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onToggleExpand}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onToggleExpand();
+          }
+        }}
+        aria-expanded={expanded}
+        className="px-4 py-3 flex flex-wrap items-start justify-between gap-3 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 hover:bg-foreground/[0.03]"
+      >
+        <div className="min-w-0">
           <div className="flex items-center gap-2 min-w-0">
-            <span
-              className={`shrink-0 text-foreground/60 transition-transform ${
-                expanded ? "rotate-180" : ""
-              }`}
-              aria-hidden
-            >
-              ▼
-            </span>
             <span className="font-bold text-foreground truncate">
               {category.name}
             </span>
@@ -61,13 +60,13 @@ export function CategoryRow({
               </span>
             )}
           </div>
-          {category.description && (
-            <p className="mt-1 text-sm text-foreground/70 line-clamp-2">
+          {expanded && category.description && (
+            <p className="mt-1 text-sm text-foreground/70">
               {category.description}
             </p>
           )}
-        </button>
-        <div className="flex items-center gap-2 shrink-0">
+        </div>
+        <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
           <button
             type="button"
             onClick={() => onEdit(category)}
