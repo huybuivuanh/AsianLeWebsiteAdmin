@@ -9,6 +9,7 @@ import { AddOptionGroupModal } from "@/components/menu/option-groups/AddOptionGr
 import { itemReferencesOptionGroup, removeOptionGroupRef } from "@/lib/menu-item-option-groups";
 import { patchClearDefaultIfNotInOptionIds } from "@/lib/option-group-updates";
 import { PublishMenuButton } from "@/components/menu/PublishMenuButton";
+import { confirmDialog, alertDialog } from "@/stores/modalStore";
 
 export default function OptionGroupsPage() {
   const {
@@ -31,7 +32,8 @@ export default function OptionGroupsPage() {
   }, [optionGroups, query]);
 
   async function handleDeleteGroup(group: OptionGroup) {
-    if (!confirm(`Delete "${group.name}"? This cannot be undone.`)) return;
+    if (!(await confirmDialog(`Delete "${group.name}"? This cannot be undone.`, { danger: true, confirmLabel: "Delete" })))
+      return;
     try {
       await Promise.all([
         ...demoItems
@@ -51,7 +53,7 @@ export default function OptionGroupsPage() {
       ]);
       await deleteOptionGroup(group.id);
     } catch {
-      alert("Failed to delete option group.");
+      await alertDialog("Failed to delete option group.");
     }
   }
 

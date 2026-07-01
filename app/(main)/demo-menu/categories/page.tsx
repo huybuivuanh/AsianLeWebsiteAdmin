@@ -9,6 +9,7 @@ import { AddDemoCategoryItemsModal } from "@/components/demo-menu/categories/Add
 import { DemoCategoryRow } from "@/components/demo-menu/categories/DemoCategoryRow";
 import { SortDemoCategoriesModal } from "@/components/demo-menu/categories/SortDemoCategoriesModal";
 import { PublishMenuButton } from "@/components/menu/PublishMenuButton";
+import { confirmDialog } from "@/stores/modalStore";
 
 export default function DemoCategoriesPage() {
   const {
@@ -43,7 +44,12 @@ export default function DemoCategoriesPage() {
   }, [categories, query]);
 
   async function handleDelete(category: DemoCategory) {
-    if (!window.confirm(`Delete “${category.name}”? This cannot be undone.`))
+    if (
+      !(await confirmDialog(`Delete "${category.name}"? This cannot be undone.`, {
+        danger: true,
+        confirmLabel: "Delete",
+      }))
+    )
       return;
     setDeletingId(category.id);
     try {

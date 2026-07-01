@@ -17,6 +17,7 @@ import {
 import { AddOptionToGroupModal } from "@/components/menu/option-groups/AddOptionToGroupModal";
 import { AddItemOptionGroupsModal } from "@/components/demo-menu/AddItemOptionGroupsModal";
 import { SortItemOptionGroupsModal } from "@/components/demo-menu/SortItemOptionGroupsModal";
+import { confirmDialog, alertDialog } from "@/stores/modalStore";
 
 type DemoMenuItemRowProps = {
   item: DemoMenuItem;
@@ -45,7 +46,8 @@ export function DemoMenuItemRow({
     .filter((g): g is OptionGroup => g != null);
 
   async function handleRemoveOptionGroup(group: OptionGroup) {
-    if (!confirm(`Remove "${group.name}" from this item?`)) return;
+    if (!(await confirmDialog(`Remove "${group.name}" from this item?`, { danger: true, confirmLabel: "Remove" })))
+      return;
     try {
       await Promise.all([
         updateDemoMenuItemField(item.id, {
@@ -56,12 +58,13 @@ export function DemoMenuItemRow({
         }),
       ]);
     } catch {
-      alert("Failed to remove option group.");
+      await alertDialog("Failed to remove option group.");
     }
   }
 
   async function handleRemoveOption(group: OptionGroup, option: ItemOption) {
-    if (!confirm(`Remove "${option.name}" from this group?`)) return;
+    if (!(await confirmDialog(`Remove "${option.name}" from this group?`, { danger: true, confirmLabel: "Remove" })))
+      return;
     try {
       await Promise.all([
         updateOptionGroup(group.id, {
@@ -73,7 +76,7 @@ export function DemoMenuItemRow({
         }),
       ]);
     } catch {
-      alert("Failed to remove option.");
+      await alertDialog("Failed to remove option.");
     }
   }
 

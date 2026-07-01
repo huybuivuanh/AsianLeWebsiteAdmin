@@ -7,6 +7,7 @@ import { AddMenuItemModal } from "@/components/menu/items/AddMenuItemModal";
 import { EditMenuItemModal } from "@/components/menu/items/EditMenuItemModal";
 import { MenuItemRow } from "@/components/menu/items/MenuItemRow";
 import { PublishMenuButton } from "@/components/menu/PublishMenuButton";
+import { confirmDialog } from "@/stores/modalStore";
 
 export default function MenuItemsPage() {
   const {
@@ -30,7 +31,12 @@ export default function MenuItemsPage() {
   }, [menuItems, query]);
 
   async function handleDelete(item: MenuItem) {
-    if (!window.confirm(`Delete “${item.name}”? This cannot be undone.`))
+    if (
+      !(await confirmDialog(`Delete "${item.name}"? This cannot be undone.`, {
+        danger: true,
+        confirmLabel: "Delete",
+      }))
+    )
       return;
     setDeletingId(item.id);
     try {

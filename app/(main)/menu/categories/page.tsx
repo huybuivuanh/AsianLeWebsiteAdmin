@@ -9,6 +9,7 @@ import { AddCategoryItemsModal } from "@/components/menu/categories/AddCategoryI
 import { CategoryRow } from "@/components/menu/categories/CategoryRow";
 import { SortCategoriesModal } from "@/components/menu/categories/SortCategoriesModal";
 import { PublishMenuButton } from "@/components/menu/PublishMenuButton";
+import { confirmDialog } from "@/stores/modalStore";
 
 export default function CategoriesPage() {
   const {
@@ -43,7 +44,12 @@ export default function CategoriesPage() {
   }, [categories, query]);
 
   async function handleDelete(category: FoodCategory) {
-    if (!window.confirm(`Delete “${category.name}”? This cannot be undone.`))
+    if (
+      !(await confirmDialog(`Delete "${category.name}"? This cannot be undone.`, {
+        danger: true,
+        confirmLabel: "Delete",
+      }))
+    )
       return;
     setDeletingId(category.id);
     try {

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useMenuVersionStore } from "@/stores/menuVersionStore";
+import { confirmDialog } from "@/stores/modalStore";
 
 export function PublishMenuButton() {
   const { version, publishMenu } = useMenuVersionStore();
@@ -9,7 +10,8 @@ export function PublishMenuButton() {
   const [error, setError] = useState<string | null>(null);
 
   async function handlePublish() {
-    if (!confirm("Publish menu? This will signal the customer site to refresh.")) return;
+    if (!(await confirmDialog("Publish menu? This will signal the customer site to refresh.", { confirmLabel: "Publish" })))
+      return;
     setError(null);
     setPublishing(true);
     try {

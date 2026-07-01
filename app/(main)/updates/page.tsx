@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useUpdatesStore } from "@/stores/updatesStore";
 import { AddUpdatesItemModal } from "@/components/updates/AddUpdatesItemModal";
 import { EditUpdatesItemModal } from "@/components/updates/EditUpdatesItemModal";
+import { confirmDialog } from "@/stores/modalStore";
 
 export default function UpdatesPage() {
   const {
@@ -20,11 +21,8 @@ export default function UpdatesPage() {
     (typeof items)[number] | null
   >(null);
 
-  function handleDelete(item: (typeof items)[number]) {
-    if (
-      typeof window !== "undefined" &&
-      window.confirm(`Delete "${item.name}"?`)
-    ) {
+  async function handleDelete(item: (typeof items)[number]) {
+    if (await confirmDialog(`Delete "${item.name}"?`, { danger: true, confirmLabel: "Delete" })) {
       void deleteUpdatesItem(item.id as string);
     }
   }

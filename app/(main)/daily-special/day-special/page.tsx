@@ -8,6 +8,7 @@ import { EditDayModal } from "@/components/daily-special/EditDayModal";
 import { DailySpecialRow } from "@/components/daily-special/DailySpecialRow";
 import { AddDayItemsModal } from "@/components/daily-special/AddDayItemsModal";
 import type { DayOfWeek } from "@/types/enum";
+import { confirmDialog } from "@/stores/modalStore";
 
 function dayLabel(value: DayOfWeek): string {
   return value.charAt(0) + value.slice(1).toLowerCase();
@@ -34,9 +35,10 @@ export default function DaySpecial() {
 
   async function handleDelete(daySpecial: DailySpecial) {
     if (
-      !window.confirm(
+      !(await confirmDialog(
         `Delete ${dayLabel(daySpecial.dayOfWeek)} (${daySpecial.timeRange.startTime} – ${daySpecial.timeRange.endTime})?`,
-      )
+        { danger: true, confirmLabel: "Delete" },
+      ))
     )
       return;
     setDeletingId(daySpecial.id);

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useHoursStore } from "@/stores/hoursStore";
 import { AddHourModal } from "@/components/store-info/AddHourModal";
 import { EditHourModal } from "@/components/store-info/EditHourModal";
+import { confirmDialog } from "@/stores/modalStore";
 
 export default function StoreInfoPage() {
   const { hours, loading, error, fetchHours, addHour, updateHour, deleteHour } =
@@ -15,11 +16,8 @@ export default function StoreInfoPage() {
     void fetchHours();
   }, [fetchHours]);
 
-  function handleDelete(hour: StoreHour) {
-    if (
-      typeof window !== "undefined" &&
-      window.confirm(`Delete "${hour.days}" entry?`)
-    ) {
+  async function handleDelete(hour: StoreHour) {
+    if (await confirmDialog(`Delete "${hour.days}" entry?`, { danger: true, confirmLabel: "Delete" })) {
       void deleteHour(hour.id);
     }
   }

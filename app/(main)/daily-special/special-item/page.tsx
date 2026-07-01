@@ -5,6 +5,7 @@ import { useSpecialItemsStore } from "@/stores/dailySpecialItemsStore";
 import { useDailySpecialsStore } from "@/stores/dailySpecialsStore";
 import { AddSpecialItemModal } from "@/components/daily-special/AddSpecialItemModal";
 import { EditSpecialItemModal } from "@/components/daily-special/EditSpecialItemModal";
+import { confirmDialog } from "@/stores/modalStore";
 
 export default function SpecialItemPage() {
   const {
@@ -20,10 +21,7 @@ export default function SpecialItemPage() {
   const [editingItem, setEditingItem] = useState<DailySpecialItem | null>(null);
 
   async function handleDelete(item: DailySpecialItem) {
-    if (
-      typeof window !== "undefined" &&
-      !window.confirm(`Delete "${item.name}"?`)
-    )
+    if (!(await confirmDialog(`Delete "${item.name}"?`, { danger: true, confirmLabel: "Delete" })))
       return;
     try {
       await deleteSpecialItem(item.id);

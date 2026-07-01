@@ -1,5 +1,6 @@
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { AppModal } from "@/components/AppModal";
 
 export default function RootLayout({
   children,
@@ -10,6 +11,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <AuthProvider>{children}</AuthProvider>
+        <AppModal />
       </body>
     </html>
   );

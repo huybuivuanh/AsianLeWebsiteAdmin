@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useGalleryStore } from "@/stores/galleryStore";
 import { AddGalleryItemModal } from "@/components/gallery/AddGalleryItemModal";
 import { EditGalleryItemModal } from "@/components/gallery/EditGalleryItemModal";
+import { confirmDialog } from "@/stores/modalStore";
 
 export default function GalleryPage() {
   const {
@@ -20,11 +21,8 @@ export default function GalleryPage() {
     (typeof items)[number] | null
   >(null);
 
-  function handleDelete(item: (typeof items)[number]) {
-    if (
-      typeof window !== "undefined" &&
-      window.confirm(`Delete "${item.name}"?`)
-    ) {
+  async function handleDelete(item: (typeof items)[number]) {
+    if (await confirmDialog(`Delete "${item.name}"?`, { danger: true, confirmLabel: "Delete" })) {
       void deleteGalleryItem(item.id as string);
     }
   }

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { deleteField } from "firebase/firestore";
 import { formatPriceCAD } from "@/lib/utils";
 import { patchClearDefaultIfOptionRemoved } from "@/lib/option-group-updates";
+import { confirmDialog, alertDialog } from "@/stores/modalStore";
 import { EditOptionGroupModal } from "./EditOptionGroupModal";
 import { AddOptionToGroupModal } from "./AddOptionToGroupModal";
 
@@ -33,7 +34,8 @@ export function OptionGroupRow({
   const isUnused = (group.itemIds?.length ?? 0) === 0;
 
   async function handleRemoveOption(option: ItemOption) {
-    if (!confirm(`Remove "${option.name}" from this group?`)) return;
+    if (!(await confirmDialog(`Remove "${option.name}" from this group?`, { danger: true, confirmLabel: "Remove" })))
+      return;
     try {
       await Promise.all([
         onUpdate(group.id, {
@@ -45,7 +47,7 @@ export function OptionGroupRow({
         }),
       ]);
     } catch {
-      alert("Failed to remove option.");
+      await alertDialog("Failed to remove option.");
     }
   }
 
@@ -58,7 +60,7 @@ export function OptionGroupRow({
         await onUpdate(group.id, { defaultOptionId: deleteField() });
       }
     } catch {
-      alert("Failed to update default option.");
+      await alertDialog("Failed to update default option.");
     } finally {
       setSavingDefault(false);
     }

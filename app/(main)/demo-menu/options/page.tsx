@@ -7,6 +7,7 @@ import { OptionRow } from "@/components/menu/options/OptionRow";
 import { AddOptionModal } from "@/components/menu/options/AddOptionModal";
 import { patchClearDefaultIfOptionRemoved } from "@/lib/option-group-updates";
 import { PublishMenuButton } from "@/components/menu/PublishMenuButton";
+import { confirmDialog, alertDialog } from "@/stores/modalStore";
 
 export default function OptionsPage() {
   const {
@@ -28,7 +29,8 @@ export default function OptionsPage() {
   }, [options, query]);
 
   async function handleDeleteOption(option: ItemOption) {
-    if (!confirm(`Delete "${option.name}"? This cannot be undone.`)) return;
+    if (!(await confirmDialog(`Delete "${option.name}"? This cannot be undone.`, { danger: true, confirmLabel: "Delete" })))
+      return;
     try {
       await Promise.all(
         optionGroups
@@ -42,7 +44,7 @@ export default function OptionsPage() {
       );
       await deleteOption(option.id);
     } catch {
-      alert("Failed to delete option.");
+      await alertDialog("Failed to delete option.");
     }
   }
 
