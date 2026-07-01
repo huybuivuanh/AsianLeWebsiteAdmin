@@ -27,6 +27,7 @@ const DEFAULTS: StoreSettings = {
     sat: { ...defaultHours, isOpen: false },
     sun: { ...defaultHours, isOpen: false },
   },
+  holidays: [],
 };
 
 export const useStoreSettingsStore = create<StoreSettingsState>((set, get) => ({

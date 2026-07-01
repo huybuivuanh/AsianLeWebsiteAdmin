@@ -101,6 +101,12 @@ declare global {
     close: string;
   }
 
+  interface Holiday {
+    id: string;
+    from: string;  // YYYY-MM-DD
+    to?: string;   // YYYY-MM-DD — if absent, single day
+  }
+
   interface StoreSettings {
     pauseOrdering: boolean;
     timezone: string;
@@ -113,6 +119,7 @@ declare global {
       sat: DayHours;
       sun: DayHours;
     };
+    holidays: Holiday[];
   }
 
   interface MenuVersion {
