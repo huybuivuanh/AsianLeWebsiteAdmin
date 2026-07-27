@@ -55,6 +55,14 @@ export function StoreSettingsForm() {
     editedTimezone !== (settings?.timezone ?? "") ||
     JSON.stringify(editedHours) !== JSON.stringify(settings?.hours ?? null);
 
+  const [editedWaitTime, setEditedWaitTime] = useState(
+    () => settings?.waitTime ?? 0,
+  );
+  const [savingWaitTime, setSavingWaitTime] = useState(false);
+  const [waitTimeError, setWaitTimeError] = useState<string | null>(null);
+
+  const hasWaitTimeChanges = editedWaitTime !== (settings?.waitTime ?? 0);
+
   const [showHolidayForm, setShowHolidayForm] = useState(false);
   const [holidayFrom, setHolidayFrom] = useState("");
   const [holidayTo, setHolidayTo] = useState("");
@@ -66,6 +74,7 @@ export function StoreSettingsForm() {
     if (settings) {
       setEditedTimezone(settings.timezone);
       setEditedHours(structuredClone(settings.hours));
+      setEditedWaitTime(settings.waitTime ?? 0);
     }
   }, [settings]);
 
@@ -88,6 +97,19 @@ export function StoreSettingsForm() {
       setSaveError("Failed to save hours.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleSaveWaitTime(e: React.FormEvent) {
+    e.preventDefault();
+    setWaitTimeError(null);
+    setSavingWaitTime(true);
+    try {
+      await updateSettings({ waitTime: editedWaitTime });
+    } catch {
+      setWaitTimeError("Failed to save wait time.");
+    } finally {
+      setSavingWaitTime(false);
     }
   }
 
@@ -228,6 +250,37 @@ export function StoreSettingsForm() {
               className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
             >
               {saving ? "Saving…" : "Save Hours"}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      {/* Wait Time */}
+      <section>
+        <h2 className="text-base font-semibold text-foreground mb-4">Order Wait Time</h2>
+        <form onSubmit={handleSaveWaitTime} className="space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-foreground/60 shrink-0 w-24">Wait time</span>
+            <input
+              type="number"
+              min={0}
+              step={1}
+              value={editedWaitTime}
+              onChange={(e) => setEditedWaitTime(Math.max(0, Number(e.target.value)))}
+              className="w-28 rounded-lg border border-foreground/15 bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
+            />
+            <span className="text-sm text-foreground/40">minutes</span>
+          </div>
+
+          {waitTimeError && <p className="text-red-500 text-sm" role="alert">{waitTimeError}</p>}
+
+          <div className="flex items-center justify-end gap-3">
+            <button
+              type="submit"
+              disabled={savingWaitTime || !hasWaitTimeChanges}
+              className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
+            >
+              {savingWaitTime ? "Saving…" : "Save Wait Time"}
             </button>
           </div>
         </form>

@@ -18,6 +18,7 @@ const defaultHours: DayHours = { isOpen: true, open: "11:00", close: "21:00" };
 const DEFAULTS: StoreSettings = {
   pauseOrdering: false,
   timezone: "America/Edmonton",
+  waitTime: 15,
   hours: {
     mon: defaultHours,
     tue: defaultHours,
