@@ -1,4 +1,9 @@
-import type { DayOfWeek, KitchenType } from "@/types/enum";
+import type {
+  DayOfWeek,
+  KitchenType,
+  OrderStatus,
+  TakeOutFulfillmentKind,
+} from "@/types/enum";
 
 declare global {
   interface FoodCategory {
@@ -137,6 +142,49 @@ declare global {
   interface MenuVersion {
     version: number;
     lastUpdated: Date | null;
+  }
+
+  // --- Orders (written by the customer-facing website, read here for order
+  // history/printing — see that repo's orders-schema.md for the full contract). ---
+
+  interface OrderItemOption {
+    name: string;
+    price: number;
+    quantity: number;
+  }
+
+  interface OrderItem {
+    menuItemId: string;
+    name: string;
+    price: number; // per-unit price INCLUDING selected options
+    quantity: number;
+    options?: OrderItemOption[];
+    instructions?: string;
+    kitchenType: KitchenType;
+  }
+
+  interface OrderTaxBreakDown {
+    subTotal: number;
+    pst: number;
+    gst: number;
+    total: number;
+  }
+
+  type OrderFulfillment =
+    | { kind: TakeOutFulfillmentKind.Immediate; readyTimeMinutes?: number }
+    | { kind: TakeOutFulfillmentKind.Scheduled; scheduledAt: Date };
+
+  interface Order {
+    id: string;
+    orderNumber: string;
+    status: OrderStatus;
+    fulfillment: OrderFulfillment;
+    customerName: string;
+    phoneNumber: string;
+    customerEmail: string;
+    orderItems: OrderItem[];
+    taxBreakDown: OrderTaxBreakDown;
+    createdAt: Date;
   }
 }
 

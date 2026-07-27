@@ -24,6 +24,22 @@ export function formatDayOfWeekLabel(day: string): string {
   return day.charAt(0).toUpperCase() + day.slice(1).toLowerCase();
 }
 
+/** "3061234567" / "(306) 123-4567" -> "(306) 123-4567" */
+export function formatPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length !== 10) return phone;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
+export function formatOrderedAt(date: Date): string {
+  return date.toLocaleString("en-CA", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
 export function matchesQuery(q: string, ...fields: string[]): boolean {
   if (!q.trim()) return true;
   const term = q.trim().toLowerCase();

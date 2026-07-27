@@ -53,3 +53,20 @@ body {
 main {
   min-width: 0;
 }
+
+/* Order receipt printing: hide the whole app chrome (nav, page content) and
+   let only the receipt marked #order-print-area take over the printed page. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #order-print-area,
+  #order-print-area * {
+    visibility: visible;
+  }
+  #order-print-area {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+  }
+}
