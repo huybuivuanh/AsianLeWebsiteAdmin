@@ -72,6 +72,8 @@ function normalizeOrderDoc(id: string, data: DocumentData): Order {
     customerEmail: (data.customerEmail as string) ?? "",
     orderItems: Array.isArray(data.orderItems) ? data.orderItems : [],
     taxBreakDown: data.taxBreakDown ?? { subTotal: 0, pst: 0, gst: 0, total: 0 },
+    paid: Boolean(data.paid),
+    printed: Boolean(data.printed),
     createdAt: data.createdAt?.toDate?.() ?? new Date(0),
   };
 }

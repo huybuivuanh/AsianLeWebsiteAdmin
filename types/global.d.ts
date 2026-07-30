@@ -63,8 +63,8 @@ declare global {
   }
 
   interface MenuItemAvailability {
-    start: string; // "11:00" — 24h HH:mm, daily window (e.g. lunch specials)
-    end: string; // "14:00"
+    start: string;
+    end: string;
   }
 
   interface MenuItemSoldOut {
@@ -184,6 +184,8 @@ declare global {
     customerEmail: string;
     orderItems: OrderItem[];
     taxBreakDown: OrderTaxBreakDown;
+    paid: boolean;
+    printed: boolean;
     createdAt: Date;
   }
 }

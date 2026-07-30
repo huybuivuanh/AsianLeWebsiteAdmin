@@ -49,6 +49,18 @@ export function OrderCard({
   const tb = order.taxBreakDown;
   const scheduled = order.fulfillment.kind === TakeOutFulfillmentKind.Scheduled;
 
+  const showPaidPill =
+    !(order.status === OrderStatus.Completed && !order.paid) &&
+    order.status !== OrderStatus.Cancelled;
+
+  const printedPillClass = order.printed
+    ? "bg-indigo-100 text-indigo-700"
+    : "bg-amber-100 text-amber-700";
+
+  const paidPillClass = order.paid
+    ? "bg-fuchsia-100 text-fuchsia-700"
+    : "bg-slate-200 text-slate-600";
+
   return (
     <div className={`rounded-xl border p-4 shadow-sm ${orderCardSurface(order.status, scheduled)}`}>
       <button
@@ -87,6 +99,12 @@ export function OrderCard({
         </div>
 
         <div className="flex flex-col items-end gap-2 shrink-0">
+          <Pill className={printedPillClass}>
+            {order.printed ? "Printed" : "Not Printed"}
+          </Pill>
+          {showPaidPill ? (
+            <Pill className={paidPillClass}>{order.paid ? "Paid" : "Unpaid"}</Pill>
+          ) : null}
           <Pill className={statusPillClass(order.status)}>{order.status}</Pill>
           <span className="text-base font-bold text-gray-900">
             {formatPriceCAD(tb.total ?? 0)}
