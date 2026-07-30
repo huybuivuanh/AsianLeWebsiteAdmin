@@ -48,6 +48,7 @@ export const useOptionGroupsStore = create<OptionGroupsState>((set, get) => ({
           createdAt: d.createdAt?.toDate?.() ?? new Date(),
         };
       });
+      optionGroups.sort((a, b) => a.name.localeCompare(b.name));
       set({ optionGroups, loading: false });
     } catch (err) {
       set({

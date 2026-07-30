@@ -55,6 +55,7 @@ export const useOptionsStore = create<OptionsState>((set, get) => ({
           createdAt: d.createdAt?.toDate?.() ?? new Date(),
         };
       });
+      options.sort((a, b) => a.name.localeCompare(b.name));
       set({ options, loading: false });
     } catch (err) {
       set({

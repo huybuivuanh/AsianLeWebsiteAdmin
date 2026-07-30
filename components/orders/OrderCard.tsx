@@ -7,6 +7,7 @@ import { OrderItemBlock } from "./OrderItemBlock";
 function orderCardSurface(status: OrderStatus, scheduled: boolean): string {
   if (status === OrderStatus.Cancelled) return "bg-red-100 border-red-200";
   if (status === OrderStatus.Completed) return "bg-green-100 border-green-200";
+  if (status === OrderStatus.New) return "bg-purple-200 border-purple-300";
   return scheduled
     ? "bg-orange-100 border-orange-200"
     : "bg-blue-100 border-blue-200";

@@ -88,6 +88,7 @@ export const useDemoMenuItemsStore = create<DemoMenuItemsState>((set, get) => ({
           createdAt: d.createdAt?.toDate?.() ?? new Date(),
         };
       });
+      items.sort((a, b) => a.name.localeCompare(b.name));
       set({ items, loading: false });
     } catch (err) {
       set({
