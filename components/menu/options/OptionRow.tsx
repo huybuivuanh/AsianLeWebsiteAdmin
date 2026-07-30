@@ -17,6 +17,7 @@ export function OptionRow({ option, optionGroups, onUpdate, onDelete }: OptionRo
   const belongsToGroups = optionGroups.filter((g) =>
     g.optionIds?.includes(option.id),
   );
+  const isUnused = belongsToGroups.length === 0;
 
   return (
     <>
@@ -25,6 +26,11 @@ export function OptionRow({ option, optionGroups, onUpdate, onDelete }: OptionRo
           <div className="flex items-center gap-3">
             <span className="text-sm font-medium text-foreground">{option.name}</span>
             <span className="text-sm text-foreground/60">{formatPriceCAD(option.price)}</span>
+            {isUnused && (
+              <span className="shrink-0 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                Unused
+              </span>
+            )}
           </div>
           {belongsToGroups.length > 0 && (
             <p className="mt-0.5 text-xs text-foreground/50">

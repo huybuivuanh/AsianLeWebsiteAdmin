@@ -44,6 +44,7 @@ export function DemoMenuItemRow({
   const itemOptionGroups = getOrderedOptionGroupRefs(item)
     .map((ref) => optionGroups.find((g) => g.id === ref.optionGroupId))
     .filter((g): g is OptionGroup => g != null);
+  const isUnused = (item.categoryIds?.length ?? 0) === 0;
 
   async function handleRemoveOptionGroup(group: OptionGroup) {
     if (!(await confirmDialog(`Remove "${group.name}" from this item?`, { danger: true, confirmLabel: "Remove" })))
@@ -155,6 +156,11 @@ export function DemoMenuItemRow({
             <span className="text-sm font-semibold text-foreground/80 rounded-full border border-foreground/15 bg-foreground/5 px-2 py-0.5">
               {formatPriceCAD(item.price)}
             </span>
+            {isUnused && (
+              <span className="shrink-0 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                Unused
+              </span>
+            )}
           </div>
 
           {expanded && item.description && (
