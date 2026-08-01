@@ -1,6 +1,7 @@
 import { create } from "zustand";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { Timestamp, doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { INDEFINITE_PAUSE } from "@/utils/storeSettingsHelpers";
 
 interface StoreSettingsState {
   settings: StoreSettings | null;
@@ -16,7 +17,7 @@ const SETTINGS_DOC = doc(db, "settings", "store");
 const defaultHours: DayHours = { isOpen: true, open: "11:00", close: "21:00" };
 
 const DEFAULTS: StoreSettings = {
-  pauseOrdering: false,
+  pausedUntil: INDEFINITE_PAUSE,
   timezone: "America/Edmonton",
   waitTime: 15,
   hours: {
@@ -45,8 +46,15 @@ export const useStoreSettingsStore = create<StoreSettingsState>((set, get) => ({
     try {
       const snapshot = await getDoc(SETTINGS_DOC);
       if (snapshot.exists()) {
-        const d = snapshot.data() as StoreSettings;
-        set({ settings: d, loading: false });
+        const d = snapshot.data();
+        set({
+          settings: {
+            ...d,
+            pausedUntil:
+              d.pausedUntil instanceof Timestamp ? d.pausedUntil.toDate() : null,
+          } as StoreSettings,
+          loading: false,
+        });
       } else {
         set({ settings: DEFAULTS, loading: false });
       }
@@ -61,7 +69,13 @@ export const useStoreSettingsStore = create<StoreSettingsState>((set, get) => ({
   updateSettings: async (patch) => {
     set({ error: null });
     try {
-      await setDoc(SETTINGS_DOC, patch, { merge: true });
+      const firestorePatch: Record<string, unknown> = { ...patch };
+      if ("pausedUntil" in patch) {
+        firestorePatch.pausedUntil = patch.pausedUntil
+          ? Timestamp.fromDate(patch.pausedUntil)
+          : null;
+      }
+      await setDoc(SETTINGS_DOC, firestorePatch, { merge: true });
       await get().fetchStoreSettings();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to update settings";

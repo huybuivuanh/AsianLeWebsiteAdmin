@@ -124,7 +124,7 @@ declare global {
   }
 
   interface StoreSettings {
-    pauseOrdering: boolean;
+    pausedUntil: Date | null;
     timezone: string;
     waitTime: number;
     hours: {
