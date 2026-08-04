@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import {
+  Timestamp,
   collection,
   getDocs,
   addDoc,
@@ -36,22 +37,13 @@ export const useOptionsStore = create<OptionsState>((set, get) => ({
       const snapshot = await getDocs(collection(db, "options"));
       const options: ItemOption[] = snapshot.docs.map((doc) => {
         const d = doc.data();
-        const rawSoldOut = d.soldOut as
-          | { since?: { toDate?: () => Date }; hours?: number; indefinite?: boolean }
-          | undefined;
         return {
           id: doc.id,
           name: (d.name as string) ?? "",
           price: (d.price as number) ?? 0,
           groupIds: d.groupIds as string[] | undefined,
           availability: d.availability as ItemOption["availability"] | undefined,
-          soldOut: rawSoldOut
-            ? {
-                since: rawSoldOut.since?.toDate?.() ?? new Date(),
-                hours: rawSoldOut.hours,
-                indefinite: !!rawSoldOut.indefinite,
-              }
-            : undefined,
+          soldOutUntil: d.soldOutUntil instanceof Timestamp ? d.soldOutUntil.toDate() : undefined,
           createdAt: d.createdAt?.toDate?.() ?? new Date(),
         };
       });

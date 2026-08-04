@@ -178,12 +178,6 @@ export function DemoMenuItemRow({
               </span>
             )}
 
-            {item.soldOut && (
-              <span className="text-xs rounded-full border border-red-300 bg-red-50 px-2 py-0.5 font-medium text-red-700">
-                Sold out{item.soldOut.indefinite ? "" : ` · ${item.soldOut.hours}h`}
-              </span>
-            )}
-
             {itemOptionGroups.length > 0 && (
               <span className="text-xs rounded-full border border-foreground/10 bg-foreground/[0.03] px-2 py-0.5 text-foreground/60">
                 {itemOptionGroups.length} option group{itemOptionGroups.length !== 1 ? "s" : ""}

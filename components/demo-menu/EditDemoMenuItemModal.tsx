@@ -5,8 +5,6 @@ import Image from "next/image";
 import { KitchenType } from "@/types/enum";
 import type { DemoMenuItemInput } from "@/stores/demoMenuItemsStore";
 
-type SoldOutOption = "in_stock" | "1h" | "2h" | "indefinite";
-
 type EditDemoMenuItemModalProps = {
   open: boolean;
   item: DemoMenuItem | null;
@@ -24,7 +22,6 @@ export function EditDemoMenuItemModal({ open, item, onClose, onSave }: EditDemoM
   const [restrictAvailability, setRestrictAvailability] = useState(false);
   const [availabilityStart, setAvailabilityStart] = useState("11:00");
   const [availabilityEnd, setAvailabilityEnd] = useState("14:00");
-  const [soldOutOption, setSoldOutOption] = useState<SoldOutOption>("in_stock");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -40,9 +37,6 @@ export function EditDemoMenuItemModal({ open, item, onClose, onSave }: EditDemoM
       setRestrictAvailability(!!item.availability);
       setAvailabilityStart(item.availability?.start ?? "11:00");
       setAvailabilityEnd(item.availability?.end ?? "14:00");
-      if (!item.soldOut) setSoldOutOption("in_stock");
-      else if (item.soldOut.indefinite) setSoldOutOption("indefinite");
-      else setSoldOutOption(item.soldOut.hours === 2 ? "2h" : "1h");
       setFormError(null);
       setSubmitting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -57,7 +51,6 @@ export function EditDemoMenuItemModal({ open, item, onClose, onSave }: EditDemoM
       setRestrictAvailability(false);
       setAvailabilityStart("11:00");
       setAvailabilityEnd("14:00");
-      setSoldOutOption("in_stock");
       setFormError(null);
       setSubmitting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -89,12 +82,6 @@ export function EditDemoMenuItemModal({ open, item, onClose, onSave }: EditDemoM
         availability: restrictAvailability
           ? { start: availabilityStart, end: availabilityEnd }
           : undefined,
-        soldOut:
-          soldOutOption === "in_stock"
-            ? undefined
-            : soldOutOption === "indefinite"
-              ? { since: new Date(), indefinite: true }
-              : { since: new Date(), hours: soldOutOption === "1h" ? 1 : 2, indefinite: false },
       });
       onClose();
     } catch {
@@ -262,23 +249,6 @@ export function EditDemoMenuItemModal({ open, item, onClose, onSave }: EditDemoM
                 </div>
               </div>
             )}
-          </div>
-
-          <div>
-            <label htmlFor="edit-di-sold-out" className="block text-sm font-medium text-foreground mb-1">
-              Stock
-            </label>
-            <select
-              id="edit-di-sold-out"
-              value={soldOutOption}
-              onChange={(e) => setSoldOutOption(e.target.value as SoldOutOption)}
-              className="w-full rounded-lg border border-foreground/20 bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
-            >
-              <option value="in_stock">In stock</option>
-              <option value="1h">Sold out for 1 hour</option>
-              <option value="2h">Sold out for 2 hours</option>
-              <option value="indefinite">Sold out until I re-enable</option>
-            </select>
           </div>
 
           <div>
