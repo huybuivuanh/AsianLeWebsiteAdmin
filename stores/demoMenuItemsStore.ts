@@ -25,7 +25,7 @@ export type DemoMenuItemInput = {
   price: number;
   imageFile: File | null;
   kitchenType: KitchenType;
-  availability?: MenuItemAvailability;
+  availability?: Availability;
   categoryIds?: string[];
   removeImage?: boolean;
 };

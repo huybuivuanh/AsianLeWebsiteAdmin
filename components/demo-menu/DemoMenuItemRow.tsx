@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { formatPriceCAD, formatTimeHHmmTo12h } from "@/lib/utils";
+import { formatPriceCAD, formatWeeklyAvailability } from "@/lib/utils";
 import { useOptionGroupsStore } from "@/stores/optionGroupsStore";
 import { useOptionsStore } from "@/stores/optionsStore";
 import { useDemoMenuItemsStore } from "@/stores/demoMenuItemsStore";
@@ -174,7 +174,7 @@ export function DemoMenuItemRow({
 
             {item.availability && (
               <span className="text-xs rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 font-medium text-amber-700">
-                {formatTimeHHmmTo12h(item.availability.start)}–{formatTimeHHmmTo12h(item.availability.end)}
+                {formatWeeklyAvailability(item.availability)}
               </span>
             )}
 

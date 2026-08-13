@@ -62,9 +62,14 @@ declare global {
     order: number;
   }
 
-  interface MenuItemAvailability {
-    start: string;
-    end: string;
+  interface Availability {
+    mon?: TimeRange;
+    tue?: TimeRange;
+    wed?: TimeRange;
+    thu?: TimeRange;
+    fri?: TimeRange;
+    sat?: TimeRange;
+    sun?: TimeRange;
   }
 
   type DemoCategory = FoodCategory;
@@ -78,7 +83,7 @@ declare global {
     optionGroupIds?: OptionGroupId[];
     categoryIds?: string[];
     kitchenType: KitchenType;
-    availability?: MenuItemAvailability;
+    availability?: Availability;
     soldOutUntil?: Date;
     createdAt: Date;
   }
@@ -100,7 +105,7 @@ declare global {
     name: string;
     price: number;
     groupIds?: string[];
-    availability?: MenuItemAvailability;
+    availability?: Availability;
     soldOutUntil?: Date;
     createdAt: Date;
   }

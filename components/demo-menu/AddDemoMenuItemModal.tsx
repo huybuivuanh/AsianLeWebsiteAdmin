@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { KitchenType } from "@/types/enum";
 import type { DemoMenuItemInput } from "@/stores/demoMenuItemsStore";
+import { WeeklyAvailabilityEditor } from "@/components/demo-menu/WeeklyAvailabilityEditor";
 
 type AddDemoMenuItemModalProps = {
   open: boolean;
@@ -17,8 +18,7 @@ export function AddDemoMenuItemModal({ open, onClose, onAdd }: AddDemoMenuItemMo
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [kitchenType, setKitchenType] = useState<KitchenType>(KitchenType.Other);
   const [restrictAvailability, setRestrictAvailability] = useState(false);
-  const [availabilityStart, setAvailabilityStart] = useState("11:00");
-  const [availabilityEnd, setAvailabilityEnd] = useState("14:00");
+  const [availability, setAvailability] = useState<Availability>({});
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -31,8 +31,7 @@ export function AddDemoMenuItemModal({ open, onClose, onAdd }: AddDemoMenuItemMo
       setImageFile(null);
       setKitchenType(KitchenType.Other);
       setRestrictAvailability(false);
-      setAvailabilityStart("11:00");
-      setAvailabilityEnd("14:00");
+      setAvailability({});
       setFormError(null);
       setSubmitting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -59,9 +58,7 @@ export function AddDemoMenuItemModal({ open, onClose, onAdd }: AddDemoMenuItemMo
         price: parsePrice(),
         imageFile,
         kitchenType,
-        availability: restrictAvailability
-          ? { start: availabilityStart, end: availabilityEnd }
-          : undefined,
+        availability: restrictAvailability ? availability : undefined,
       });
       onClose();
     } catch {
@@ -165,34 +162,11 @@ export function AddDemoMenuItemModal({ open, onClose, onAdd }: AddDemoMenuItemMo
                 onChange={(e) => setRestrictAvailability(e.target.checked)}
                 className="h-4 w-4 rounded border-foreground/30"
               />
-              <span className="text-sm font-medium text-foreground">Restrict to a time window</span>
+              <span className="text-sm font-medium text-foreground">Restrict to a weekly schedule</span>
             </label>
             {restrictAvailability && (
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                <div>
-                  <label htmlFor="add-di-avail-start" className="block text-xs text-foreground/60 mb-1">
-                    Start
-                  </label>
-                  <input
-                    id="add-di-avail-start"
-                    type="time"
-                    value={availabilityStart}
-                    onChange={(e) => setAvailabilityStart(e.target.value)}
-                    className="w-full rounded-lg border border-foreground/20 bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="add-di-avail-end" className="block text-xs text-foreground/60 mb-1">
-                    End
-                  </label>
-                  <input
-                    id="add-di-avail-end"
-                    type="time"
-                    value={availabilityEnd}
-                    onChange={(e) => setAvailabilityEnd(e.target.value)}
-                    className="w-full rounded-lg border border-foreground/20 bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
-                  />
-                </div>
+              <div className="mt-2">
+                <WeeklyAvailabilityEditor value={availability} onChange={setAvailability} />
               </div>
             )}
           </div>

@@ -18,6 +18,26 @@ export function formatTimeHHmmTo12h(timeStr: string): string {
   return `${hour12}:${mins.toString().padStart(2, "0")} ${period}`;
 }
 
+const AVAILABILITY_DAY_ORDER: { key: keyof Availability; label: string }[] = [
+  { key: "mon", label: "Mon" },
+  { key: "tue", label: "Tue" },
+  { key: "wed", label: "Wed" },
+  { key: "thu", label: "Thu" },
+  { key: "fri", label: "Fri" },
+  { key: "sat", label: "Sat" },
+  { key: "sun", label: "Sun" },
+];
+
+/** { mon: {startTime, endTime}, ... } -> "Mon 11:00 AM–2:00 PM, Tue 2:00 PM–8:00 PM" */
+export function formatWeeklyAvailability(availability: Availability): string {
+  return AVAILABILITY_DAY_ORDER.filter(({ key }) => availability[key])
+    .map(({ key, label }) => {
+      const range = availability[key]!;
+      return `${label} ${formatTimeHHmmTo12h(range.startTime)}–${formatTimeHHmmTo12h(range.endTime)}`;
+    })
+    .join(", ");
+}
+
 /** "MONDAY" -> "Monday" */
 export function formatDayOfWeekLabel(day: string): string {
   if (!day) return "";

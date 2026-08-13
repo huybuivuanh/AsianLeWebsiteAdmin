@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { KitchenType } from "@/types/enum";
 import type { DemoMenuItemInput } from "@/stores/demoMenuItemsStore";
+import { WeeklyAvailabilityEditor } from "@/components/demo-menu/WeeklyAvailabilityEditor";
 
 type EditDemoMenuItemModalProps = {
   open: boolean;
@@ -20,8 +21,7 @@ export function EditDemoMenuItemModal({ open, item, onClose, onSave }: EditDemoM
   const [removeImage, setRemoveImage] = useState(false);
   const [kitchenType, setKitchenType] = useState<KitchenType>(KitchenType.Other);
   const [restrictAvailability, setRestrictAvailability] = useState(false);
-  const [availabilityStart, setAvailabilityStart] = useState("11:00");
-  const [availabilityEnd, setAvailabilityEnd] = useState("14:00");
+  const [availability, setAvailability] = useState<Availability>({});
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -35,8 +35,7 @@ export function EditDemoMenuItemModal({ open, item, onClose, onSave }: EditDemoM
       setRemoveImage(false);
       setKitchenType(item.kitchenType);
       setRestrictAvailability(!!item.availability);
-      setAvailabilityStart(item.availability?.start ?? "11:00");
-      setAvailabilityEnd(item.availability?.end ?? "14:00");
+      setAvailability(item.availability ?? {});
       setFormError(null);
       setSubmitting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -49,8 +48,7 @@ export function EditDemoMenuItemModal({ open, item, onClose, onSave }: EditDemoM
       setRemoveImage(false);
       setKitchenType(KitchenType.Other);
       setRestrictAvailability(false);
-      setAvailabilityStart("11:00");
-      setAvailabilityEnd("14:00");
+      setAvailability({});
       setFormError(null);
       setSubmitting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -79,9 +77,7 @@ export function EditDemoMenuItemModal({ open, item, onClose, onSave }: EditDemoM
         imageFile,
         removeImage: removeImage || undefined,
         kitchenType,
-        availability: restrictAvailability
-          ? { start: availabilityStart, end: availabilityEnd }
-          : undefined,
+        availability: restrictAvailability ? availability : undefined,
       });
       onClose();
     } catch {
@@ -219,34 +215,11 @@ export function EditDemoMenuItemModal({ open, item, onClose, onSave }: EditDemoM
                 onChange={(e) => setRestrictAvailability(e.target.checked)}
                 className="h-4 w-4 rounded border-foreground/30"
               />
-              <span className="text-sm font-medium text-foreground">Restrict to a time window</span>
+              <span className="text-sm font-medium text-foreground">Restrict to a weekly schedule</span>
             </label>
             {restrictAvailability && (
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                <div>
-                  <label htmlFor="edit-di-avail-start" className="block text-xs text-foreground/60 mb-1">
-                    Start
-                  </label>
-                  <input
-                    id="edit-di-avail-start"
-                    type="time"
-                    value={availabilityStart}
-                    onChange={(e) => setAvailabilityStart(e.target.value)}
-                    className="w-full rounded-lg border border-foreground/20 bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="edit-di-avail-end" className="block text-xs text-foreground/60 mb-1">
-                    End
-                  </label>
-                  <input
-                    id="edit-di-avail-end"
-                    type="time"
-                    value={availabilityEnd}
-                    onChange={(e) => setAvailabilityEnd(e.target.value)}
-                    className="w-full rounded-lg border border-foreground/20 bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
-                  />
-                </div>
+              <div className="mt-2">
+                <WeeklyAvailabilityEditor value={availability} onChange={setAvailability} />
               </div>
             )}
           </div>
