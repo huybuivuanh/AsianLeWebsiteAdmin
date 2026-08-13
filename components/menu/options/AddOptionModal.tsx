@@ -23,6 +23,13 @@ export function AddOptionModal({ open, onClose, onAdd }: AddOptionModalProps) {
     }
   }, [open]);
 
+  function parsePrice(): number {
+    const s = price.trim();
+    if (s === "") return 0;
+    const n = parseFloat(s);
+    return Number.isFinite(n) && n >= 0 ? n : 0;
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setFormError(null);
@@ -30,14 +37,9 @@ export function AddOptionModal({ open, onClose, onAdd }: AddOptionModalProps) {
       setFormError("Name is required.");
       return;
     }
-    const parsedPrice = parseFloat(price);
-    if (isNaN(parsedPrice) || parsedPrice < 0) {
-      setFormError("Price must be a valid number ≥ 0.");
-      return;
-    }
     setSubmitting(true);
     try {
-      await onAdd({ name: name.trim(), price: parsedPrice });
+      await onAdd({ name: name.trim(), price: parsePrice() });
       onClose();
     } catch {
       setFormError("Something went wrong. Try again.");
@@ -85,7 +87,7 @@ export function AddOptionModal({ open, onClose, onAdd }: AddOptionModalProps) {
           </div>
           <div>
             <label htmlFor="add-option-price" className="block text-sm font-medium text-foreground mb-1">
-              Price (CAD) <span className="text-red-500">*</span>
+              Price (CAD)
             </label>
             <input
               id="add-option-price"
@@ -94,10 +96,10 @@ export function AddOptionModal({ open, onClose, onAdd }: AddOptionModalProps) {
               step={0.01}
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              required
               className="w-full rounded-lg border border-foreground/20 bg-background px-3 py-2 text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
               placeholder="0.00"
             />
+            <p className="mt-1 text-xs text-foreground/50">Leave blank or enter 0 if no price.</p>
           </div>
           <div className="flex gap-2 justify-end pt-2">
             <button
