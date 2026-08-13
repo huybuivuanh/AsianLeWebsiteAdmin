@@ -8,7 +8,6 @@ import { OptionGroupRow } from "@/components/menu/option-groups/OptionGroupRow";
 import { AddOptionGroupModal } from "@/components/menu/option-groups/AddOptionGroupModal";
 import { itemReferencesOptionGroup, removeOptionGroupRef } from "@/lib/menu-item-option-groups";
 import { patchClearDefaultIfNotInOptionIds } from "@/lib/option-group-updates";
-import { PublishMenuButton } from "@/components/menu/PublishMenuButton";
 import { confirmDialog, alertDialog } from "@/stores/modalStore";
 
 export default function OptionGroupsPage() {
@@ -96,7 +95,6 @@ export default function OptionGroupsPage() {
         >
           + Add Option Group
         </button>
-        <PublishMenuButton />
       </div>
       <div className="mb-4">
         <input

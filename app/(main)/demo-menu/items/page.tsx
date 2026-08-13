@@ -5,7 +5,6 @@ import { useDemoMenuItemsStore } from "@/stores/demoMenuItemsStore";
 import { DemoMenuItemRow } from "@/components/demo-menu/DemoMenuItemRow";
 import { AddDemoMenuItemModal } from "@/components/demo-menu/AddDemoMenuItemModal";
 import { EditDemoMenuItemModal } from "@/components/demo-menu/EditDemoMenuItemModal";
-import { PublishMenuButton } from "@/components/menu/PublishMenuButton";
 import { confirmDialog } from "@/stores/modalStore";
 
 export default function DemoMenuItemsPage() {
@@ -50,7 +49,6 @@ export default function DemoMenuItemsPage() {
         >
           + Add Item
         </button>
-        <PublishMenuButton />
       </div>
 
       <div className="mb-4">

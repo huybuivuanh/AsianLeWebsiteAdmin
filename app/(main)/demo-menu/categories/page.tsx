@@ -8,7 +8,6 @@ import { EditDemoCategoryModal } from "@/components/demo-menu/categories/EditDem
 import { AddDemoCategoryItemsModal } from "@/components/demo-menu/categories/AddDemoCategoryItemsModal";
 import { DemoCategoryRow } from "@/components/demo-menu/categories/DemoCategoryRow";
 import { SortDemoCategoriesModal } from "@/components/demo-menu/categories/SortDemoCategoriesModal";
-import { PublishMenuButton } from "@/components/menu/PublishMenuButton";
 import { confirmDialog } from "@/stores/modalStore";
 
 export default function DemoCategoriesPage() {
@@ -132,7 +131,6 @@ export default function DemoCategoriesPage() {
             Sort Category
           </button>
         )}
-        <PublishMenuButton />
       </div>
       <div className="mb-4">
         <input

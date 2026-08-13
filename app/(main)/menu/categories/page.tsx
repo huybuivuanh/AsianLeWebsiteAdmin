@@ -8,7 +8,6 @@ import { EditCategoryModal } from "@/components/menu/categories/EditCategoryModa
 import { AddCategoryItemsModal } from "@/components/menu/categories/AddCategoryItemsModal";
 import { CategoryRow } from "@/components/menu/categories/CategoryRow";
 import { SortCategoriesModal } from "@/components/menu/categories/SortCategoriesModal";
-import { PublishMenuButton } from "@/components/menu/PublishMenuButton";
 import { confirmDialog } from "@/stores/modalStore";
 
 export default function CategoriesPage() {
@@ -115,7 +114,6 @@ export default function CategoriesPage() {
 
   return (
     <div className="min-w-0">
-      <PublishMenuButton />
       <div className="flex flex-wrap items-center gap-4 mb-4">
         <button
           type="button"

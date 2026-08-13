@@ -22,7 +22,6 @@ import { useDailySpecialsStore } from "@/stores/dailySpecialsStore";
 import { useSpecialItemsStore } from "@/stores/dailySpecialItemsStore";
 import { useOptionGroupsStore } from "@/stores/optionGroupsStore";
 import { useOptionsStore } from "@/stores/optionsStore";
-import { useMenuVersionStore } from "@/stores/menuVersionStore";
 import { useStoreSettingsStore } from "@/stores/storeSettingsStore";
 import { useDemoMenuItemsStore } from "@/stores/demoMenuItemsStore";
 import { useDemoCategoriesStore } from "@/stores/demoCategoriesStore";
@@ -58,7 +57,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         void useSpecialItemsStore.getState().fetchSpecialItems();
         void useOptionGroupsStore.getState().fetchOptionGroups();
         void useOptionsStore.getState().fetchOptions();
-        void useMenuVersionStore.getState().fetchMenuVersion();
         void useStoreSettingsStore.getState().fetchStoreSettings();
         void useDemoMenuItemsStore.getState().fetchDemoMenuItems();
         void useDemoCategoriesStore.getState().fetchDemoCategories();
@@ -71,7 +69,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         useSpecialItemsStore.getState().reset();
         useOptionGroupsStore.getState().reset();
         useOptionsStore.getState().reset();
-        useMenuVersionStore.getState().reset();
         useStoreSettingsStore.getState().reset();
         useDemoMenuItemsStore.getState().reset();
         useDemoCategoriesStore.getState().reset();
@@ -114,7 +111,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useSpecialItemsStore.getState().reset();
     useOptionGroupsStore.getState().reset();
     useOptionsStore.getState().reset();
-    useMenuVersionStore.getState().reset();
     useStoreSettingsStore.getState().reset();
     useDemoMenuItemsStore.getState().reset();
     useDemoCategoriesStore.getState().reset();

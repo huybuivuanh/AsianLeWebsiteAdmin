@@ -138,11 +138,6 @@ declare global {
     holidays: Holiday[];
   }
 
-  interface MenuVersion {
-    version: number;
-    lastUpdated: Date | null;
-  }
-
   // --- Orders (written by the customer-facing website, read here for order
   // history/printing — see that repo's orders-schema.md for the full contract). ---
 

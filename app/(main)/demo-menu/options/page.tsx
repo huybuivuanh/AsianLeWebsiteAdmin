@@ -6,7 +6,6 @@ import { useOptionGroupsStore } from "@/stores/optionGroupsStore";
 import { OptionRow } from "@/components/menu/options/OptionRow";
 import { AddOptionModal } from "@/components/menu/options/AddOptionModal";
 import { patchClearDefaultIfOptionRemoved } from "@/lib/option-group-updates";
-import { PublishMenuButton } from "@/components/menu/PublishMenuButton";
 import { confirmDialog, alertDialog } from "@/stores/modalStore";
 
 export default function OptionsPage() {
@@ -58,7 +57,6 @@ export default function OptionsPage() {
         >
           + Add Option
         </button>
-        <PublishMenuButton />
       </div>
       <div className="mb-4">
         <input
