@@ -72,6 +72,15 @@ export function AddDemoMenuItemModal({ open, onClose, onAdd }: AddDemoMenuItemMo
     if (!submitting) onClose();
   }
 
+  useEffect(() => {
+    if (!open) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && !submitting) onClose();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, submitting, onClose]);
+
   if (!open) return null;
 
   return (

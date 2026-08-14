@@ -68,6 +68,15 @@ export function EditOptionGroupModal({
     if (!submitting) onClose();
   }
 
+  useEffect(() => {
+    if (!open) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && !submitting) onClose();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, submitting, onClose]);
+
   if (!open || !group) return null;
 
   return (

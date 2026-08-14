@@ -1,10 +1,20 @@
 "use client";
 
+import { useEffect } from "react";
 import { useModalStore } from "@/stores/modalStore";
 
 export function AppModal() {
   const { open, kind, title, message, confirmLabel, cancelLabel, danger, resolveModal } =
     useModalStore();
+
+  useEffect(() => {
+    if (!open) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") resolveModal(kind !== "confirm");
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, kind, resolveModal]);
 
   if (!open) return null;
 
