@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { WeeklyAvailabilityEditor } from "@/components/demo-menu/WeeklyAvailabilityEditor";
 
 type AddOptionModalProps = {
   open: boolean;
@@ -11,6 +12,8 @@ type AddOptionModalProps = {
 export function AddOptionModal({ open, onClose, onAdd }: AddOptionModalProps) {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
+  const [restrictAvailability, setRestrictAvailability] = useState(false);
+  const [availability, setAvailability] = useState<Availability>({});
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -18,6 +21,8 @@ export function AddOptionModal({ open, onClose, onAdd }: AddOptionModalProps) {
     if (!open) {
       setName("");
       setPrice("");
+      setRestrictAvailability(false);
+      setAvailability({});
       setFormError(null);
       setSubmitting(false);
     }
@@ -39,7 +44,9 @@ export function AddOptionModal({ open, onClose, onAdd }: AddOptionModalProps) {
     }
     setSubmitting(true);
     try {
-      await onAdd({ name: name.trim(), price: parsePrice() });
+      const data: Omit<ItemOption, "id" | "createdAt"> = { name: name.trim(), price: parsePrice() };
+      if (restrictAvailability) data.availability = availability;
+      await onAdd(data);
       onClose();
     } catch {
       setFormError("Something went wrong. Try again.");
@@ -109,6 +116,22 @@ export function AddOptionModal({ open, onClose, onAdd }: AddOptionModalProps) {
               placeholder="0.00"
             />
             <p className="mt-1 text-xs text-foreground/50">Leave blank or enter 0 if no price.</p>
+          </div>
+          <div>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={restrictAvailability}
+                onChange={(e) => setRestrictAvailability(e.target.checked)}
+                className="h-4 w-4 rounded border-foreground/30"
+              />
+              <span className="text-sm font-medium text-foreground">Restrict to a weekly schedule</span>
+            </label>
+            {restrictAvailability && (
+              <div className="mt-2">
+                <WeeklyAvailabilityEditor value={availability} onChange={setAvailability} />
+              </div>
+            )}
           </div>
           <div className="flex gap-2 justify-end pt-2">
             <button

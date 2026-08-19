@@ -38,6 +38,11 @@ export function formatWeeklyAvailability(availability: Availability): string {
     .join(", ");
 }
 
+/** An Availability object with no days configured means unavailable every day. */
+export function hasNoAvailableDays(availability: Availability): boolean {
+  return AVAILABILITY_DAY_ORDER.every(({ key }) => !availability[key]);
+}
+
 /** "MONDAY" -> "Monday" */
 export function formatDayOfWeekLabel(day: string): string {
   if (!day) return "";

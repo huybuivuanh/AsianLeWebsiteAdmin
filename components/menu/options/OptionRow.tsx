@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { formatPriceCAD } from "@/lib/utils";
+import { formatPriceCAD, formatWeeklyAvailability, hasNoAvailableDays } from "@/lib/utils";
 import { EditOptionModal } from "./EditOptionModal";
 
 type OptionRowProps = {
@@ -36,6 +36,16 @@ export function OptionRow({ option, optionGroups, onUpdate, onDelete }: OptionRo
             <p className="mt-0.5 text-xs text-foreground/50">
               Groups: {belongsToGroups.map((g) => g.name).join(", ")}
             </p>
+          )}
+          {option.availability && hasNoAvailableDays(option.availability) && (
+            <span className="mt-1 inline-block text-xs rounded-full border border-red-300 bg-red-50 px-2 py-0.5 font-medium text-red-700">
+              Unavailable · no days set
+            </span>
+          )}
+          {option.availability && !hasNoAvailableDays(option.availability) && (
+            <span className="mt-1 inline-block text-xs rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 font-medium text-amber-700">
+              {formatWeeklyAvailability(option.availability)}
+            </span>
           )}
         </div>
         <div className="flex gap-2 shrink-0">

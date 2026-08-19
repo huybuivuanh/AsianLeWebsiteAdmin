@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { deleteField } from "firebase/firestore";
+import { WeeklyAvailabilityEditor } from "@/components/demo-menu/WeeklyAvailabilityEditor";
 
 type EditOptionModalProps = {
   open: boolean;
@@ -17,6 +19,8 @@ export function EditOptionModal({
 }: EditOptionModalProps) {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
+  const [restrictAvailability, setRestrictAvailability] = useState(false);
+  const [availability, setAvailability] = useState<Availability>({});
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -24,12 +28,16 @@ export function EditOptionModal({
     if (open && option) {
       setName(option.name);
       setPrice(option.price.toString());
+      setRestrictAvailability(!!option.availability);
+      setAvailability(option.availability ?? {});
       setFormError(null);
       setSubmitting(false);
     }
     if (!open) {
       setName("");
       setPrice("");
+      setRestrictAvailability(false);
+      setAvailability({});
       setFormError(null);
       setSubmitting(false);
     }
@@ -50,7 +58,11 @@ export function EditOptionModal({
     }
     setSubmitting(true);
     try {
-      await onSave(option.id, { name: name.trim(), price: parsedPrice });
+      await onSave(option.id, {
+        name: name.trim(),
+        price: parsedPrice,
+        availability: restrictAvailability ? availability : deleteField(),
+      });
       onClose();
     } catch {
       setFormError("Something went wrong. Try again.");
@@ -118,6 +130,22 @@ export function EditOptionModal({
               required
               className="w-full rounded-lg border border-foreground/20 bg-background px-3 py-2 text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
             />
+          </div>
+          <div>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={restrictAvailability}
+                onChange={(e) => setRestrictAvailability(e.target.checked)}
+                className="h-4 w-4 rounded border-foreground/30"
+              />
+              <span className="text-sm font-medium text-foreground">Restrict to a weekly schedule</span>
+            </label>
+            {restrictAvailability && (
+              <div className="mt-2">
+                <WeeklyAvailabilityEditor value={availability} onChange={setAvailability} />
+              </div>
+            )}
           </div>
           <div className="flex gap-2 justify-end pt-2">
             <button
