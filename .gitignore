@@ -34,6 +34,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# functions/.env holds non-secret Cloud Functions params (firebase-functions/params)
+# and is meant to be committed — only functions/.env.local (local override) stays ignored.
+!functions/.env
 
 # vercel
 .vercel

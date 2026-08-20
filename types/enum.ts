@@ -21,6 +21,7 @@ export enum KitchenType {
 export enum OrderStatus {
   New = "New",
   InProgress = "InProgress",
+  ReadyForPickup = "ReadyForPickup",
   Completed = "Completed",
   Cancelled = "Cancelled",
 }

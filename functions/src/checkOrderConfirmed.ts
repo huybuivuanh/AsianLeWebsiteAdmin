@@ -1,13 +1,9 @@
 import { onTaskDispatched } from "firebase-functions/v2/tasks";
 import { logger } from "firebase-functions/v2";
-import { defineSecret } from "firebase-functions/params";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
 import { placeConfirmationCall } from "./twilio";
 import { isCallRateLimited, recordCallForRateLimit } from "./rateLimit";
-
-const twilioAccountSid = defineSecret("TWILIO_ACCOUNT_SID");
-const twilioAuthToken = defineSecret("TWILIO_AUTH_TOKEN");
-const twilioFromNumber = defineSecret("TWILIO_FROM_NUMBER");
+import { twilioAccountSid, twilioAuthToken, twilioFromNumber } from "./secrets";
 
 interface CheckOrderConfirmedPayload {
   orderId: string;

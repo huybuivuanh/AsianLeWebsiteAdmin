@@ -1,6 +1,8 @@
 node_modules/
 lib/
 *.log
-.env
+# .env and .env.<project-id> hold non-secret Cloud Functions params (see
+# firebase-functions/params) and are meant to be committed. Only the local
+# override file is ignored — it's never deployed.
 .env.local
 .runtimeconfig.json
