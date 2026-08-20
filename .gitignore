@@ -4,6 +4,8 @@
 /node_modules
 /.pnp
 .pnp.*
+functions/node_modules
+functions/lib
 .yarn/*
 !.yarn/patches
 !.yarn/plugins

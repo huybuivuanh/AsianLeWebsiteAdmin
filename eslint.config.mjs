@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Separate Node project with its own build/tooling — not part of the Next.js app.
+    "functions/**",
   ]),
 ]);
 

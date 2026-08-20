@@ -126,6 +126,8 @@ declare global {
     pausedUntil: Date | null;
     timezone: string;
     waitTime: number;
+    /** E.164, e.g. "+13065551234" — who the confirm-call Cloud Function calls. */
+    restaurantPhoneNumber?: string;
     hours: {
       mon: DayHours;
       tue: DayHours;
@@ -181,6 +183,9 @@ declare global {
     paid: boolean;
     printed: boolean;
     createdAt: Date;
+    /** Written only by the confirmOrderCall Cloud Function (functions/), never by this app. */
+    confirmationCallStatus?: "placed" | "failed";
+    confirmationCallPlacedAt?: Date;
   }
 }
 

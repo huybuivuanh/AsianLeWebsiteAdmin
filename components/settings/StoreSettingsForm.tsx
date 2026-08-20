@@ -63,6 +63,15 @@ export function StoreSettingsForm() {
 
   const hasWaitTimeChanges = editedWaitTime !== (settings?.waitTime ?? 0);
 
+  const [editedRestaurantPhone, setEditedRestaurantPhone] = useState(
+    () => settings?.restaurantPhoneNumber ?? "",
+  );
+  const [savingRestaurantPhone, setSavingRestaurantPhone] = useState(false);
+  const [restaurantPhoneError, setRestaurantPhoneError] = useState<string | null>(null);
+
+  const hasRestaurantPhoneChanges =
+    editedRestaurantPhone !== (settings?.restaurantPhoneNumber ?? "");
+
   const [showHolidayForm, setShowHolidayForm] = useState(false);
   const [holidayFrom, setHolidayFrom] = useState("");
   const [holidayTo, setHolidayTo] = useState("");
@@ -75,6 +84,7 @@ export function StoreSettingsForm() {
       setEditedTimezone(settings.timezone);
       setEditedHours(structuredClone(settings.hours));
       setEditedWaitTime(settings.waitTime ?? 0);
+      setEditedRestaurantPhone(settings.restaurantPhoneNumber ?? "");
     }
   }, [settings]);
 
@@ -110,6 +120,24 @@ export function StoreSettingsForm() {
       setWaitTimeError("Failed to save wait time.");
     } finally {
       setSavingWaitTime(false);
+    }
+  }
+
+  async function handleSaveRestaurantPhone(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = editedRestaurantPhone.trim();
+    if (!/^\+[1-9]\d{6,14}$/.test(trimmed)) {
+      setRestaurantPhoneError('Enter a valid phone number in E.164 format, e.g. "+13065551234".');
+      return;
+    }
+    setRestaurantPhoneError(null);
+    setSavingRestaurantPhone(true);
+    try {
+      await updateSettings({ restaurantPhoneNumber: trimmed });
+    } catch {
+      setRestaurantPhoneError("Failed to save restaurant phone number.");
+    } finally {
+      setSavingRestaurantPhone(false);
     }
   }
 
@@ -281,6 +309,40 @@ export function StoreSettingsForm() {
               className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
             >
               {savingWaitTime ? "Saving…" : "Save Wait Time"}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      {/* Restaurant Phone (confirmation-call alert) */}
+      <section>
+        <h2 className="text-base font-semibold text-foreground mb-1">Restaurant Phone</h2>
+        <p className="text-sm text-foreground/50 mb-4">
+          Called automatically if a new order sits unconfirmed for 30 seconds.
+        </p>
+        <form onSubmit={handleSaveRestaurantPhone} className="space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-foreground/60 shrink-0 w-24">Phone number</span>
+            <input
+              type="tel"
+              value={editedRestaurantPhone}
+              onChange={(e) => setEditedRestaurantPhone(e.target.value)}
+              placeholder="+13065551234"
+              className="flex-1 rounded-lg border border-foreground/15 bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/35 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+            />
+          </div>
+
+          {restaurantPhoneError && (
+            <p className="text-red-500 text-sm" role="alert">{restaurantPhoneError}</p>
+          )}
+
+          <div className="flex items-center justify-end gap-3">
+            <button
+              type="submit"
+              disabled={savingRestaurantPhone || !hasRestaurantPhoneChanges}
+              className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
+            >
+              {savingRestaurantPhone ? "Saving…" : "Save Phone Number"}
             </button>
           </div>
         </form>
