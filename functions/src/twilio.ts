@@ -10,14 +10,15 @@ interface PlaceConfirmationCallArgs {
 
 /** Escape text dropped into a TwiML <Say> element. */
 function escapeForTwiml(text: string): string {
-  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 function buildTwiml(orderNumber: string): string {
   const message = escapeForTwiml(
-    `This is an automated alert from the order system. ` +
-      `You have a new order, number ${orderNumber}, that has not been confirmed. ` +
-      `Please check your order screen.`,
+    `You have a new order, number ${orderNumber}, that has not been confirmed. Please check your order screen. You have a new order, number ${orderNumber}, that has not been confirmed. Please check your order screen. You have a new order, number ${orderNumber}, that has not been confirmed. Please check your order screen.`,
   );
   return `<?xml version="1.0" encoding="UTF-8"?><Response><Say voice="Polly.Joanna">${message}</Say></Response>`;
 }

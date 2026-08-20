@@ -127,7 +127,7 @@ declare global {
     timezone: string;
     waitTime: number;
     /** E.164, e.g. "+13065551234" — who the confirm-call Cloud Function calls. */
-    restaurantPhoneNumber?: string;
+    restaurantPhoneNumber: string;
     hours: {
       mon: DayHours;
       tue: DayHours;
