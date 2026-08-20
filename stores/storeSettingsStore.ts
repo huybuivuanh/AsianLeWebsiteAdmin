@@ -20,6 +20,7 @@ const DEFAULTS: StoreSettings = {
   pausedUntil: INDEFINITE_PAUSE,
   timezone: "America/Edmonton",
   waitTime: 15,
+  restaurantPhoneNumber: "",
   hours: {
     mon: defaultHours,
     tue: defaultHours,
