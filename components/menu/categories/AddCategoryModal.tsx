@@ -27,7 +27,7 @@ export function AddCategoryModal({
     }
   }, [open]);
 
-  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setFormError(null);
     const trimmedName = name.trim();

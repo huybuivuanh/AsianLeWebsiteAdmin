@@ -9,7 +9,6 @@ const navLinks = [
   { href: "/", label: "Dashboard" },
   { href: "/orders", label: "Orders" },
   { href: "/menu", label: "Menu" },
-  { href: "/demo-menu", label: "Demo Menu" },
   { href: "/daily-special", label: "Daily Special" },
   { href: "/gallery", label: "Gallery" },
   { href: "/updates", label: "Updates" },

@@ -21,7 +21,7 @@ export default function CategoriesPage() {
     updateCategoryItemIds,
     reorderCategories,
   } = useCategoriesStore();
-  const { menuItems, updateMenuItemCategoryIds } = useMenuItemsStore();
+  const { items, updateMenuItemField } = useMenuItemsStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<FoodCategory | null>(
     null,
@@ -53,12 +53,12 @@ export default function CategoriesPage() {
     setDeletingId(category.id);
     try {
       await deleteCategory(category.id);
-      for (const menuItem of menuItems) {
-        if (menuItem.categoryIds?.includes(category.id)) {
-          const nextCategoryIds = (menuItem.categoryIds ?? []).filter(
+      for (const item of items) {
+        if (item.categoryIds?.includes(category.id)) {
+          const nextCategoryIds = (item.categoryIds ?? []).filter(
             (cid) => cid !== category.id,
           );
-          await updateMenuItemCategoryIds(menuItem.id, nextCategoryIds);
+          await updateMenuItemField(item.id, { categoryIds: nextCategoryIds });
         }
       }
     } finally {
@@ -69,12 +69,12 @@ export default function CategoriesPage() {
   async function handleRemoveItem(category: FoodCategory, itemId: string) {
     const next = (category.itemIds ?? []).filter((id) => id !== itemId);
     await updateCategoryItemIds(category.id, next);
-    const item = menuItems.find((m) => m.id === itemId);
+    const item = items.find((m) => m.id === itemId);
     if (item) {
       const nextCategoryIds = (item.categoryIds ?? []).filter(
         (cid) => cid !== category.id,
       );
-      await updateMenuItemCategoryIds(itemId, nextCategoryIds);
+      await updateMenuItemField(itemId, { categoryIds: nextCategoryIds });
     }
   }
 
@@ -91,21 +91,21 @@ export default function CategoriesPage() {
     await updateCategoryItemIds(categoryId, itemIds);
 
     for (const itemId of removed) {
-      const item = menuItems.find((m) => m.id === itemId);
+      const item = items.find((m) => m.id === itemId);
       if (item) {
         const nextCategoryIds = (item.categoryIds ?? []).filter(
           (cid) => cid !== categoryId,
         );
-        await updateMenuItemCategoryIds(itemId, nextCategoryIds);
+        await updateMenuItemField(itemId, { categoryIds: nextCategoryIds });
       }
     }
     for (const itemId of added) {
-      const item = menuItems.find((m) => m.id === itemId);
+      const item = items.find((m) => m.id === itemId);
       if (item) {
         const nextCategoryIds = (item.categoryIds ?? []).includes(categoryId)
           ? item.categoryIds!
           : [...(item.categoryIds ?? []), categoryId];
-        await updateMenuItemCategoryIds(itemId, nextCategoryIds);
+        await updateMenuItemField(itemId, { categoryIds: nextCategoryIds });
       }
     }
 
@@ -114,13 +114,13 @@ export default function CategoriesPage() {
 
   return (
     <div className="min-w-0">
-      <div className="flex flex-wrap items-center gap-4 mb-4">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-foreground/10 bg-background px-4 py-3 mb-4">
         <button
           type="button"
           onClick={() => setModalOpen(true)}
           className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20"
         >
-          Add Category
+          + Add Category
         </button>
         {categories.length > 1 && (
           <button
@@ -152,7 +152,7 @@ export default function CategoriesPage() {
         <p className="text-foreground/60 text-sm">Loading categories…</p>
       ) : categories.length === 0 ? (
         <p className="text-foreground/70 text-sm sm:text-base">
-          No categories yet. Add data in Firestore to see them here.
+          No categories yet. Add one to get started.
         </p>
       ) : filteredCategories.length === 0 ? (
         <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.02] p-6">

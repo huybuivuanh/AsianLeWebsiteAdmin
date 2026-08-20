@@ -24,14 +24,14 @@ export function CategoryRow({
   onRemoveItem,
   deleting = false,
 }: CategoryRowProps) {
-  const { menuItems } = useMenuItemsStore();
+  const { items } = useMenuItemsStore();
 
   const itemsInCategory = useMemo(() => {
     const ids = category.itemIds ?? [];
     return ids
-      .map((id) => menuItems.find((m) => m.id === id))
+      .map((id) => items.find((m) => m.id === id))
       .filter((m): m is MenuItem => m != null);
-  }, [category.itemIds, menuItems]);
+  }, [category.itemIds, items]);
 
   return (
     <li className="rounded-2xl border border-foreground/10 bg-foreground/[0.02] overflow-hidden">

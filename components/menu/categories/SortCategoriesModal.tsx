@@ -192,4 +192,3 @@ export function SortCategoriesModal({
     </div>
   );
 }
-

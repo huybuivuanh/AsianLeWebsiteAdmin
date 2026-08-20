@@ -36,13 +36,13 @@ export function reindexOptionGroupOrders(refs: OptionGroupId[]): OptionGroupId[]
   }));
 }
 
-export function getOrderedOptionGroupRefs(item: DemoMenuItem): OptionGroupId[] {
+export function getOrderedOptionGroupRefs(item: MenuItem): OptionGroupId[] {
   const list = normalizeMenuItemOptionGroupIds(item.optionGroupIds) ?? [];
   return [...list].sort((a, b) => a.order - b.order);
 }
 
 export function mergeOptionGroupSelection(
-  item: DemoMenuItem,
+  item: MenuItem,
   selectedIds: string[],
 ): OptionGroupId[] {
   const ordered = getOrderedOptionGroupRefs(item);
@@ -57,7 +57,7 @@ export function mergeOptionGroupSelection(
 }
 
 export function removeOptionGroupRef(
-  item: DemoMenuItem,
+  item: MenuItem,
   groupId: string,
 ): OptionGroupId[] {
   const next = getOrderedOptionGroupRefs(item).filter(
@@ -67,7 +67,7 @@ export function removeOptionGroupRef(
 }
 
 export function itemReferencesOptionGroup(
-  item: DemoMenuItem,
+  item: MenuItem,
   groupId: string,
 ): boolean {
   return getOrderedOptionGroupRefs(item).some(

@@ -28,7 +28,11 @@ declare global {
     price: number;
     image?: ImageItem;
     options?: string[];
+    optionGroupIds?: OptionGroupId[];
     categoryIds?: string[];
+    kitchenType?: KitchenType;
+    availability?: Availability;
+    soldOutUntil?: Date;
     createdAt: Date;
   }
   interface DailySpecialItem {
@@ -70,22 +74,6 @@ declare global {
     fri?: TimeRange;
     sat?: TimeRange;
     sun?: TimeRange;
-  }
-
-  type DemoCategory = FoodCategory;
-
-  interface DemoMenuItem {
-    id: string;
-    name: string;
-    description?: string;
-    price: number;
-    image?: ImageItem;
-    optionGroupIds?: OptionGroupId[];
-    categoryIds?: string[];
-    kitchenType: KitchenType;
-    availability?: Availability;
-    soldOutUntil?: Date;
-    createdAt: Date;
   }
 
   interface OptionGroup {

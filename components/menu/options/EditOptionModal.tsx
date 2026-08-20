@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { deleteField } from "firebase/firestore";
-import { WeeklyAvailabilityEditor } from "@/components/demo-menu/WeeklyAvailabilityEditor";
+import { WeeklyAvailabilityEditor } from "@/components/menu/items/WeeklyAvailabilityEditor";
 
 type EditOptionModalProps = {
   open: boolean;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { WeeklyAvailabilityEditor } from "@/components/demo-menu/WeeklyAvailabilityEditor";
+import { WeeklyAvailabilityEditor } from "@/components/menu/items/WeeklyAvailabilityEditor";
 
 type AddOptionModalProps = {
   open: boolean;

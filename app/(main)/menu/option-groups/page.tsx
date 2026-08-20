@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useOptionGroupsStore } from "@/stores/optionGroupsStore";
 import { useOptionsStore } from "@/stores/optionsStore";
-import { useDemoMenuItemsStore } from "@/stores/demoMenuItemsStore";
+import { useMenuItemsStore } from "@/stores/menuItemsStore";
 import { OptionGroupRow } from "@/components/menu/option-groups/OptionGroupRow";
 import { AddOptionGroupModal } from "@/components/menu/option-groups/AddOptionGroupModal";
 import { itemReferencesOptionGroup, removeOptionGroupRef } from "@/lib/menu-item-option-groups";
@@ -20,7 +20,7 @@ export default function OptionGroupsPage() {
     deleteOptionGroup,
   } = useOptionGroupsStore();
   const { options, updateOption } = useOptionsStore();
-  const { items: demoItems, updateDemoMenuItemField } = useDemoMenuItemsStore();
+  const { items: menuItems, updateMenuItemField } = useMenuItemsStore();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -35,10 +35,10 @@ export default function OptionGroupsPage() {
       return;
     try {
       await Promise.all([
-        ...demoItems
+        ...menuItems
           .filter((item) => itemReferencesOptionGroup(item, group.id))
           .map((item) =>
-            updateDemoMenuItemField(item.id, {
+            updateMenuItemField(item.id, {
               optionGroupIds: removeOptionGroupRef(item, group.id),
             }),
           ),

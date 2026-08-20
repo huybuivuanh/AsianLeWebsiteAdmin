@@ -20,7 +20,7 @@ export function AddCategoryItemsModal({
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const { menuItems } = useMenuItemsStore();
+  const { items } = useMenuItemsStore();
 
   useEffect(() => {
     if (open && category) {
@@ -39,9 +39,9 @@ export function AddCategoryItemsModal({
 
   const filteredItems = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return menuItems;
-    return menuItems.filter((m) => m.name.toLowerCase().includes(q));
-  }, [menuItems, search]);
+    if (!q) return items;
+    return items.filter((m) => m.name.toLowerCase().includes(q));
+  }, [items, search]);
 
   function toggleItem(id: string) {
     setSelectedIds((prev) =>
@@ -49,7 +49,7 @@ export function AddCategoryItemsModal({
     );
   }
 
-  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!category) return;
     setFormError(null);

@@ -5,7 +5,7 @@ import { getOrderedOptionGroupRefs, mergeOptionGroupSelection } from "@/lib/menu
 
 type AddItemOptionGroupsModalProps = {
   open: boolean;
-  item: DemoMenuItem;
+  item: MenuItem;
   optionGroups: OptionGroup[];
   onClose: () => void;
   onSave: (optionGroupIds: OptionGroupId[]) => Promise<void>;
