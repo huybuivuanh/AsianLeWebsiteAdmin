@@ -1,6 +1,8 @@
 import twilio from "twilio";
 import { OrderDetails } from "./orderStatusEmail";
 
+const RESTAURANT_NAME = "Asian Le Restaurant";
+
 interface SendOrderStatusSmsArgs {
   to: string;
   body: string;
@@ -57,7 +59,7 @@ export function confirmedSmsBody(
   orderDetails: OrderDetails,
   timeZone: string,
 ): string {
-  return `Thank you for ordering from Asian Le Restaurant! Your order #${orderNumber} has been confirmed and is being prepared. Order total is $${orderDetails.taxBreakDown.total}.${fulfillmentLineText(orderDetails.fulfillment, timeZone, true)}`;
+  return `Thank you for ordering from ${RESTAURANT_NAME}! Your order #${orderNumber} has been confirmed and is being prepared. Order total is $${orderDetails.taxBreakDown.total}.${fulfillmentLineText(orderDetails.fulfillment, timeZone, true)} Please pay at the store when you pick up your order. Thank you!`;
 }
 
 export function readyForPickupSmsBody(
@@ -65,9 +67,9 @@ export function readyForPickupSmsBody(
   orderDetails: OrderDetails,
   timeZone: string,
 ): string {
-  return `Your order #${orderNumber} is ready for pickup! Order total is $${orderDetails.taxBreakDown.total}. Please pay at the store when you pick up your order.${fulfillmentLineText(orderDetails.fulfillment, timeZone, false)}`;
+  return `Thank you for ordering from ${RESTAURANT_NAME}! Your order #${orderNumber} is ready for pickup! Order total is $${orderDetails.taxBreakDown.total}.${fulfillmentLineText(orderDetails.fulfillment, timeZone, false)} Please pay at the store when you pick up your order. Thank you!`;
 }
 
 export function cancelledSmsBody(orderNumber: string): string {
-  return `Your order #${orderNumber} has been cancelled. If you weren't expecting this or have any questions, please contact the restaurant.`;
+  return `Thank you for choosing ${RESTAURANT_NAME}. Unfortunately, your order #${orderNumber} has been cancelled. If you weren't expecting this or have any questions, please contact us. Thank you for your understanding!`;
 }
