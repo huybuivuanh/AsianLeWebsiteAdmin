@@ -67,3 +67,7 @@ export function readyForPickupSmsBody(
 ): string {
   return `Your order #${orderNumber} is ready for pickup! Order total is $${orderDetails.taxBreakDown.total}. Please pay at the store when you pick up your order.${fulfillmentLineText(orderDetails.fulfillment, timeZone, false)}`;
 }
+
+export function cancelledSmsBody(orderNumber: string): string {
+  return `Your order #${orderNumber} has been cancelled. If you weren't expecting this or have any questions, please contact the restaurant.`;
+}

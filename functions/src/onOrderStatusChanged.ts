@@ -12,11 +12,13 @@ import {
   sendOrderStatusSms,
   confirmedSmsBody,
   readyForPickupSmsBody,
+  cancelledSmsBody,
 } from "./orderStatusSms";
 import {
   sendOrderStatusEmail,
   confirmedEmail,
   readyForPickupEmail,
+  cancelledEmail,
   OrderDetails,
 } from "./orderStatusEmail";
 
@@ -38,8 +40,9 @@ function normalizeFulfillment(raw: unknown): OrderFulfillment {
 
 /**
  * Fires on every order update. Only acts on an actual transition into
- * "InProgress" (order confirmed) or "ReadyForPickup" — a customer gets one
- * SMS + one email for each of those two milestones, not on every write.
+ * "InProgress" (order confirmed), "ReadyForPickup", or "Cancelled" — a
+ * customer gets one SMS + one email for each of those milestones, not on
+ * every write.
  */
 export const onOrderStatusChanged = onDocumentUpdated(
   {
@@ -79,6 +82,9 @@ export const onOrderStatusChanged = onDocumentUpdated(
     } else if (after.status === "ReadyForPickup") {
       sms = readyForPickupSmsBody(orderNumber, orderDetails, TIME_ZONE);
       email = readyForPickupEmail(orderDetails, TIME_ZONE);
+    } else if (after.status === "Cancelled") {
+      sms = cancelledSmsBody(orderNumber);
+      email = cancelledEmail(orderDetails);
     } else {
       return;
     }

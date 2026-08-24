@@ -177,3 +177,19 @@ export function readyForPickupEmail(
       </div>`,
   };
 }
+
+export function cancelledEmail(order: OrderDetails): {
+  subject: string;
+  html: string;
+} {
+  const { orderNumber, customerName } = order;
+  return {
+    subject: `Order #${orderNumber} cancelled`,
+    html: `
+      <div style="font-family:sans-serif;font-size:14px;color:#222;">
+        <p>Hi ${escapeHtml(customerName)},</p>
+        <p>Your order <strong>#${escapeHtml(orderNumber)}</strong> has been cancelled. If you weren't expecting this or have any questions, please contact the restaurant.</p>
+        ${orderDetailsHtml(order)}
+      </div>`,
+  };
+}
