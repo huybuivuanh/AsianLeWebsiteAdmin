@@ -138,7 +138,10 @@ function orderDetailsHtml({ orderItems, taxBreakDown }: OrderDetails): string {
     </table>`;
 }
 
-export function confirmedEmail(order: OrderDetails, timeZone: string): {
+export function confirmedEmail(
+  order: OrderDetails,
+  timeZone: string,
+): {
   subject: string;
   html: string;
 } {
@@ -148,14 +151,17 @@ export function confirmedEmail(order: OrderDetails, timeZone: string): {
     html: `
       <div style="font-family:sans-serif;font-size:14px;color:#222;">
         <p>Hi ${escapeHtml(customerName)},</p>
-        <p>Your order <strong>#${escapeHtml(orderNumber)}</strong> has been confirmed and is being prepared.</p>
+        <p>Your order <strong>#${escapeHtml(orderNumber)}</strong> has been confirmed and is being prepared. Please pay at the store. Thank you!</p>
         ${fulfillmentLineHtml(fulfillment, timeZone, true)}
         ${orderDetailsHtml(order)}
       </div>`,
   };
 }
 
-export function readyForPickupEmail(order: OrderDetails, timeZone: string): {
+export function readyForPickupEmail(
+  order: OrderDetails,
+  timeZone: string,
+): {
   subject: string;
   html: string;
 } {
@@ -165,7 +171,7 @@ export function readyForPickupEmail(order: OrderDetails, timeZone: string): {
     html: `
       <div style="font-family:sans-serif;font-size:14px;color:#222;">
         <p>Hi ${escapeHtml(customerName)},</p>
-        <p>Your order <strong>#${escapeHtml(orderNumber)}</strong> is ready for pickup!</p>
+        <p>Your order <strong>#${escapeHtml(orderNumber)}</strong> is ready for pickup! Please pay at the store. Thank you!</p>
         ${fulfillmentLineHtml(fulfillment, timeZone, false)}
         ${orderDetailsHtml(order)}
       </div>`,

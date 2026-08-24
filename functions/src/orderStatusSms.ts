@@ -57,7 +57,7 @@ export function confirmedSmsBody(
   orderDetails: OrderDetails,
   timeZone: string,
 ): string {
-  return `Thank you for ordering from Asian Le Restaurant!Your order #${orderNumber} has been confirmed and is being prepared. Order total is $${orderDetails.taxBreakDown.total}.${fulfillmentLineText(orderDetails.fulfillment, timeZone, true)}`;
+  return `Thank you for ordering from Asian Le Restaurant! Your order #${orderNumber} has been confirmed and is being prepared. Order total is $${orderDetails.taxBreakDown.total}.${fulfillmentLineText(orderDetails.fulfillment, timeZone, true)}`;
 }
 
 export function readyForPickupSmsBody(
