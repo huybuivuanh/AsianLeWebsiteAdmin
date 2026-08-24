@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { formatPriceCAD, formatWeeklyAvailability, hasNoAvailableDays } from "@/lib/utils";
+import { formatPriceCAD } from "@/lib/utils";
 import { useOptionGroupsStore } from "@/stores/optionGroupsStore";
 import { useOptionsStore } from "@/stores/optionsStore";
 import { useMenuItemsStore } from "@/stores/menuItemsStore";
@@ -171,17 +171,6 @@ export function MenuItemRow({
             <span className="text-xs rounded-full border border-foreground/10 bg-foreground/[0.03] px-2 py-0.5 text-foreground/60">
               {item.kitchenType}
             </span>
-
-            {item.availability && hasNoAvailableDays(item.availability) && (
-              <span className="text-xs rounded-full border border-red-300 bg-red-50 px-2 py-0.5 font-medium text-red-700">
-                Unavailable · no days set
-              </span>
-            )}
-            {item.availability && !hasNoAvailableDays(item.availability) && (
-              <span className="text-xs rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 font-medium text-amber-700">
-                {formatWeeklyAvailability(item.availability)}
-              </span>
-            )}
 
             {itemOptionGroups.length > 0 && (
               <span className="text-xs rounded-full border border-foreground/10 bg-foreground/[0.03] px-2 py-0.5 text-foreground/60">
