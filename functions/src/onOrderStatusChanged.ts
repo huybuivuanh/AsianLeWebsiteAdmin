@@ -1,5 +1,6 @@
 import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { logger } from "firebase-functions/v2";
+import { Timestamp } from "firebase-admin/firestore";
 import {
   twilioAccountSid,
   twilioAuthToken,
@@ -7,8 +8,33 @@ import {
   resendApiKey,
   resendFromEmail,
 } from "./secrets";
-import { sendOrderStatusSms, confirmedSmsBody, readyForPickupSmsBody } from "./orderStatusSms";
-import { sendOrderStatusEmail, confirmedEmail, readyForPickupEmail } from "./orderStatusEmail";
+import {
+  sendOrderStatusSms,
+  confirmedSmsBody,
+  readyForPickupSmsBody,
+} from "./orderStatusSms";
+import {
+  sendOrderStatusEmail,
+  confirmedEmail,
+  readyForPickupEmail,
+  OrderDetails,
+} from "./orderStatusEmail";
+
+// Mirrors stores/storeSettingsStore.ts's default in the admin app.
+const TIME_ZONE = "America/Edmonton";
+
+/** Converts an order doc's raw `fulfillment` field into OrderFulfillment,
+ * turning the Firestore Timestamp on a preorder's `scheduledAt` into a Date
+ * (mirrors lib/orders-firestore.ts's normalizeFulfillment in the admin app). */
+function normalizeFulfillment(raw: unknown): OrderFulfillment {
+  const r = raw as
+    | { kind?: string; scheduledAt?: Timestamp; readyTimeMinutes?: number }
+    | undefined;
+  if (r?.kind === "scheduled" && r.scheduledAt) {
+    return { kind: "scheduled", scheduledAt: r.scheduledAt.toDate() } as OrderFulfillment;
+  }
+  return { kind: "immediate", readyTimeMinutes: r?.readyTimeMinutes } as OrderFulfillment;
+}
 
 /**
  * Fires on every order update. Only acts on an actual transition into
@@ -18,7 +44,12 @@ import { sendOrderStatusEmail, confirmedEmail, readyForPickupEmail } from "./ord
 export const onOrderStatusChanged = onDocumentUpdated(
   {
     document: "orders/{orderId}",
-    secrets: [twilioAccountSid, twilioAuthToken, twilioFromNumber, resendApiKey],
+    secrets: [
+      twilioAccountSid,
+      twilioAuthToken,
+      twilioFromNumber,
+      resendApiKey,
+    ],
   },
   async (event) => {
     const before = event.data?.before.data();
@@ -31,15 +62,23 @@ export const onOrderStatusChanged = onDocumentUpdated(
     const customerEmail = after.customerEmail as string | undefined;
     const phoneNumber = after.phoneNumber as string | undefined;
 
+    const orderDetails: OrderDetails = {
+      orderNumber,
+      customerName: (after.customerName as string | undefined) ?? "there",
+      orderItems: after.orderItems as OrderDetails["orderItems"],
+      taxBreakDown: after.taxBreakDown as OrderDetails["taxBreakDown"],
+      fulfillment: normalizeFulfillment(after.fulfillment),
+    };
+
     let sms: string | undefined;
     let email: { subject: string; html: string } | undefined;
 
     if (after.status === "InProgress") {
-      sms = confirmedSmsBody(orderNumber);
-      email = confirmedEmail(orderNumber);
+      sms = confirmedSmsBody(orderNumber, orderDetails, TIME_ZONE);
+      email = confirmedEmail(orderDetails, TIME_ZONE);
     } else if (after.status === "ReadyForPickup") {
-      sms = readyForPickupSmsBody(orderNumber);
-      email = readyForPickupEmail(orderNumber);
+      sms = readyForPickupSmsBody(orderNumber, orderDetails, TIME_ZONE);
+      email = readyForPickupEmail(orderDetails, TIME_ZONE);
     } else {
       return;
     }
@@ -55,10 +94,15 @@ export const onOrderStatusChanged = onDocumentUpdated(
         });
         logger.info(`Order ${orderId}: status SMS sent for "${after.status}".`);
       } catch (err) {
-        logger.error(`Order ${orderId}: status SMS failed for "${after.status}"`, err);
+        logger.error(
+          `Order ${orderId}: status SMS failed for "${after.status}"`,
+          err,
+        );
       }
     } else {
-      logger.warn(`Order ${orderId}: no phoneNumber on order, skipped status SMS.`);
+      logger.warn(
+        `Order ${orderId}: no phoneNumber on order, skipped status SMS.`,
+      );
     }
 
     if (customerEmail) {
@@ -70,12 +114,19 @@ export const onOrderStatusChanged = onDocumentUpdated(
           apiKey: resendApiKey.value(),
           from: resendFromEmail.value(),
         });
-        logger.info(`Order ${orderId}: status email sent for "${after.status}".`);
+        logger.info(
+          `Order ${orderId}: status email sent for "${after.status}".`,
+        );
       } catch (err) {
-        logger.error(`Order ${orderId}: status email failed for "${after.status}"`, err);
+        logger.error(
+          `Order ${orderId}: status email failed for "${after.status}"`,
+          err,
+        );
       }
     } else {
-      logger.warn(`Order ${orderId}: no customerEmail on order, skipped status email.`);
+      logger.warn(
+        `Order ${orderId}: no customerEmail on order, skipped status email.`,
+      );
     }
   },
 );

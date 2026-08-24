@@ -34,6 +34,33 @@ function formatDateDisplay(dateStr: string): string {
   });
 }
 
+/** Strips a typed phone value down to at most 10 digits. Since the input's displayed
+ * value always carries a literal "+1 " prefix, that has to be dropped first — otherwise
+ * its "1" gets miscounted as a digit the user typed on every keystroke. Once 10 digits
+ * are present, further typing is simply ignored (capped, not shifted) — dropping a
+ * "country code" digit here would be wrong whenever the real number happens to start
+ * with 1. Use {@link extractTenDigitPhoneFromPaste} for pasted values instead. */
+function extractTenDigitPhone(raw: string): string {
+  const withoutPrefix = raw.startsWith("+1") ? raw.slice(2) : raw;
+  return withoutPrefix.replace(/\D/g, "").slice(0, 10);
+}
+
+/** Strips a leading "1" country code from a pasted full number (e.g. pasting
+ * "+1 234-567-8901" or "12345678901"), then caps at 10 digits. */
+function extractTenDigitPhoneFromPaste(raw: string): string {
+  let digits = raw.replace(/\D/g, "");
+  if (digits.length > 10 && digits.startsWith("1")) digits = digits.slice(1);
+  return digits.slice(0, 10);
+}
+
+/** Formats up to 10 NANP digits as "+1 (306) 764-7799", growing as digits are typed. */
+function formatNanpPhone(digits: string): string {
+  if (digits.length === 0) return "+1 ";
+  if (digits.length <= 3) return `+1 (${digits}`;
+  if (digits.length <= 6) return `+1 (${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `+1 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
 export function StoreSettingsForm() {
   const { settings, loading, error, updateSettings, fetchStoreSettings } =
     useStoreSettingsStore();
@@ -64,13 +91,13 @@ export function StoreSettingsForm() {
   const hasWaitTimeChanges = editedWaitTime !== (settings?.waitTime ?? 0);
 
   const [editedRestaurantPhone, setEditedRestaurantPhone] = useState(
-    () => settings?.restaurantPhoneNumber ?? "",
+    () => extractTenDigitPhone(settings?.restaurantPhoneNumber ?? ""),
   );
   const [savingRestaurantPhone, setSavingRestaurantPhone] = useState(false);
   const [restaurantPhoneError, setRestaurantPhoneError] = useState<string | null>(null);
 
   const hasRestaurantPhoneChanges =
-    editedRestaurantPhone !== (settings?.restaurantPhoneNumber ?? "");
+    editedRestaurantPhone !== extractTenDigitPhone(settings?.restaurantPhoneNumber ?? "");
 
   const [showHolidayForm, setShowHolidayForm] = useState(false);
   const [holidayFrom, setHolidayFrom] = useState("");
@@ -84,7 +111,7 @@ export function StoreSettingsForm() {
       setEditedTimezone(settings.timezone);
       setEditedHours(structuredClone(settings.hours));
       setEditedWaitTime(settings.waitTime ?? 0);
-      setEditedRestaurantPhone(settings.restaurantPhoneNumber ?? "");
+      setEditedRestaurantPhone(extractTenDigitPhone(settings.restaurantPhoneNumber ?? ""));
     }
   }, [settings]);
 
@@ -125,15 +152,14 @@ export function StoreSettingsForm() {
 
   async function handleSaveRestaurantPhone(e: React.FormEvent) {
     e.preventDefault();
-    const trimmed = editedRestaurantPhone.trim();
-    if (!/^\+[1-9]\d{6,14}$/.test(trimmed)) {
-      setRestaurantPhoneError('Enter a valid phone number in E.164 format, e.g. "+13065551234".');
+    if (editedRestaurantPhone.length !== 10) {
+      setRestaurantPhoneError("Enter a complete 10-digit phone number, e.g. +1 (306) 764-7799.");
       return;
     }
     setRestaurantPhoneError(null);
     setSavingRestaurantPhone(true);
     try {
-      await updateSettings({ restaurantPhoneNumber: trimmed });
+      await updateSettings({ restaurantPhoneNumber: `+1${editedRestaurantPhone}` });
     } catch {
       setRestaurantPhoneError("Failed to save restaurant phone number.");
     } finally {
@@ -325,9 +351,16 @@ export function StoreSettingsForm() {
             <span className="text-sm text-foreground/60 shrink-0 w-24">Phone number</span>
             <input
               type="tel"
-              value={editedRestaurantPhone}
-              onChange={(e) => setEditedRestaurantPhone(e.target.value)}
-              placeholder="+13065551234"
+              inputMode="numeric"
+              value={formatNanpPhone(editedRestaurantPhone)}
+              onChange={(e) => setEditedRestaurantPhone(extractTenDigitPhone(e.target.value))}
+              onPaste={(e) => {
+                e.preventDefault();
+                setEditedRestaurantPhone(
+                  extractTenDigitPhoneFromPaste(e.clipboardData.getData("text")),
+                );
+              }}
+              placeholder="+1 (306) 764-7799"
               className="flex-1 rounded-lg border border-foreground/15 bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/35 focus:outline-none focus:ring-2 focus:ring-foreground/20"
             />
           </div>
