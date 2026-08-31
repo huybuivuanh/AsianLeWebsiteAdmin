@@ -2,9 +2,16 @@
 
 Two features live here:
 
-1. **Confirmation call** (`docs/confirm-call-spec.md`): if a new order sits
-   with `status: "New"` for 30 seconds, an automated Twilio call is placed
-   to the restaurant.
+1. **Unconfirmed-order nag call**: a scheduled function runs every minute and,
+   while any order has sat with `status: "New"` for more than 30 seconds,
+   places one automated Twilio call to the restaurant covering all such orders.
+   It keeps calling each minute until none remain — the order is confirmed,
+   cancelled, or ages past 5 minutes (after which it is marked
+   `confirmationCallStatus: "exhausted"` and left alone).
+   - Pacing: the every-minute schedule is the cadence; `MIN_SECONDS_BETWEEN_CALLS`
+     (60s) is the floor guard so the phone isn't re-dialled mid-ring; the
+     `confirmationCallLog` hourly cap (60) is a last-resort backstop against a
+     bug or order-creation spam, not a normal operating limit.
 2. **Order-status notifications**: when an order's status changes to
    `"InProgress"` (confirmed) or `"ReadyForPickup"`, the customer gets one
    SMS + one email for that milestone.
@@ -51,16 +58,16 @@ npm run deploy
 npm run shell
 ```
 The Firebase Functions shell lets you call functions directly against the
-emulator without waiting for a real order or the real 30s delay.
+emulator without waiting for the every-minute schedule — e.g.
+`nagUnconfirmedOrders()` runs one scan immediately.
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `src/onOrderCreated.ts` | Firestore trigger on `orders/{orderId}` create — enqueues the delayed confirm-call check via Cloud Tasks. |
-| `src/checkOrderConfirmed.ts` | Cloud Tasks target — checks the order is still `"New"`, then places the call. Owns idempotency + the rate-limit guardrail. |
-| `src/twilio.ts` | Builds the TwiML script and places the confirmation call. |
-| `src/rateLimit.ts` | Hourly call cap safeguard (`confirmationCallLog` collection) — defensive only, not a normal operating limit. |
+| `src/nagUnconfirmedOrders.ts` | Scheduled (every 1 min) — scans for orders still `"New"`, places one alert call covering all of them, ages stale ones out to `"exhausted"`. |
+| `src/twilio.ts` | Builds the TwiML script and places the alert call (25s ring timeout). |
+| `src/rateLimit.ts` | `confirmationCallLog` collection — min-interval helper + hourly backstop cap. Defensive only, not a normal operating limit. |
 | `src/onOrderStatusChanged.ts` | Firestore trigger on `orders/{orderId}` update — fires the SMS + email for `InProgress`/`ReadyForPickup` transitions. |
 | `src/orderStatusSms.ts` | Twilio SMS body text + send call for order-status texts. |
 | `src/orderStatusEmail.ts` | Resend email subject/body + send call for order-status emails. |

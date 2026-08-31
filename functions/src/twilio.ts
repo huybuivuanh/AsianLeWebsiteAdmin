@@ -2,7 +2,8 @@ import twilio from "twilio";
 
 interface PlaceConfirmationCallArgs {
   to: string;
-  orderNumber: string;
+  /** How many orders are still unconfirmed — spoken in the alert. */
+  orderCount: number;
   accountSid: string;
   authToken: string;
   fromNumber: string;
@@ -16,17 +17,19 @@ function escapeForTwiml(text: string): string {
     .replace(/>/g, "&gt;");
 }
 
-function buildTwiml(orderNumber: string): string {
-  const message = escapeForTwiml(
-    `You have a new order, number ${orderNumber}, that has not been confirmed. Please check your order screen. You have a new order, number ${orderNumber}, that has not been confirmed. Please check your order screen. You have a new order, number ${orderNumber}, that has not been confirmed. Please check your order screen.`,
-  );
+function buildTwiml(orderCount: number): string {
+  const noun = orderCount === 1 ? "order" : "orders";
+  const sentence = `You have ${orderCount} unconfirmed ${noun}. Please check your order screen.`;
+  const message = escapeForTwiml(`${sentence} ${sentence} ${sentence}`);
   return `<?xml version="1.0" encoding="UTF-8"?><Response><Say voice="Polly.Joanna">${message}</Say></Response>`;
 }
 
-/** Places a single Twilio voice call reading the confirmation-alert script. Throws on failure. */
+/** Places a single Twilio voice call reading the unconfirmed-orders alert.
+ * Rings for 25s before giving up so a missed call clears well inside the
+ * one-minute nag cadence. Throws on failure. */
 export async function placeConfirmationCall({
   to,
-  orderNumber,
+  orderCount,
   accountSid,
   authToken,
   fromNumber,
@@ -35,6 +38,7 @@ export async function placeConfirmationCall({
   await client.calls.create({
     to,
     from: fromNumber,
-    twiml: buildTwiml(orderNumber),
+    twiml: buildTwiml(orderCount),
+    timeout: 25,
   });
 }

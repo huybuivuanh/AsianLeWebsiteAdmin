@@ -2,6 +2,5 @@ import { initializeApp } from "firebase-admin/app";
 
 initializeApp();
 
-export { onOrderCreated } from "./onOrderCreated";
-export { checkOrderConfirmed } from "./checkOrderConfirmed";
+export { nagUnconfirmedOrders } from "./nagUnconfirmedOrders";
 export { onOrderStatusChanged } from "./onOrderStatusChanged";
