@@ -1,41 +1,72 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { SectionSidebar, type SectionSidebarLink } from "@/components/SectionSidebar";
 
-const menuNavLinks = [
-  { href: "/menu/categories", label: "Categories" },
-  { href: "/menu/items", label: "Items" },
-  { href: "/menu/option-groups", label: "Option Groups" },
-  { href: "/menu/options", label: "Options" },
-] as const;
+const menuNavLinks: readonly SectionSidebarLink[] = [
+  {
+    href: "/menu/categories",
+    label: "Categories",
+    icon: (
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M4 6h16M4 12h16M4 18h7"
+        />
+      </svg>
+    ),
+  },
+  {
+    href: "/menu/items",
+    label: "Items",
+    icon: (
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M4 6h16M4 12h16M4 18h16"
+        />
+      </svg>
+    ),
+  },
+  {
+    href: "/menu/option-groups",
+    label: "Option Groups",
+    icon: (
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
+        />
+      </svg>
+    ),
+  },
+  {
+    href: "/menu/options",
+    label: "Options",
+    icon: (
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+        />
+      </svg>
+    ),
+  },
+];
 
 export function MenuSidebar() {
-  const pathname = usePathname();
-
   return (
-    <aside
-      className="shrink-0 w-52 border-r border-foreground/10 bg-foreground/[0.04] min-h-[calc(100dvh-3.5rem)] py-4 pl-4 pr-0"
-      aria-label="Menu section navigation"
-    >
-      <nav className="flex flex-col gap-0.5 sticky top-4">
-        {menuNavLinks.map(({ href, label }) => {
-          const isActive = pathname === href || pathname.startsWith(href + "/");
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`rounded-lg px-3 py-2.5 text-sm font-medium transition-colors whitespace-nowrap ${
-                isActive
-                  ? "bg-foreground/10 text-foreground"
-                  : "text-foreground/70 hover:bg-foreground/5 hover:text-foreground"
-              }`}
-            >
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
-    </aside>
+    <SectionSidebar
+      title="Menu"
+      links={menuNavLinks}
+      ariaLabel="Menu section navigation"
+    />
   );
 }
