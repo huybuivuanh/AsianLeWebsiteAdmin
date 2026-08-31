@@ -1,6 +1,11 @@
 @import "tailwindcss";
 
+/* Force light mode everywhere: `dark:` utilities only apply under an explicit
+   `.dark` class (which the app never sets) instead of the device preference. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
+  color-scheme: light;
   --background: #ffffff;
   --foreground: #171717;
   --nav-bg: #1e293b;
@@ -9,19 +14,6 @@
   --nav-border: #334155;
   --nav-hover: rgba(255, 255, 255, 0.08);
   --nav-active: rgba(255, 255, 255, 0.12);
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --nav-bg: #0f172a;
-    --nav-foreground: #f1f5f9;
-    --nav-foreground-muted: #94a3b8;
-    --nav-border: #1e293b;
-    --nav-hover: rgba(255, 255, 255, 0.06);
-    --nav-active: rgba(255, 255, 255, 0.1);
-  }
 }
 
 @theme inline {
