@@ -249,7 +249,7 @@ export function StoreSettingsForm() {
               return (
                 <div
                   key={key}
-                  className={`flex items-center gap-3 px-4 py-3 ${i > 0 ? "border-t border-foreground/8" : ""} ${!day.isOpen ? "bg-foreground/[0.015]" : ""}`}
+                  className={`flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 ${i > 0 ? "border-t border-foreground/8" : ""} ${!day.isOpen ? "bg-foreground/[0.015]" : ""}`}
                 >
                   <span className={`w-24 shrink-0 text-sm font-medium ${day.isOpen ? "text-foreground" : "text-foreground/35"}`}>
                     {label}
@@ -272,7 +272,7 @@ export function StoreSettingsForm() {
                   </button>
 
                   {day.isOpen ? (
-                    <div className="flex items-center gap-2 ml-auto">
+                    <div className="flex flex-wrap items-center justify-end gap-2 ml-auto">
                       <input
                         type="time"
                         value={day.open}
@@ -401,7 +401,7 @@ export function StoreSettingsForm() {
             onSubmit={handleAddHoliday}
             className="mb-4 rounded-xl border border-foreground/10 bg-foreground/[0.02] p-4 space-y-4"
           >
-            <div className="flex items-end gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-2 sm:gap-3">
               <div className="flex-1">
                 <label className="block text-xs font-medium text-foreground/60 mb-1.5">
                   From <span className="text-red-500">*</span>
@@ -414,7 +414,7 @@ export function StoreSettingsForm() {
                   className="w-full rounded-lg border border-foreground/15 bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
                 />
               </div>
-              <span className="text-sm text-foreground/40 pb-2.5">to</span>
+              <span className="text-sm text-foreground/40 sm:pb-2.5">to</span>
               <div className="flex-1">
                 <label className="block text-xs font-medium text-foreground/60 mb-1.5">
                   To <span className="text-foreground/35">(optional)</span>

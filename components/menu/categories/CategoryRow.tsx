@@ -71,7 +71,7 @@ export function CategoryRow({
             type="button"
             onClick={() => onEdit(category)}
             disabled={deleting}
-            className="rounded-xl border border-foreground/20 px-3.5 py-2 text-base font-semibold text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
+            className="rounded-lg border border-foreground/20 px-3 py-1.5 text-sm font-semibold text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
           >
             Edit
           </button>
@@ -79,7 +79,7 @@ export function CategoryRow({
             type="button"
             onClick={() => onDelete(category)}
             disabled={deleting}
-            className="rounded-xl border border-red-600 text-red-600 px-3.5 py-2 text-base font-semibold hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:opacity-50"
+            className="rounded-lg border border-red-600 text-red-600 px-3 py-1.5 text-sm font-semibold hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:opacity-50"
           >
             {deleting ? "…" : "Delete"}
           </button>

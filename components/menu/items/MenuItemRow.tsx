@@ -150,9 +150,9 @@ export function MenuItemRow({
           className="w-16 h-16 object-cover rounded-md shrink-0"
         />
 
-        <div className="min-w-0 flex-1">
+        <div className="flex-1 basis-44 min-w-[11rem]">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="font-bold text-foreground">{item.name}</span>
+            <span className="font-bold text-foreground break-words">{item.name}</span>
             <span className="text-sm font-semibold text-foreground/80 rounded-full border border-foreground/15 bg-foreground/5 px-2 py-0.5">
               {formatPriceCAD(item.price)}
             </span>
@@ -234,7 +234,7 @@ export function MenuItemRow({
                           key={opt.id}
                           className="flex items-center justify-between gap-2 rounded-lg border border-foreground/10 bg-background px-3 py-2"
                         >
-                          <span className="text-sm text-foreground truncate">
+                          <span className="min-w-0 truncate text-sm text-foreground">
                             {opt.name} <span className="text-foreground/50">· {formatPriceCAD(opt.price)}</span>
                           </span>
                           <button

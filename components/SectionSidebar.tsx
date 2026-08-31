@@ -19,18 +19,27 @@ const listeners = new Set<() => void>();
 function subscribe(callback: () => void) {
   listeners.add(callback);
   window.addEventListener("storage", callback);
+  // With no explicit preference the collapsed state follows the viewport, so
+  // re-evaluate when it crosses the breakpoint.
+  window.addEventListener("resize", callback);
   return () => {
     listeners.delete(callback);
     window.removeEventListener("storage", callback);
+    window.removeEventListener("resize", callback);
   };
 }
 
 function getSnapshot() {
   try {
-    return localStorage.getItem(STORAGE_KEY) === "1";
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === "1") return true;
+    if (stored === "0") return false;
   } catch {
-    return false;
+    /* localStorage unavailable — fall through to the viewport default */
   }
+  // No stored preference: start collapsed on small screens where a full-width
+  // sidebar would crowd out the page content.
+  return typeof window !== "undefined" && window.innerWidth < 768;
 }
 
 function setCollapsed(next: boolean) {

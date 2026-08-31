@@ -68,7 +68,7 @@ export default function SpecialItemPage() {
           </p>
         </div>
       ) : (
-        <ul className="grid grid-cols-1 lg:grid-cols-1 gap-3">
+        <ul className="grid grid-cols-1 gap-3">
           {items.map((item: DailySpecialItem) => (
             <li
               key={item.id}
