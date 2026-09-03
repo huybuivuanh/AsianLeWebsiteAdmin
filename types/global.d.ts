@@ -171,12 +171,9 @@ declare global {
     paid: boolean;
     printed: boolean;
     createdAt: Date;
-    /** Written only by the `nagUnconfirmedOrders` Cloud Function (functions/), never by this app.
-     * "exhausted" = still "New" 5 min after creation, auto-calling gave up. */
-    confirmationCallStatus?: "exhausted";
-    /** How many alert calls have covered this order while it was unconfirmed. */
-    confirmationCallCount?: number;
-    lastConfirmationCallAt?: Date;
+    /** Written only by the confirmOrderCall Cloud Function (functions/), never by this app. */
+    confirmationCallStatus?: "placed" | "failed";
+    confirmationCallPlacedAt?: Date;
   }
 }
 
