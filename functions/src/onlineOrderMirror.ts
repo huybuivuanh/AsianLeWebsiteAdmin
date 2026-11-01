@@ -28,7 +28,22 @@ export function posDb(): Firestore {
   return posDbInstance;
 }
 
-/** Only the fields the POS shows. Customer email is left out on purpose. */
+/** Rewards fields the POS needs to check a member's points: points promised on an
+ * online order (`pointsToRedeem`) aren't taken from the balance until the Orders app
+ * completes it (`pointsRedeemed`), so the POS subtracts the pending ones. */
+function toPosLoyalty(loyalty: unknown) {
+  if (!loyalty || typeof loyalty !== "object") return undefined;
+  const l = loyalty as DocumentData;
+  if (typeof l.memberId !== "string" || !l.memberId) return undefined;
+  return {
+    memberId: l.memberId,
+    pointsToRedeem: typeof l.pointsToRedeem === "number" ? l.pointsToRedeem : undefined,
+    pointsRedeemed: typeof l.pointsRedeemed === "number" ? l.pointsRedeemed : undefined,
+  };
+}
+
+/** Only the fields the POS shows (plus the rewards check). Customer email is left out
+ * on purpose. */
 function toPosOrder(data: DocumentData, fallbackCreatedAt: Timestamp) {
   const items = Array.isArray(data.orderItems) ? data.orderItems : [];
   return {
@@ -53,18 +68,14 @@ function toPosOrder(data: DocumentData, fallbackCreatedAt: Timestamp) {
         : undefined,
     })),
     taxBreakDown: data.taxBreakDown,
+    loyalty: toPosLoyalty(data.loyalty),
     paid: Boolean(data.paid),
     printed: Boolean(data.printed),
     createdAt: data.createdAt instanceof Timestamp ? data.createdAt : fallbackCreatedAt,
   };
 }
 
-export type MirrorResult =
-  | "written"
-  | "deleted"
-  | "skipped-new"
-  | "skipped-rejected"
-  | "skipped-stale";
+export type MirrorResult = "written" | "deleted" | "skipped-stale";
 
 /**
  * Brings the POS copy of one online order up to date.
@@ -76,7 +87,6 @@ export async function mirrorOnlineOrder(
   orderId: string,
   data: DocumentData | null,
   sourceUpdatedAt: Timestamp,
-  options: { copyCancelledWithoutCopy?: boolean } = {},
 ): Promise<MirrorResult> {
   const db = posDb();
   const ref = db.collection(POS_ONLINE_ORDERS_COLLECTION).doc(orderId);
@@ -93,19 +103,9 @@ export async function mirrorOnlineOrder(
       return "deleted";
     }
 
-    // Not accepted yet: shows up in the POS once it's accepted.
-    if (data.status === "New") return "skipped-new";
-
-    // Cancelled with no POS copy means it was rejected before being accepted
-    // (accepting would have created the copy), so it never reached the kitchen.
-    if (
-      data.status === "Cancelled" &&
-      !snap.exists &&
-      !options.copyCancelledWithoutCopy
-    ) {
-      return "skipped-rejected";
-    }
-
+    // Every order is copied, New ones too: the POS shows them all (New with its own
+    // badge; rejected ones as Cancelled), and needs open ones to count a member's
+    // pending points.
     tx.set(ref, {
       ...toPosOrder(data, sourceUpdatedAt),
       sourceUpdatedAt,

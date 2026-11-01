@@ -19,11 +19,7 @@ async function main() {
 
   const counts: Record<string, number> = {};
   for (const doc of snapshot.docs) {
-    // Can't tell rejected from accepted-then-cancelled here, so copy
-    // cancelled orders too.
-    const result = await mirrorOnlineOrder(doc.id, doc.data(), doc.updateTime, {
-      copyCancelledWithoutCopy: true,
-    });
+    const result = await mirrorOnlineOrder(doc.id, doc.data(), doc.updateTime);
     counts[result] = (counts[result] ?? 0) + 1;
   }
 
