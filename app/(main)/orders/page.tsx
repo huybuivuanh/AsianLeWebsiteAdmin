@@ -5,18 +5,13 @@ import {
   dateToLocalKey,
   fetchAllOrders,
   fetchOrdersForDate,
-  fetchOrdersSince,
 } from "@/lib/orders-firestore";
 import { matchesQuery } from "@/lib/utils";
 import { OrderCard } from "@/components/orders/OrderCard";
 import { PrintableReceipt } from "@/components/orders/PrintableReceipt";
 
-/** "Search all orders" looks this far back first; older orders need an extra click. */
-const RECENT_SEARCH_DAYS = 90;
 /** Search results are reused for this long, so repeat searches don't re-read Firestore. */
 const SEARCH_CACHE_MS = 5 * 60 * 1000;
-
-type SearchScope = "recent" | "all";
 
 function matchesOrderSearch(order: Order, q: string): boolean {
   if (!q.trim()) return true;
@@ -64,7 +59,6 @@ type DayResult = {
 
 type SearchResult = {
   query: string;
-  scope: SearchScope;
   orders: Order[];
 };
 
@@ -80,11 +74,7 @@ export default function OrdersPage() {
   const [globalResult, setGlobalResult] = useState<SearchResult | null>(null);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
-  const searchCache = useRef<{
-    scope: SearchScope;
-    fetchedAt: number;
-    orders: Order[];
-  } | null>(null);
+  const searchCache = useRef<{ fetchedAt: number; orders: Order[] } | null>(null);
 
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
 
@@ -153,47 +143,33 @@ export default function OrdersPage() {
     setExpanded({});
   }
 
-  const runGlobalSearch = useCallback(
-    async (scope: SearchScope) => {
-      const q = globalQuery.trim();
-      if (!q) return;
-      setSearching(true);
-      setSearchError(null);
-      try {
-        const cache = searchCache.current;
-        let pool: Order[];
-        if (
-          cache &&
-          Date.now() - cache.fetchedAt < SEARCH_CACHE_MS &&
-          (cache.scope === scope || cache.scope === "all")
-        ) {
-          pool = cache.orders;
-        } else {
-          if (scope === "all") {
-            pool = await fetchAllOrders();
-          } else {
-            const since = new Date();
-            since.setDate(since.getDate() - RECENT_SEARCH_DAYS);
-            since.setHours(0, 0, 0, 0);
-            pool = await fetchOrdersSince(since);
-          }
-          searchCache.current = { scope, fetchedAt: Date.now(), orders: pool };
-        }
-        setGlobalResult({
-          query: q,
-          scope,
-          orders: pool.filter((order) => matchesOrderSearch(order, q)),
-        });
-        setExpanded({});
-      } catch (e) {
-        setSearchError(e instanceof Error ? e.message : "Failed to search orders.");
-        setGlobalResult(null);
-      } finally {
-        setSearching(false);
+  // Orders are deleted after ~30 days (purgeStaleOrders function), so "all" stays small.
+  const runGlobalSearch = useCallback(async () => {
+    const q = globalQuery.trim();
+    if (!q) return;
+    setSearching(true);
+    setSearchError(null);
+    try {
+      const cache = searchCache.current;
+      let pool: Order[];
+      if (cache && Date.now() - cache.fetchedAt < SEARCH_CACHE_MS) {
+        pool = cache.orders;
+      } else {
+        pool = await fetchAllOrders();
+        searchCache.current = { fetchedAt: Date.now(), orders: pool };
       }
-    },
-    [globalQuery],
-  );
+      setGlobalResult({
+        query: q,
+        orders: pool.filter((order) => matchesOrderSearch(order, q)),
+      });
+      setExpanded({});
+    } catch (e) {
+      setSearchError(e instanceof Error ? e.message : "Failed to search orders.");
+      setGlobalResult(null);
+    } finally {
+      setSearching(false);
+    }
+  }, [globalQuery]);
 
   const clearGlobalSearch = useCallback(() => {
     setGlobalQuery("");
@@ -269,7 +245,7 @@ export default function OrdersPage() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
-                    runGlobalSearch("recent");
+                    runGlobalSearch();
                   }
                 }}
                 className="w-full rounded-md border border-foreground/15 bg-background py-2 pl-9 pr-3 text-sm text-foreground shadow-xs focus:outline-none focus:ring-2 focus:ring-foreground/20"
@@ -278,7 +254,7 @@ export default function OrdersPage() {
           </div>
           <button
             type="button"
-            onClick={() => runGlobalSearch("recent")}
+            onClick={runGlobalSearch}
             disabled={searching || !globalQuery.trim()}
             className="inline-flex h-9 items-center justify-center rounded-md bg-foreground px-4 text-sm font-medium text-background hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
           >
@@ -298,20 +274,7 @@ export default function OrdersPage() {
           <p className="mt-3 text-sm text-foreground/60">
             {globalResult.orders.length}{" "}
             {globalResult.orders.length === 1 ? "order" : "orders"} matching
-            &ldquo;{globalResult.query}&rdquo;
-            {globalResult.scope === "recent"
-              ? ` in the last ${RECENT_SEARCH_DAYS} days. `
-              : " across all orders."}
-            {globalResult.scope === "recent" ? (
-              <button
-                type="button"
-                onClick={() => runGlobalSearch("all")}
-                disabled={searching || globalQuery.trim() !== globalResult.query}
-                className="font-medium text-foreground underline underline-offset-2 hover:opacity-80 disabled:opacity-50"
-              >
-                Search older orders too
-              </button>
-            ) : null}
+            &ldquo;{globalResult.query}&rdquo;.
           </p>
         ) : null}
       </div>
