@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useSpecialItemsStore } from "@/stores/dailySpecialItemsStore";
 import { useDailySpecialsStore } from "@/stores/dailySpecialsStore";
 import { AddSpecialItemModal } from "@/components/daily-special/AddSpecialItemModal";
 import { EditSpecialItemModal } from "@/components/daily-special/EditSpecialItemModal";
 import { confirmDialog } from "@/stores/modalStore";
+import { UnusedFilterButton } from "@/components/menu/MenuPageHeader";
+import { UnusedBadge } from "@/components/menu/RowParts";
+import { WEEK_ORDER, shortDayLabel } from "@/lib/daily-special";
+import type { DayOfWeek } from "@/types/enum";
 
 export default function SpecialItemPage() {
   const {
@@ -19,6 +23,33 @@ export default function SpecialItemPage() {
   const { dailySpecials, updateDailySpecialsBatch } = useDailySpecialsStore();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DailySpecialItem | null>(null);
+  const [unusedOnly, setUnusedOnly] = useState(false);
+
+  /** Item id → the weekdays it's on, e.g. ["Mon", "Wed"] (a day with two time
+   * ranges is listed once). Read from the days' own item lists. */
+  const daysByItemId = useMemo(() => {
+    const days = new Map<string, Set<DayOfWeek>>();
+    for (const daySpecial of dailySpecials) {
+      for (const itemId of daySpecial.itemIds ?? []) {
+        if (!days.has(itemId)) days.set(itemId, new Set());
+        days.get(itemId)!.add(daySpecial.dayOfWeek);
+      }
+    }
+    const labels = new Map<string, string[]>();
+    for (const [itemId, set] of days) {
+      labels.set(itemId, WEEK_ORDER.filter((d) => set.has(d)).map(shortDayLabel));
+    }
+    return labels;
+  }, [dailySpecials]);
+
+  const unusedCount = useMemo(
+    () => items.filter((item) => !daysByItemId.has(item.id)).length,
+    [items, daysByItemId],
+  );
+  const visibleItems = useMemo(
+    () => (unusedOnly ? items.filter((item) => !daysByItemId.has(item.id)) : items),
+    [items, unusedOnly, daysByItemId],
+  );
 
   async function handleDelete(item: DailySpecialItem) {
     if (!(await confirmDialog(`Delete "${item.name}"?`, { danger: true, confirmLabel: "Delete" })))
@@ -48,6 +79,12 @@ export default function SpecialItemPage() {
         >
           Add Item
         </button>
+        <UnusedFilterButton
+          active={unusedOnly}
+          count={unusedCount}
+          onToggle={() => setUnusedOnly((v) => !v)}
+          title="Special items not on any day"
+        />
       </div>
 
       {error && (
@@ -67,18 +104,33 @@ export default function SpecialItemPage() {
             Add your first special item, then attach it to a day special.
           </p>
         </div>
+      ) : visibleItems.length === 0 ? (
+        <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.02] p-6">
+          <p className="text-foreground text-sm font-medium">No unused special items.</p>
+          <p className="mt-1 text-foreground/60 text-sm">
+            Turn off the Unused filter to see all special items.
+          </p>
+        </div>
       ) : (
         <ul className="grid grid-cols-1 gap-3">
-          {items.map((item: DailySpecialItem) => (
+          {visibleItems.map((item: DailySpecialItem) => {
+            const days = daysByItemId.get(item.id);
+            return (
             <li
               key={item.id}
               className="rounded-2xl border border-foreground/10 bg-foreground/[0.02] px-4 py-3 space-y-3"
             >
               <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
                 <div className="min-w-0">
-                  <span className="text-base font-semibold text-foreground truncate">
-                    {item.name}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-base font-semibold text-foreground truncate">
+                      {item.name}
+                    </span>
+                    {!days && <UnusedBadge />}
+                  </div>
+                  {days && (
+                    <p className="mt-0.5 text-sm text-foreground/60">{days.join(", ")}</p>
+                  )}
                 </div>
                 <span className="text-base font-semibold text-foreground/80 rounded-full border border-foreground/15 bg-foreground/5 px-2 py-0.5">
                   ${item.price.toFixed(2)}
@@ -118,7 +170,8 @@ export default function SpecialItemPage() {
                 </button>
               </div>
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
 

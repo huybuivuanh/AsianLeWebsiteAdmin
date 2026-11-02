@@ -7,23 +7,8 @@ import { AddDayModal } from "@/components/daily-special/AddDayModal";
 import { EditDayModal } from "@/components/daily-special/EditDayModal";
 import { DailySpecialRow } from "@/components/daily-special/DailySpecialRow";
 import { AddDayItemsModal } from "@/components/daily-special/AddDayItemsModal";
-import { DayOfWeek } from "@/types/enum";
+import { compareDailySpecials, dayLabel, formatTimeRange } from "@/lib/daily-special";
 import { confirmDialog } from "@/stores/modalStore";
-
-function dayLabel(value: DayOfWeek): string {
-  return value.charAt(0) + value.slice(1).toLowerCase();
-}
-
-/** Monday first, Sunday last — the order staff read the week in. */
-const WEEK_ORDER: DayOfWeek[] = [
-  DayOfWeek.MONDAY,
-  DayOfWeek.TUESDAY,
-  DayOfWeek.WEDNESDAY,
-  DayOfWeek.THURSDAY,
-  DayOfWeek.FRIDAY,
-  DayOfWeek.SATURDAY,
-  DayOfWeek.SUNDAY,
-];
 
 export default function DaySpecial() {
   const {
@@ -47,21 +32,15 @@ export default function DaySpecial() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
-  // "HH:mm" strings compare correctly as text.
   const sortedDays = useMemo(
-    () =>
-      dailySpecials.slice().sort(
-        (a, b) =>
-          WEEK_ORDER.indexOf(a.dayOfWeek) - WEEK_ORDER.indexOf(b.dayOfWeek) ||
-          a.timeRange.startTime.localeCompare(b.timeRange.startTime),
-      ),
+    () => dailySpecials.slice().sort(compareDailySpecials),
     [dailySpecials],
   );
 
   async function handleDelete(daySpecial: DailySpecial) {
     if (
       !(await confirmDialog(
-        `Delete ${dayLabel(daySpecial.dayOfWeek)} (${daySpecial.timeRange.startTime} – ${daySpecial.timeRange.endTime})?`,
+        `Delete ${dayLabel(daySpecial.dayOfWeek)} (${formatTimeRange(daySpecial.timeRange)})?`,
         { danger: true, confirmLabel: "Delete" },
       ))
     )

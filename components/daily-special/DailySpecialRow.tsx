@@ -2,11 +2,7 @@
 
 import { useMemo } from "react";
 import { useSpecialItemsStore } from "@/stores/dailySpecialItemsStore";
-import type { DayOfWeek } from "@/types/enum";
-
-function dayLabel(value: DayOfWeek): string {
-  return value.charAt(0) + value.slice(1).toLowerCase();
-}
+import { dayLabel, formatTimeRange } from "@/lib/daily-special";
 
 type DailySpecialRowProps = {
   daySpecial: DailySpecial;
@@ -59,7 +55,7 @@ export function DailySpecialRow({
             {dayLabel(daySpecial.dayOfWeek)}
           </span>
           <span className="text-foreground/60 text-sm shrink-0">
-            {daySpecial.timeRange.startTime} – {daySpecial.timeRange.endTime}
+            {formatTimeRange(daySpecial.timeRange)}
           </span>
           {daySpecial.itemIds && daySpecial.itemIds.length > 0 && (
             <span className="text-xs text-foreground/50 shrink-0 rounded-full bg-foreground/5 px-2 py-0.5">
