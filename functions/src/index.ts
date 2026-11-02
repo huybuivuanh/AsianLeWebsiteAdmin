@@ -6,3 +6,4 @@ export { onOrderCreated } from "./onOrderCreated";
 export { checkOrderConfirmed } from "./checkOrderConfirmed";
 export { onOrderStatusChanged } from "./onOrderStatusChanged";
 export { mirrorOnlineOrder } from "./mirrorOnlineOrder";
+export { purgeStaleOrders } from "./purgeStaleOrders";
