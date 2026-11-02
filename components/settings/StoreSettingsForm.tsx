@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { DEFAULT_RESERVATION_DAY, useStoreSettingsStore } from "@/stores/storeSettingsStore";
+import { dateToLocalKey } from "@/lib/orders-firestore";
 
 type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+type HolidayStatus = "upcoming" | "now" | "past";
 
 const CANADA_TIMEZONES = [
   { value: "America/Vancouver", label: "Pacific Time — Vancouver, Victoria" },
@@ -352,7 +354,24 @@ export function StoreSettingsForm() {
     return <p className="text-foreground/50 text-sm">No settings found.</p>;
   }
 
-  const holidays = settings.holidays ?? [];
+  // Upcoming (and current) holidays first, soonest first; past ones after, most
+  // recent first. "YYYY-MM-DD" strings compare correctly as text.
+  const todayKey = dateToLocalKey(new Date());
+  const holidays = (settings.holidays ?? [])
+    .map((h) => {
+      const end = h.to ?? h.from;
+      const status: HolidayStatus =
+        end < todayKey ? "past" : h.from <= todayKey ? "now" : "upcoming";
+      return { ...h, status };
+    })
+    .sort((a, b) => {
+      if ((a.status === "past") !== (b.status === "past")) {
+        return a.status === "past" ? 1 : -1;
+      }
+      return a.status === "past"
+        ? b.from.localeCompare(a.from)
+        : a.from.localeCompare(b.from);
+    });
 
   return (
     <div className="space-y-10 max-w-2xl">
@@ -592,13 +611,29 @@ export function StoreSettingsForm() {
             {holidays.map((h, i) => (
               <div
                 key={h.id}
-                className={`flex items-center justify-between gap-4 px-4 py-3 ${i > 0 ? "border-t border-foreground/8" : ""}`}
+                className={`flex items-center justify-between gap-4 px-4 py-3 ${i > 0 ? "border-t border-foreground/8" : ""} ${h.status === "past" ? "bg-foreground/[0.015]" : ""}`}
               >
-                <p className="text-sm font-medium text-foreground">
-                  {h.to
-                    ? `${formatDateDisplay(h.from)} – ${formatDateDisplay(h.to)}`
-                    : formatDateDisplay(h.from)}
-                </p>
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <p
+                    className={`text-sm font-medium ${
+                      h.status === "past" ? "text-foreground/40" : "text-foreground"
+                    }`}
+                  >
+                    {h.to
+                      ? `${formatDateDisplay(h.from)} – ${formatDateDisplay(h.to)}`
+                      : formatDateDisplay(h.from)}
+                  </p>
+                  {h.status === "now" && (
+                    <span className="rounded-full border border-green-300 bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+                      Now
+                    </span>
+                  )}
+                  {h.status === "past" && (
+                    <span className="rounded-full border border-foreground/10 bg-foreground/5 px-2 py-0.5 text-xs font-medium text-foreground/50">
+                      Past
+                    </span>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={() => handleDeleteHoliday(h.id)}
