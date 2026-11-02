@@ -1,18 +1,39 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   dateToLocalKey,
   fetchAllOrders,
   fetchOrdersForDate,
+  fetchOrdersSince,
 } from "@/lib/orders-firestore";
 import { matchesQuery } from "@/lib/utils";
 import { OrderCard } from "@/components/orders/OrderCard";
 import { PrintableReceipt } from "@/components/orders/PrintableReceipt";
 
+/** "Search all orders" looks this far back first; older orders need an extra click. */
+const RECENT_SEARCH_DAYS = 90;
+/** Search results are reused for this long, so repeat searches don't re-read Firestore. */
+const SEARCH_CACHE_MS = 5 * 60 * 1000;
+
+type SearchScope = "recent" | "all";
+
 function matchesOrderSearch(order: Order, q: string): boolean {
   if (!q.trim()) return true;
   return matchesQuery(q, order.customerName, order.phoneNumber, order.orderNumber);
+}
+
+/** "2026-11-02" → "Monday, November 2". */
+function formatDateKey(dateKey: string): string {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  if (Number.isNaN(date.getTime())) return dateKey;
+  return date.toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: y === new Date().getFullYear() ? undefined : "numeric",
+  });
 }
 
 function SearchIcon() {
@@ -34,32 +55,72 @@ function SearchIcon() {
   );
 }
 
+type DayResult = {
+  dateKey: string;
+  reloadToken: number;
+  orders: Order[];
+  error: string | null;
+};
+
+type SearchResult = {
+  query: string;
+  scope: SearchScope;
+  orders: Order[];
+};
+
 export default function OrdersPage() {
   const todayKey = useMemo(() => dateToLocalKey(new Date()), []);
   const [dateKey, setDateKey] = useState(todayKey);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [loadedDateKey, setLoadedDateKey] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
+  const [dayResult, setDayResult] = useState<DayResult | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [searchTerm, setSearchTerm] = useState("");
 
   const [globalQuery, setGlobalQuery] = useState("");
-  const [globalResults, setGlobalResults] = useState<Order[] | null>(null);
+  const [globalResult, setGlobalResult] = useState<SearchResult | null>(null);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const searchCache = useRef<{
+    scope: SearchScope;
+    fetchedAt: number;
+    orders: Order[];
+  } | null>(null);
 
   const [printingOrder, setPrintingOrder] = useState<Order | null>(null);
 
-  const searchMode = globalResults !== null;
+  const searchMode = globalResult !== null;
 
+  // Load the selected day's orders whenever the date changes (or Refresh is pressed).
   useEffect(() => {
-    setOrders([]);
-    setLoadedDateKey(null);
-    setExpanded({});
-    setError(null);
-    setSearchTerm("");
-  }, [dateKey]);
+    if (!dateKey) return;
+    let cancelled = false;
+    fetchOrdersForDate(dateKey)
+      .then((orders) => {
+        if (!cancelled) setDayResult({ dateKey, reloadToken, orders, error: null });
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setDayResult({
+          dateKey,
+          reloadToken,
+          orders: [],
+          error: e instanceof Error ? e.message : "Failed to load orders.",
+        });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [dateKey, reloadToken]);
+
+  const loading =
+    Boolean(dateKey) &&
+    (dayResult?.dateKey !== dateKey || dayResult?.reloadToken !== reloadToken);
+  const orders = useMemo(
+    () => (dayResult?.dateKey === dateKey ? dayResult.orders : []),
+    [dayResult, dateKey],
+  );
+  const error = !loading ? (dayResult?.error ?? null) : null;
+  const loaded = Boolean(dateKey) && !loading && !error;
 
   useEffect(() => {
     if (!printingOrder) return;
@@ -81,48 +142,67 @@ export default function OrdersPage() {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
   }, []);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const rows = await fetchOrdersForDate(dateKey);
-      setOrders(rows);
-      setLoadedDateKey(dateKey);
-      setExpanded({});
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load orders.");
-      setOrders([]);
-      setLoadedDateKey(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [dateKey]);
+  function changeDate(next: string) {
+    setDateKey(next);
+    setExpanded({});
+    setSearchTerm("");
+  }
 
-  const runGlobalSearch = useCallback(async () => {
-    const q = globalQuery.trim();
-    if (!q) return;
-    setSearching(true);
-    setSearchError(null);
-    try {
-      const all = await fetchAllOrders();
-      setGlobalResults(all.filter((order) => matchesOrderSearch(order, q)));
-      setExpanded({});
-    } catch (e) {
-      setSearchError(e instanceof Error ? e.message : "Failed to search orders.");
-      setGlobalResults(null);
-    } finally {
-      setSearching(false);
-    }
-  }, [globalQuery]);
+  function refresh() {
+    setReloadToken((t) => t + 1);
+    setExpanded({});
+  }
+
+  const runGlobalSearch = useCallback(
+    async (scope: SearchScope) => {
+      const q = globalQuery.trim();
+      if (!q) return;
+      setSearching(true);
+      setSearchError(null);
+      try {
+        const cache = searchCache.current;
+        let pool: Order[];
+        if (
+          cache &&
+          Date.now() - cache.fetchedAt < SEARCH_CACHE_MS &&
+          (cache.scope === scope || cache.scope === "all")
+        ) {
+          pool = cache.orders;
+        } else {
+          if (scope === "all") {
+            pool = await fetchAllOrders();
+          } else {
+            const since = new Date();
+            since.setDate(since.getDate() - RECENT_SEARCH_DAYS);
+            since.setHours(0, 0, 0, 0);
+            pool = await fetchOrdersSince(since);
+          }
+          searchCache.current = { scope, fetchedAt: Date.now(), orders: pool };
+        }
+        setGlobalResult({
+          query: q,
+          scope,
+          orders: pool.filter((order) => matchesOrderSearch(order, q)),
+        });
+        setExpanded({});
+      } catch (e) {
+        setSearchError(e instanceof Error ? e.message : "Failed to search orders.");
+        setGlobalResult(null);
+      } finally {
+        setSearching(false);
+      }
+    },
+    [globalQuery],
+  );
 
   const clearGlobalSearch = useCallback(() => {
     setGlobalQuery("");
-    setGlobalResults(null);
+    setGlobalResult(null);
     setSearchError(null);
     setExpanded({});
   }, []);
 
-  const displayedOrders = searchMode ? (globalResults ?? []) : filteredOrders;
+  const displayedOrders = searchMode ? globalResult.orders : filteredOrders;
 
   return (
     <>
@@ -148,18 +228,27 @@ export default function OrdersPage() {
               id="orders-date"
               type="date"
               value={dateKey}
-              onChange={(e) => setDateKey(e.target.value)}
+              onChange={(e) => changeDate(e.target.value)}
               className="w-full rounded-md border border-foreground/15 bg-background px-3 py-2 text-sm text-foreground shadow-xs focus:outline-none focus:ring-2 focus:ring-foreground/20"
             />
           </div>
           <button
             type="button"
-            onClick={load}
+            onClick={refresh}
             disabled={loading || !dateKey}
-            className="inline-flex h-9 items-center justify-center rounded-md bg-foreground px-4 text-sm font-medium text-background hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50 sm:mb-0"
+            className="inline-flex h-9 items-center justify-center rounded-md border border-foreground/20 px-4 text-sm font-medium text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
           >
-            {loading ? "Loading…" : "Load"}
+            {loading ? "Loading…" : "Refresh"}
           </button>
+          {dateKey !== todayKey ? (
+            <button
+              type="button"
+              onClick={() => changeDate(todayKey)}
+              className="inline-flex h-9 items-center justify-center rounded-md border border-foreground/20 px-4 text-sm font-medium text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+            >
+              Today
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -180,7 +269,7 @@ export default function OrdersPage() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
-                    runGlobalSearch();
+                    runGlobalSearch("recent");
                   }
                 }}
                 className="w-full rounded-md border border-foreground/15 bg-background py-2 pl-9 pr-3 text-sm text-foreground shadow-xs focus:outline-none focus:ring-2 focus:ring-foreground/20"
@@ -189,7 +278,7 @@ export default function OrdersPage() {
           </div>
           <button
             type="button"
-            onClick={runGlobalSearch}
+            onClick={() => runGlobalSearch("recent")}
             disabled={searching || !globalQuery.trim()}
             className="inline-flex h-9 items-center justify-center rounded-md bg-foreground px-4 text-sm font-medium text-background hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
           >
@@ -205,6 +294,26 @@ export default function OrdersPage() {
             </button>
           ) : null}
         </div>
+        {searchMode ? (
+          <p className="mt-3 text-sm text-foreground/60">
+            {globalResult.orders.length}{" "}
+            {globalResult.orders.length === 1 ? "order" : "orders"} matching
+            &ldquo;{globalResult.query}&rdquo;
+            {globalResult.scope === "recent"
+              ? ` in the last ${RECENT_SEARCH_DAYS} days. `
+              : " across all orders."}
+            {globalResult.scope === "recent" ? (
+              <button
+                type="button"
+                onClick={() => runGlobalSearch("all")}
+                disabled={searching || globalQuery.trim() !== globalResult.query}
+                className="font-medium text-foreground underline underline-offset-2 hover:opacity-80 disabled:opacity-50"
+              >
+                Search older orders too
+              </button>
+            ) : null}
+          </p>
+        ) : null}
       </div>
 
       {searchError && (
@@ -218,27 +327,19 @@ export default function OrdersPage() {
         </p>
       )}
 
-      {searchMode ? (
-        globalResults!.length === 0 && !searching ? (
-          <p className="rounded-lg border border-dashed border-foreground/15 px-4 py-10 text-center text-sm text-foreground/50">
-            No orders match &ldquo;{globalQuery}&rdquo;.
-          </p>
-        ) : null
-      ) : (
+      {searchMode ? null : (
         <>
-          {!loadedDateKey && !loading ? (
-            <p className="text-center text-sm text-foreground/50">
-              Choose a date, then press <strong>Load</strong>.
-            </p>
+          {loading ? (
+            <p className="text-center text-sm text-foreground/50">Loading orders…</p>
           ) : null}
 
-          {loadedDateKey && !loading && orders.length === 0 ? (
+          {loaded && orders.length === 0 ? (
             <p className="rounded-lg border border-dashed border-foreground/15 px-4 py-10 text-center text-sm text-foreground/50">
-              No orders for {loadedDateKey}.
+              No orders on {formatDateKey(dateKey)}.
             </p>
           ) : null}
 
-          {loadedDateKey && !loading && orders.length > 0 ? (
+          {loaded && orders.length > 0 ? (
             <div className="mb-4 relative">
               <SearchIcon />
               <input
@@ -252,9 +353,9 @@ export default function OrdersPage() {
             </div>
           ) : null}
 
-          {loadedDateKey && !loading && orders.length > 0 && filteredOrders.length === 0 ? (
+          {loaded && orders.length > 0 && filteredOrders.length === 0 ? (
             <p className="rounded-lg border border-dashed border-foreground/15 px-4 py-10 text-center text-sm text-foreground/50">
-              No orders match your search.
+              No orders match &ldquo;{searchTerm.trim()}&rdquo;.
             </p>
           ) : null}
         </>

@@ -19,6 +19,8 @@ function statusPillClass(status: OrderStatus): string {
       return "bg-indigo-100 text-indigo-700";
     case OrderStatus.InProgress:
       return "bg-amber-100 text-amber-700";
+    case OrderStatus.ReadyForPickup:
+      return "bg-teal-100 text-teal-700";
     case OrderStatus.Completed:
       return "bg-green-100 text-green-700";
     case OrderStatus.Cancelled:
@@ -27,6 +29,14 @@ function statusPillClass(status: OrderStatus): string {
       return "bg-gray-100 text-gray-700";
   }
 }
+
+const STATUS_LABELS: Record<OrderStatus, string> = {
+  [OrderStatus.New]: "New",
+  [OrderStatus.InProgress]: "In progress",
+  [OrderStatus.ReadyForPickup]: "Ready for pickup",
+  [OrderStatus.Completed]: "Completed",
+  [OrderStatus.Cancelled]: "Cancelled",
+};
 
 function Pill({ className, children }: { className: string; children: React.ReactNode }) {
   return (
@@ -67,6 +77,7 @@ export function OrderCard({
       <button
         type="button"
         onClick={onToggle}
+        aria-expanded={expanded}
         className="flex w-full items-center justify-between gap-4 text-left"
       >
         <div className="min-w-0">
@@ -106,7 +117,9 @@ export function OrderCard({
           {showPaidPill ? (
             <Pill className={paidPillClass}>{order.paid ? "Paid" : "Unpaid"}</Pill>
           ) : null}
-          <Pill className={statusPillClass(order.status)}>{order.status}</Pill>
+          <Pill className={statusPillClass(order.status)}>
+            {STATUS_LABELS[order.status] ?? order.status}
+          </Pill>
           <span className="text-base font-bold text-gray-900">
             {formatPriceCAD(tb.total ?? 0)}
           </span>

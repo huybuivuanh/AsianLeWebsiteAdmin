@@ -92,6 +92,18 @@ export async function fetchOrdersForDate(dateKey: string): Promise<Order[]> {
   return snap.docs.map((d) => normalizeOrderDoc(d.id, d.data()));
 }
 
+/** Orders created on or after `since`, newest first. */
+export async function fetchOrdersSince(since: Date): Promise<Order[]> {
+  const snap = await getDocs(
+    query(
+      collection(db, ORDERS_COLLECTION),
+      where("createdAt", ">=", Timestamp.fromDate(since)),
+      orderBy("createdAt", "desc"),
+    ),
+  );
+  return snap.docs.map((d) => normalizeOrderDoc(d.id, d.data()));
+}
+
 export async function fetchAllOrders(): Promise<Order[]> {
   const snap = await getDocs(
     query(collection(db, ORDERS_COLLECTION), orderBy("createdAt", "desc")),
