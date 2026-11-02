@@ -6,6 +6,11 @@ import { useOptionGroupsStore } from "@/stores/optionGroupsStore";
 import { OptionRow } from "@/components/menu/options/OptionRow";
 import { AddOptionModal } from "@/components/menu/options/AddOptionModal";
 import { patchClearDefaultIfOptionRemoved } from "@/lib/option-group-updates";
+import {
+  MenuPageHeader,
+  UnusedFilterButton,
+  primaryButtonClass,
+} from "@/components/menu/MenuPageHeader";
 import { confirmDialog, alertDialog } from "@/stores/modalStore";
 
 export default function OptionsPage() {
@@ -20,12 +25,26 @@ export default function OptionsPage() {
   const { optionGroups, updateOptionGroupsBatch } = useOptionGroupsStore();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [unusedOnly, setUnusedOnly] = useState(false);
+
+  /** Same rule as the "Unused" badge on OptionRow: not in any option group. */
+  const usedOptionIds = useMemo(
+    () => new Set(optionGroups.flatMap((g) => g.optionIds ?? [])),
+    [optionGroups],
+  );
+  const unusedCount = useMemo(
+    () => options.filter((o) => !usedOptionIds.has(o.id)).length,
+    [options, usedOptionIds],
+  );
 
   const filteredOptions = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return options;
-    return options.filter((o) => o.name.toLowerCase().includes(q));
-  }, [options, query]);
+    return options.filter(
+      (o) =>
+        (!unusedOnly || !usedOptionIds.has(o.id)) &&
+        (!q || o.name.toLowerCase().includes(q)),
+    );
+  }, [options, query, unusedOnly, usedOptionIds]);
 
   async function handleDeleteOption(option: ItemOption) {
     if (!(await confirmDialog(`Delete "${option.name}"? This cannot be undone.`, { danger: true, confirmLabel: "Delete" })))
@@ -50,22 +69,31 @@ export default function OptionsPage() {
 
   return (
     <div className="min-w-0">
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-foreground/10 bg-background px-4 py-3 mb-4">
+      <MenuPageHeader
+        title="Options"
+        count={loading && options.length === 0 ? undefined : options.length}
+      >
         <button
           type="button"
           onClick={() => setAddModalOpen(true)}
-          className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+          className={primaryButtonClass}
         >
-          + Add Option
+          + Add option
         </button>
-      </div>
-      <div className="mb-4">
+      </MenuPageHeader>
+      <div className="mb-4 flex gap-2">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search options…"
-          className="w-full rounded-xl border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+          className="min-w-0 flex-1 rounded-xl border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
           aria-label="Search options"
+        />
+        <UnusedFilterButton
+          active={unusedOnly}
+          count={unusedCount}
+          onToggle={() => setUnusedOnly((v) => !v)}
+          title="Options not in any option group"
         />
       </div>
 
@@ -84,10 +112,12 @@ export default function OptionsPage() {
       ) : filteredOptions.length === 0 ? (
         <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.02] p-6">
           <p className="text-foreground text-sm font-medium">
-            No options match “{query.trim()}”.
+            {query.trim()
+              ? `No ${unusedOnly ? "unused " : ""}options match \u201c${query.trim()}\u201d.`
+              : "No unused options."}
           </p>
           <p className="mt-1 text-foreground/60 text-sm">
-            Try a different search.
+            {unusedOnly ? "Turn off the Unused filter to see all options." : "Try a different search."}
           </p>
         </div>
       ) : (

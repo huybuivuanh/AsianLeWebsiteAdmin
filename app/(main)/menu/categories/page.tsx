@@ -8,6 +8,11 @@ import { EditCategoryModal } from "@/components/menu/categories/EditCategoryModa
 import { AddCategoryItemsModal } from "@/components/menu/categories/AddCategoryItemsModal";
 import { CategoryRow } from "@/components/menu/categories/CategoryRow";
 import { SortCategoriesModal } from "@/components/menu/categories/SortCategoriesModal";
+import {
+  MenuPageHeader,
+  primaryButtonClass,
+  secondaryButtonClass,
+} from "@/components/menu/MenuPageHeader";
 import { confirmDialog } from "@/stores/modalStore";
 
 export default function CategoriesPage() {
@@ -110,24 +115,27 @@ export default function CategoriesPage() {
 
   return (
     <div className="min-w-0">
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-foreground/10 bg-background px-4 py-3 mb-4">
-        <button
-          type="button"
-          onClick={() => setModalOpen(true)}
-          className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20"
-        >
-          + Add Category
-        </button>
+      <MenuPageHeader
+        title="Categories"
+        count={loading && categories.length === 0 ? undefined : categories.length}
+      >
         {categories.length > 1 && (
           <button
             type="button"
             onClick={() => setSortModalOpen(true)}
-            className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+            className={secondaryButtonClass}
           >
-            Sort Category
+            Sort categories
           </button>
         )}
-      </div>
+        <button
+          type="button"
+          onClick={() => setModalOpen(true)}
+          className={primaryButtonClass}
+        >
+          + Add category
+        </button>
+      </MenuPageHeader>
       <div className="mb-4">
         <input
           value={query}
