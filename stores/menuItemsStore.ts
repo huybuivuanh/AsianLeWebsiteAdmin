@@ -12,11 +12,10 @@ import {
 } from "firebase/firestore";
 import {
   ref,
-  uploadBytes,
-  getDownloadURL,
   deleteObject,
 } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
+import { uploadImage } from "@/lib/imageUpload";
 import { KitchenType } from "@/types/enum";
 
 export type MenuItemInput = {
@@ -94,10 +93,7 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
     try {
       let image: ImageItem | undefined;
       if (imageFile && imageFile.size > 0) {
-        const safeName = imageFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-        const storageRef = ref(storage, `menuItems/${Date.now()}_${safeName}`);
-        await uploadBytes(storageRef, imageFile);
-        const url = await getDownloadURL(storageRef);
+        const url = await uploadImage("menuItems", imageFile);
         image = { name: imageFile.name, url };
       }
 
@@ -141,10 +137,7 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
         if (item?.image) {
           try { await deleteStorageImageByUrl(item.image.url); } catch { /* ignore */ }
         }
-        const safeName = imageFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-        const storageRef = ref(storage, `menuItems/${Date.now()}_${safeName}`);
-        await uploadBytes(storageRef, imageFile);
-        const url = await getDownloadURL(storageRef);
+        const url = await uploadImage("menuItems", imageFile);
         payload.image = { name: imageFile.name, url };
       }
 

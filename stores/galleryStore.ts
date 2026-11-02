@@ -9,11 +9,10 @@ import {
 } from "firebase/firestore";
 import {
   ref,
-  uploadBytes,
-  getDownloadURL,
   deleteObject,
 } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
+import { uploadImage } from "@/lib/imageUpload";
 
 function deleteStorageByUrl(imageUrl: string): Promise<void> {
   const url = new URL(imageUrl);
@@ -71,10 +70,7 @@ export const useGalleryStore = create<GalleryState>((set, get) => ({
   addGalleryItem: async (name, imageFile) => {
     set({ error: null });
     try {
-      const safeName = imageFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const storageRef = ref(storage, `gallery/${Date.now()}_${safeName}`);
-      await uploadBytes(storageRef, imageFile);
-      const url = await getDownloadURL(storageRef);
+      const url = await uploadImage("gallery", imageFile);
 
       await addDoc(collection(db, "gallery"), {
         name: name.trim(),
@@ -102,10 +98,7 @@ export const useGalleryStore = create<GalleryState>((set, get) => ({
         } catch {
           // Ignore; upload new image anyway
         }
-        const safeName = imageFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-        const storageRef = ref(storage, `gallery/${Date.now()}_${safeName}`);
-        await uploadBytes(storageRef, imageFile);
-        url = await getDownloadURL(storageRef);
+        url = await uploadImage("gallery", imageFile);
       }
 
       await updateDoc(doc(db, "gallery", id), {
