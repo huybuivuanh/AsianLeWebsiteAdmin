@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DEFAULT_RESERVATION_DAY, useStoreSettingsStore } from "@/stores/storeSettingsStore";
 
 type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
@@ -143,12 +143,8 @@ function initialReservationHours(settings: StoreSettings): WeeklyHours {
 }
 
 export function StoreSettingsForm() {
-  const { settings, loading, error, updateSettings, fetchStoreSettings } =
-    useStoreSettingsStore();
-
-  useEffect(() => {
-    void fetchStoreSettings();
-  }, [fetchStoreSettings]);
+  // Settings are loaded once at login (AuthContext), so no fetch here.
+  const { settings, loading, error, updateSettings } = useStoreSettingsStore();
 
   const [editedTimezone, setEditedTimezone] = useState(
     () => settings?.timezone ?? "",
@@ -197,14 +193,18 @@ export function StoreSettingsForm() {
   const [deletingHolidayId, setDeletingHolidayId] = useState<string | null>(null);
   const [holidayError, setHolidayError] = useState<string | null>(null);
 
+  // Fill the form from the saved settings once, when they first arrive. Not on every
+  // re-fetch: saving one section re-fetches, and that must not wipe unsaved edits in
+  // the other sections (the saved section already matches what was saved).
+  const filledFromSettings = useRef(settings != null);
   useEffect(() => {
-    if (settings) {
-      setEditedTimezone(settings.timezone);
-      setEditedHours(structuredClone(settings.hours));
-      setEditedReservationHours(initialReservationHours(settings));
-      setEditedWaitTime(settings.waitTime ?? 0);
-      setEditedRestaurantPhone(extractTenDigitPhone(settings.restaurantPhoneNumber ?? ""));
-    }
+    if (!settings || filledFromSettings.current) return;
+    filledFromSettings.current = true;
+    setEditedTimezone(settings.timezone);
+    setEditedHours(structuredClone(settings.hours));
+    setEditedReservationHours(initialReservationHours(settings));
+    setEditedWaitTime(settings.waitTime ?? 0);
+    setEditedRestaurantPhone(extractTenDigitPhone(settings.restaurantPhoneNumber ?? ""));
   }, [settings]);
 
   function updateDay(key: DayKey, patch: Partial<DayHours>) {
@@ -218,6 +218,14 @@ export function StoreSettingsForm() {
   async function handleSaveHours(e: React.FormEvent) {
     e.preventDefault();
     if (!editedHours) return;
+    const badDay = DAY_LABELS.find(({ key }) => {
+      const day = editedHours[key];
+      return day.isOpen && (!day.open || !day.close || day.open >= day.close);
+    });
+    if (badDay) {
+      setSaveError(`${badDay.label}: the opening time must be before the closing time.`);
+      return;
+    }
     setSaveError(null);
     setSaving(true);
     try {
@@ -318,20 +326,25 @@ export function StoreSettingsForm() {
   async function handleDeleteHoliday(id: string) {
     if (!settings) return;
     setDeletingHolidayId(id);
+    setHolidayError(null);
     try {
       await updateSettings({
         holidays: (settings.holidays ?? []).filter((h) => h.id !== id),
       });
+    } catch {
+      setHolidayError("Couldn't remove the holiday. Try again.");
     } finally {
       setDeletingHolidayId(null);
     }
   }
 
-  if (loading) {
+  // Only before the first load: once settings exist, a re-fetch or a failed save keeps
+  // the form on screen (save errors show next to each section's Save button).
+  if (!settings && loading) {
     return <p className="text-foreground/50 text-sm">Loading settings…</p>;
   }
 
-  if (error) {
+  if (!settings && error) {
     return <p className="text-red-500 text-sm" role="alert">{error}</p>;
   }
 
@@ -456,7 +469,7 @@ export function StoreSettingsForm() {
       <section>
         <h2 className="text-base font-semibold text-foreground mb-1">Restaurant Phone</h2>
         <p className="text-sm text-foreground/50 mb-4">
-          Called automatically if a new order sits unconfirmed for 30 seconds.
+          Called automatically if a new order sits unconfirmed for 15 seconds.
         </p>
         <form onSubmit={handleSaveRestaurantPhone} className="space-y-4">
           <div className="flex items-center gap-3">
