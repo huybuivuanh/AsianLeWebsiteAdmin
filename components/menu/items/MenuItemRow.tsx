@@ -18,6 +18,16 @@ import { AddOptionToGroupModal } from "@/components/menu/option-groups/AddOption
 import { AddItemOptionGroupsModal } from "@/components/menu/items/AddItemOptionGroupsModal";
 import { SortItemOptionGroupsModal } from "@/components/menu/items/SortItemOptionGroupsModal";
 import { confirmDialog, alertDialog } from "@/stores/modalStore";
+import {
+  ExpandChevron,
+  RemoveButton,
+  RowActions,
+  UnusedBadge,
+  addButtonClass,
+  rowCardClass,
+  rowHeaderClass,
+  subtleButtonClass,
+} from "@/components/menu/RowParts";
 
 type MenuItemRowProps = {
   item: MenuItem;
@@ -131,7 +141,7 @@ export function MenuItemRow({
   }
 
   return (
-    <li className="rounded-2xl border border-foreground/10 bg-foreground/[0.02] overflow-hidden">
+    <li className={rowCardClass}>
       <div
         role="button"
         tabIndex={0}
@@ -143,140 +153,126 @@ export function MenuItemRow({
           }
         }}
         aria-expanded={expanded}
-        className="px-4 py-3 flex flex-wrap items-start gap-3 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 hover:bg-foreground/[0.03]"
+        className={rowHeaderClass}
       >
         <Image
           src={item.image?.url ?? "/Soup Bowl Icon.jpg"}
-          alt={item.name}
+          alt=""
           width={128}
           height={128}
-          sizes="128px"
-          className="w-16 h-16 object-cover rounded-md shrink-0"
+          sizes="56px"
+          className="h-14 w-14 shrink-0 rounded-lg object-cover"
         />
 
-        <div className="flex-1 basis-44 min-w-[11rem]">
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="font-bold text-foreground break-words">{item.name}</span>
-            <span className="text-sm font-semibold text-foreground/80 rounded-full border border-foreground/15 bg-foreground/5 px-2 py-0.5">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <p className="min-w-0 font-semibold text-foreground break-words">{item.name}</p>
+            <span className="shrink-0 font-semibold tabular-nums text-foreground">
               {formatPriceCAD(item.price)}
             </span>
-            {isUnused && (
-              <span className="shrink-0 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
-                Unused
-              </span>
-            )}
           </div>
-
-          {expanded && item.description && (
-            <p className="mt-1 text-sm text-foreground/70">{item.description}</p>
-          )}
-
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            <span className="text-xs rounded-full border border-foreground/10 bg-foreground/[0.03] px-2 py-0.5 text-foreground/60">
-              {item.kitchenType}
-            </span>
-
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-foreground/60">
+            {isUnused && <UnusedBadge />}
+            {item.kitchenType && <span>{item.kitchenType}</span>}
             {itemOptionGroups.length > 0 && (
-              <span className="text-xs rounded-full border border-foreground/10 bg-foreground/[0.03] px-2 py-0.5 text-foreground/60">
+              <span>
                 {itemOptionGroups.length} option group{itemOptionGroups.length !== 1 ? "s" : ""}
               </span>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-          <button
-            type="button"
-            onClick={() => onEdit(item)}
-            disabled={deleting}
-            className="rounded-xl border border-foreground/20 px-3.5 py-2 text-sm font-semibold text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
-          >
-            Edit
-          </button>
-          <button
-            type="button"
-            onClick={() => onDelete(item)}
-            disabled={deleting}
-            className="rounded-xl border border-red-600 text-red-600 px-3.5 py-2 text-sm font-semibold hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:opacity-50"
-          >
-            {deleting ? "…" : "Delete"}
-          </button>
-        </div>
+        <ExpandChevron expanded={expanded} />
+        <RowActions
+          name={item.name}
+          onEdit={() => onEdit(item)}
+          onDelete={() => onDelete(item)}
+          deleting={deleting}
+        />
       </div>
 
       {expanded && (
-        <div className="border-t border-foreground/10 bg-foreground/[0.02] px-4 py-4 space-y-3">
+        <div className="space-y-3 border-t border-foreground/10 px-3 py-3 sm:px-4">
+          {item.description && (
+            <p className="text-sm text-foreground/70">{item.description}</p>
+          )}
+
           {itemOptionGroups.length === 0 ? (
             <p className="text-sm text-foreground/60">No option groups assigned.</p>
           ) : (
             itemOptionGroups.map((group) => {
               const groupOptions = options.filter((o) => group.optionIds?.includes(o.id));
               return (
-                <div
+                <section
                   key={group.id}
-                  className="rounded-xl border border-foreground/10 bg-background/40 p-3 space-y-2"
+                  className="overflow-hidden rounded-lg border border-foreground/10"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-medium text-foreground">{group.name}</span>
-                    <button
-                      type="button"
+                  <div className="flex items-center justify-between gap-2 bg-foreground/[0.03] px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground">{group.name}</p>
+                      <p className="text-xs text-foreground/60">
+                        Min {group.minSelection}, max {group.maxSelection}
+                      </p>
+                    </div>
+                    <RemoveButton
                       onClick={() => handleRemoveOptionGroup(group)}
-                      className="rounded-lg border border-red-600/30 px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                      label={`Remove ${group.name} from ${item.name}`}
                     >
                       Remove group
-                    </button>
+                    </RemoveButton>
                   </div>
-                  <p className="text-xs text-foreground/60">
-                    Min {group.minSelection} · Max {group.maxSelection}
-                  </p>
-                  <div className="space-y-1.5">
+                  <ul className="divide-y divide-foreground/10">
                     {groupOptions.length === 0 ? (
-                      <p className="text-sm text-foreground/50">No options in this group.</p>
+                      <li className="px-3 py-2 text-sm text-foreground/50">
+                        No options in this group.
+                      </li>
                     ) : (
                       groupOptions.map((opt) => (
-                        <div
+                        <li
                           key={opt.id}
-                          className="flex items-center justify-between gap-2 rounded-lg border border-foreground/10 bg-background px-3 py-2"
+                          className="flex items-center justify-between gap-3 px-3 py-1.5"
                         >
-                          <span className="min-w-0 truncate text-sm text-foreground">
-                            {opt.name} <span className="text-foreground/50">· {formatPriceCAD(opt.price)}</span>
+                          <span className="min-w-0 flex-1 truncate text-sm text-foreground">
+                            {opt.name}
                           </span>
-                          <button
-                            type="button"
+                          <span className="shrink-0 text-sm tabular-nums text-foreground/60">
+                            {formatPriceCAD(opt.price)}
+                          </span>
+                          <RemoveButton
                             onClick={() => handleRemoveOption(group, opt)}
-                            className="shrink-0 rounded-lg border border-red-600/30 px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20"
-                          >
-                            Remove option
-                          </button>
-                        </div>
+                            label={`Remove ${opt.name} from ${group.name}`}
+                          />
+                        </li>
                       ))
                     )}
+                  </ul>
+                  <div className="border-t border-foreground/10 px-3 py-2">
+                    <button
+                      type="button"
+                      onClick={() => setAddOptionForGroup(group)}
+                      className={addButtonClass}
+                    >
+                      + Add options
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setAddOptionForGroup(group)}
-                    className="rounded-lg border border-foreground/20 px-3 py-1.5 text-sm font-medium text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20"
-                  >
-                    + Add Options
-                  </button>
-                </div>
+                </section>
               );
             })
           )}
 
-          <div className="flex flex-wrap gap-2 pt-1">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => setAddGroupsOpen(true)}
-              className="rounded-xl border border-foreground/20 px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+              className={addButtonClass}
             >
-              + Add Option Groups
+              + Add option groups
             </button>
             <button
               type="button"
               onClick={() => setSortGroupsOpen(true)}
               disabled={itemOptionGroups.length < 2}
-              className="rounded-xl border border-foreground/20 px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
+              className={subtleButtonClass}
             >
               Sort groups
             </button>

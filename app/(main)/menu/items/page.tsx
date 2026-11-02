@@ -111,7 +111,7 @@ export default function MenuItemsPage() {
           </p>
         </div>
       ) : (
-        <ul className="space-y-3">
+        <ul className="space-y-2">
           {filteredItems.map((item) => (
             <MenuItemRow
               key={item.id}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { formatPriceCAD } from "@/lib/utils";
 import { EditOptionModal } from "./EditOptionModal";
+import { RowActions, UnusedBadge, rowCardClass } from "@/components/menu/RowParts";
 
 type OptionRowProps = {
   option: ItemOption;
@@ -21,39 +22,28 @@ export function OptionRow({ option, optionGroups, onUpdate, onDelete }: OptionRo
 
   return (
     <>
-      <li className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-foreground/10 bg-foreground/[0.02] px-4 py-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-foreground">{option.name}</span>
-            <span className="text-sm text-foreground/60">{formatPriceCAD(option.price)}</span>
-            {isUnused && (
-              <span className="shrink-0 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
-                Unused
-              </span>
-            )}
+      <li className={`${rowCardClass} flex items-center gap-3 px-3 py-3 sm:px-4`}>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <span className="font-semibold text-foreground break-words">{option.name}</span>
+              {isUnused && <UnusedBadge />}
+            </div>
+            <span className="shrink-0 font-semibold tabular-nums text-foreground">
+              {formatPriceCAD(option.price)}
+            </span>
           </div>
           {belongsToGroups.length > 0 && (
-            <p className="mt-0.5 text-xs text-foreground/50">
-              Groups: {belongsToGroups.map((g) => g.name).join(", ")}
+            <p className="mt-0.5 text-sm text-foreground/60">
+              In {belongsToGroups.map((g) => g.name).join(", ")}
             </p>
           )}
         </div>
-        <div className="flex gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={() => setEditOpen(true)}
-            className="rounded-lg border border-foreground/20 px-3 py-1.5 text-sm font-medium text-foreground hover:bg-foreground/5"
-          >
-            Edit
-          </button>
-          <button
-            type="button"
-            onClick={() => onDelete(option)}
-            className="rounded-lg border border-red-600 text-red-600 px-3 py-1.5 text-sm font-medium hover:bg-red-600 hover:text-white"
-          >
-            Delete
-          </button>
-        </div>
+        <RowActions
+          name={option.name}
+          onEdit={() => setEditOpen(true)}
+          onDelete={() => onDelete(option)}
+        />
       </li>
 
       <EditOptionModal

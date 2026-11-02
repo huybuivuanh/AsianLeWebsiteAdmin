@@ -2,6 +2,15 @@
 
 import { useMemo } from "react";
 import { useMenuItemsStore } from "@/stores/menuItemsStore";
+import { formatPriceCAD } from "@/lib/utils";
+import {
+  ExpandChevron,
+  RemoveButton,
+  RowActions,
+  addButtonClass,
+  rowCardClass,
+  rowHeaderClass,
+} from "@/components/menu/RowParts";
 
 type CategoryRowProps = {
   category: FoodCategory;
@@ -33,8 +42,10 @@ export function CategoryRow({
       .filter((m): m is MenuItem => m != null);
   }, [category.itemIds, items]);
 
+  const itemCount = category.itemIds?.length ?? 0;
+
   return (
-    <li className="rounded-2xl border border-foreground/10 bg-foreground/[0.02] overflow-hidden">
+    <li className={rowCardClass}>
       <div
         role="button"
         tabIndex={0}
@@ -46,93 +57,61 @@ export function CategoryRow({
           }
         }}
         aria-expanded={expanded}
-        className="px-4 py-3 flex flex-wrap items-start justify-between gap-3 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 hover:bg-foreground/[0.03]"
+        className={rowHeaderClass}
       >
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="font-bold text-foreground truncate">
-              {category.name}
-            </span>
-            {category.itemIds && category.itemIds.length > 0 && (
-              <span className="text-xs text-foreground/50 shrink-0 rounded-full bg-foreground/5 px-2 py-0.5">
-                ({category.itemIds.length} item
-                {category.itemIds.length !== 1 ? "s" : ""})
-              </span>
-            )}
-          </div>
-          {expanded && category.description && (
-            <p className="mt-1 text-sm text-foreground/70">
-              {category.description}
-            </p>
-          )}
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-foreground break-words">{category.name}</p>
+          <p className="mt-0.5 text-sm text-foreground/60">
+            {itemCount} item{itemCount !== 1 ? "s" : ""}
+          </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-          <button
-            type="button"
-            onClick={() => onEdit(category)}
-            disabled={deleting}
-            className="rounded-lg border border-foreground/20 px-3 py-1.5 text-sm font-semibold text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
-          >
-            Edit
-          </button>
-          <button
-            type="button"
-            onClick={() => onDelete(category)}
-            disabled={deleting}
-            className="rounded-lg border border-red-600 text-red-600 px-3 py-1.5 text-sm font-semibold hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 disabled:opacity-50"
-          >
-            {deleting ? "…" : "Delete"}
-          </button>
-        </div>
+        <ExpandChevron expanded={expanded} />
+        <RowActions
+          name={category.name}
+          onEdit={() => onEdit(category)}
+          onDelete={() => onDelete(category)}
+          deleting={deleting}
+        />
       </div>
 
       {expanded && (
-        <div className="border-t border-foreground/10 bg-foreground/[0.02] px-4 py-4">
+        <div className="space-y-3 border-t border-foreground/10 px-3 py-3 sm:px-4">
+          {category.description && (
+            <p className="text-sm text-foreground/70">{category.description}</p>
+          )}
+
           {itemsInCategory.length === 0 ? (
-            <div className="rounded-xl border border-foreground/10 bg-background/40 p-4 mb-3">
-              <p className="text-sm font-medium text-foreground">
-                No items in this category.
-              </p>
-              <p className="mt-1 text-sm text-foreground/60">
-                Add items to start building this section.
-              </p>
-            </div>
+            <p className="text-sm text-foreground/60">
+              No items in this category yet.
+            </p>
           ) : (
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+            <ul className="divide-y divide-foreground/10 overflow-hidden rounded-lg border border-foreground/10">
               {itemsInCategory.map((item) => (
                 <li
                   key={item.id}
-                  className="flex items-center justify-between gap-2 rounded-xl border border-foreground/10 bg-background/40 px-3 py-2"
+                  className="flex items-center justify-between gap-3 px-3 py-1.5"
                 >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-sm font-medium text-foreground truncate">
-                        {item.name}
-                      </span>
-                      {item.price != null && (
-                        <span className="text-xs font-semibold text-foreground/80 rounded-full border border-foreground/15 bg-foreground/5 px-2 py-0.5 shrink-0">
-                          ${Number(item.price).toFixed(2)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    type="button"
+                  <span className="min-w-0 flex-1 truncate text-sm text-foreground">
+                    {item.name}
+                  </span>
+                  <span className="shrink-0 text-sm tabular-nums text-foreground/60">
+                    {formatPriceCAD(item.price)}
+                  </span>
+                  <RemoveButton
                     onClick={() => onRemoveItem(category, item.id)}
-                    className="rounded-lg border border-red-600/30 px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500/20 shrink-0"
-                  >
-                    Remove
-                  </button>
+                    label={`Remove ${item.name} from ${category.name}`}
+                  />
                 </li>
               ))}
             </ul>
           )}
+
           <button
             type="button"
             onClick={() => onAddItems(category)}
-            className="rounded-xl border border-foreground/20 px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+            className={addButtonClass}
           >
-            + Add Items
+            + Add items
           </button>
         </div>
       )}

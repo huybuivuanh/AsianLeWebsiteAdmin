@@ -7,6 +7,15 @@ import { patchClearDefaultIfOptionRemoved } from "@/lib/option-group-updates";
 import { confirmDialog, alertDialog } from "@/stores/modalStore";
 import { EditOptionGroupModal } from "./EditOptionGroupModal";
 import { AddOptionToGroupModal } from "./AddOptionToGroupModal";
+import {
+  ExpandChevron,
+  RemoveButton,
+  RowActions,
+  UnusedBadge,
+  addButtonClass,
+  rowCardClass,
+  rowHeaderClass,
+} from "@/components/menu/RowParts";
 
 type OptionGroupRowProps = {
   group: OptionGroup;
@@ -68,8 +77,7 @@ export function OptionGroupRow({
 
   return (
     <>
-      <li className="rounded-lg border border-foreground/10 bg-foreground/[0.02]">
-        {/* Header */}
+      <li className={rowCardClass}>
         <div
           role="button"
           tabIndex={0}
@@ -81,57 +89,49 @@ export function OptionGroupRow({
             }
           }}
           aria-expanded={expanded}
-          className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 hover:bg-foreground/[0.03]"
+          className={rowHeaderClass}
         >
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="text-sm font-medium text-foreground truncate">{group.name}</span>
-            {isUnused && (
-              <span className="shrink-0 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
-                Unused
+          <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <span className="font-semibold text-foreground break-words">{group.name}</span>
+              {isUnused && <UnusedBadge />}
+            </div>
+            <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-1 text-sm text-foreground/60">
+              <span>
+                Min {group.minSelection}, max {group.maxSelection}
               </span>
-            )}
+              <span>
+                {groupOptions.length} option{groupOptions.length !== 1 ? "s" : ""}
+              </span>
+              {group.multipleOptionQuantity && <span>Multiple qty</span>}
+            </div>
           </div>
-          <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-            <button
-              type="button"
-              onClick={() => setEditOpen(true)}
-              className="rounded-lg border border-foreground/20 px-3 py-1.5 text-sm font-medium text-foreground hover:bg-foreground/5"
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              onClick={() => onDelete(group)}
-              className="rounded-lg border border-red-600 text-red-600 px-3 py-1.5 text-sm font-medium hover:bg-red-600 hover:text-white"
-            >
-              Delete
-            </button>
-          </div>
+          <ExpandChevron expanded={expanded} />
+          <RowActions
+            name={group.name}
+            onEdit={() => setEditOpen(true)}
+            onDelete={() => onDelete(group)}
+          />
         </div>
 
-        {/* Summary */}
-        <p className="px-4 pb-3 text-xs text-foreground/50">
-          Min {group.minSelection} · Max {group.maxSelection} · {groupOptions.length} option{groupOptions.length !== 1 ? "s" : ""}
-          {group.multipleOptionQuantity && " · Multiple qty"}
-        </p>
-
-        {/* Expanded options */}
         {expanded && (
-          <div className="border-t border-foreground/10 px-4 py-3 space-y-2">
+          <div className="space-y-3 border-t border-foreground/10 px-3 py-3 sm:px-4">
             {groupOptions.length === 0 ? (
-              <p className="text-sm text-foreground/50">No options in this group yet.</p>
+              <p className="text-sm text-foreground/60">No options in this group yet.</p>
             ) : (
-              groupOptions.map((opt) => (
-                <div
-                  key={opt.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-foreground/10 bg-background px-3 py-2"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-sm text-foreground truncate">{opt.name}</span>
-                    <span className="text-sm text-foreground/50 shrink-0">{formatPriceCAD(opt.price)}</span>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <label className="flex items-center gap-1.5 cursor-pointer">
+              <ul className="divide-y divide-foreground/10 overflow-hidden rounded-lg border border-foreground/10">
+                {groupOptions.map((opt) => (
+                  <li
+                    key={opt.id}
+                    className="flex items-center justify-between gap-3 px-3 py-1.5"
+                  >
+                    <span className="min-w-0 flex-1 truncate text-sm text-foreground">
+                      {opt.name}
+                    </span>
+                    <span className="shrink-0 text-sm tabular-nums text-foreground/60">
+                      {formatPriceCAD(opt.price)}
+                    </span>
+                    <label className="flex shrink-0 cursor-pointer items-center gap-1.5">
                       <input
                         type="checkbox"
                         checked={group.defaultOptionId === opt.id}
@@ -145,23 +145,20 @@ export function OptionGroupRow({
                       />
                       <span className="text-xs text-foreground/60 whitespace-nowrap">Default</span>
                     </label>
-                    <button
-                      type="button"
+                    <RemoveButton
                       onClick={() => handleRemoveOption(opt)}
-                      className="rounded border border-red-600/50 text-red-600 px-2 py-1 text-xs font-medium hover:bg-red-600 hover:text-white"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              ))
+                      label={`Remove ${opt.name} from ${group.name}`}
+                    />
+                  </li>
+                ))}
+              </ul>
             )}
             <button
               type="button"
               onClick={() => setAddOptionOpen(true)}
-              className="mt-1 rounded-lg border border-foreground/20 px-3 py-1.5 text-sm font-medium text-foreground hover:bg-foreground/5"
+              className={addButtonClass}
             >
-              + Add Options
+              + Add options
             </button>
           </div>
         )}
