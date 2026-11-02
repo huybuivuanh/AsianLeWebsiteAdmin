@@ -23,6 +23,7 @@ import { useSpecialItemsStore } from "@/stores/dailySpecialItemsStore";
 import { useOptionGroupsStore } from "@/stores/optionGroupsStore";
 import { useOptionsStore } from "@/stores/optionsStore";
 import { useStoreSettingsStore } from "@/stores/storeSettingsStore";
+import { useHoursStore } from "@/stores/hoursStore";
 
 type AuthContextValue = {
   user: User | null;
@@ -56,6 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         void useOptionGroupsStore.getState().fetchOptionGroups();
         void useOptionsStore.getState().fetchOptions();
         void useStoreSettingsStore.getState().fetchStoreSettings();
+        void useHoursStore.getState().fetchHours();
       } else {
         useCategoriesStore.getState().reset();
         useMenuItemsStore.getState().reset();
@@ -66,6 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         useOptionGroupsStore.getState().reset();
         useOptionsStore.getState().reset();
         useStoreSettingsStore.getState().reset();
+        useHoursStore.getState().reset();
       }
     });
     return () => unsubscribe();
@@ -106,6 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useOptionGroupsStore.getState().reset();
     useOptionsStore.getState().reset();
     useStoreSettingsStore.getState().reset();
+    useHoursStore.getState().reset();
   }, []);
 
   const clearError = useCallback(() => setError(null), []);

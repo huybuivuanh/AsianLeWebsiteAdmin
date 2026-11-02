@@ -8,6 +8,7 @@ import {
   doc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { batchUpdateDocs } from "@/lib/batch-update";
 
 interface HoursState {
   hours: StoreHour[];
@@ -17,6 +18,8 @@ interface HoursState {
   addHour: (days: string, time: string) => Promise<void>;
   updateHour: (id: string, days: string, time: string) => Promise<void>;
   deleteHour: (id: string) => Promise<void>;
+  /** Saves this display order (the website sorts hours by `order`). */
+  reorderHours: (orderedIds: string[]) => Promise<void>;
   reset: () => void;
 }
 
@@ -80,6 +83,22 @@ export const useHoursStore = create<HoursState>((set, get) => ({
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to update hour";
+      set({ error: message });
+      throw err;
+    }
+  },
+
+  reorderHours: async (orderedIds) => {
+    set({ error: null });
+    try {
+      await batchUpdateDocs(
+        "hours",
+        orderedIds.map((id, index) => ({ id, data: { order: index } })),
+      );
+      await get().fetchHours();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to reorder hours";
       set({ error: message });
       throw err;
     }
