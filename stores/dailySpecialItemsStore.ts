@@ -9,6 +9,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { batchUpdateDocs, type DocUpdate } from "@/lib/batch-update";
 
 interface SpecialItemsState {
   items: DailySpecialItem[];
@@ -31,6 +32,8 @@ interface SpecialItemsState {
     id: string,
     dayOfWeekIds: string[],
   ) => Promise<void>;
+  /** Many updates in one batch, then a single re-fetch. */
+  updateSpecialItemsBatch: (updates: DocUpdate[]) => Promise<void>;
   reset: () => void;
 }
 
@@ -126,6 +129,19 @@ export const useSpecialItemsStore = create<SpecialItemsState>((set, get) => ({
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete special item";
+      set({ error: message });
+      throw err;
+    }
+  },
+
+  updateSpecialItemsBatch: async (updates) => {
+    if (updates.length === 0) return;
+    set({ error: null });
+    try {
+      await batchUpdateDocs("dailySpecialItems", updates);
+      await get().fetchSpecialItems();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to update special items";
       set({ error: message });
       throw err;
     }

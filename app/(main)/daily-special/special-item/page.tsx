@@ -16,7 +16,7 @@ export default function SpecialItemPage() {
     updateSpecialItem,
     deleteSpecialItem,
   } = useSpecialItemsStore();
-  const { dailySpecials, updateDailySpecialItemIds } = useDailySpecialsStore();
+  const { dailySpecials, updateDailySpecialsBatch } = useDailySpecialsStore();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DailySpecialItem | null>(null);
 
@@ -25,14 +25,14 @@ export default function SpecialItemPage() {
       return;
     try {
       await deleteSpecialItem(item.id);
-      for (const daySpecial of dailySpecials) {
-        if (daySpecial.itemIds?.includes(item.id)) {
-          const next = (daySpecial.itemIds ?? []).filter(
-            (id) => id !== item.id,
-          );
-          await updateDailySpecialItemIds(daySpecial.id, next);
-        }
-      }
+      await updateDailySpecialsBatch(
+        dailySpecials
+          .filter((daySpecial) => daySpecial.itemIds?.includes(item.id))
+          .map((daySpecial) => ({
+            id: daySpecial.id,
+            data: { itemIds: (daySpecial.itemIds ?? []).filter((id) => id !== item.id) },
+          })),
+      );
     } catch {
       // Error already set in store
     }
@@ -56,7 +56,7 @@ export default function SpecialItemPage() {
         </p>
       )}
 
-      {loading ? (
+      {loading && items.length === 0 ? (
         <p className="text-foreground/60 text-sm">Loading…</p>
       ) : items.length === 0 ? (
         <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.02] p-6">
@@ -76,11 +76,11 @@ export default function SpecialItemPage() {
             >
               <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
                 <div className="min-w-0">
-                  <span className="text-medium font-semibold text-foreground truncate">
+                  <span className="text-base font-semibold text-foreground truncate">
                     {item.name}
                   </span>
                 </div>
-                <span className="text-medium font-semibold text-foreground/80 rounded-full border border-foreground/15 bg-foreground/5 px-2 py-0.5">
+                <span className="text-base font-semibold text-foreground/80 rounded-full border border-foreground/15 bg-foreground/5 px-2 py-0.5">
                   ${item.price.toFixed(2)}
                 </span>
               </div>
@@ -89,13 +89,13 @@ export default function SpecialItemPage() {
                   {item.options.slice(0, 6).map((opt) => (
                     <span
                       key={opt}
-                      className="text-medium leading-5 rounded-full border border-foreground/10 bg-foreground/[0.03] px-2 text-foreground/70"
+                      className="text-base leading-5 rounded-full border border-foreground/10 bg-foreground/[0.03] px-2 text-foreground/70"
                     >
                       {opt}
                     </span>
                   ))}
                   {item.options.length > 6 && (
-                    <span className="text-medium leading-5 text-foreground/50">
+                    <span className="text-base leading-5 text-foreground/50">
                       +{item.options.length - 6} more
                     </span>
                   )}

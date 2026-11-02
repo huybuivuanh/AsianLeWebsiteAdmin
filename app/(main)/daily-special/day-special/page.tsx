@@ -1,18 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useDailySpecialsStore } from "@/stores/dailySpecialsStore";
 import { useSpecialItemsStore } from "@/stores/dailySpecialItemsStore";
 import { AddDayModal } from "@/components/daily-special/AddDayModal";
 import { EditDayModal } from "@/components/daily-special/EditDayModal";
 import { DailySpecialRow } from "@/components/daily-special/DailySpecialRow";
 import { AddDayItemsModal } from "@/components/daily-special/AddDayItemsModal";
-import type { DayOfWeek } from "@/types/enum";
+import { DayOfWeek } from "@/types/enum";
 import { confirmDialog } from "@/stores/modalStore";
 
 function dayLabel(value: DayOfWeek): string {
   return value.charAt(0) + value.slice(1).toLowerCase();
 }
+
+/** Monday first, Sunday last — the order staff read the week in. */
+const WEEK_ORDER: DayOfWeek[] = [
+  DayOfWeek.MONDAY,
+  DayOfWeek.TUESDAY,
+  DayOfWeek.WEDNESDAY,
+  DayOfWeek.THURSDAY,
+  DayOfWeek.FRIDAY,
+  DayOfWeek.SATURDAY,
+  DayOfWeek.SUNDAY,
+];
 
 export default function DaySpecial() {
   const {
@@ -24,14 +35,28 @@ export default function DaySpecial() {
     deleteDailySpecial,
     updateDailySpecialItemIds,
   } = useDailySpecialsStore();
-  const { items: specialItems, updateSpecialItemDayOfWeekIds } =
-    useSpecialItemsStore();
+  const {
+    items: specialItems,
+    updateSpecialItemDayOfWeekIds,
+    updateSpecialItemsBatch,
+  } = useSpecialItemsStore();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DailySpecial | null>(null);
   const [addItemsDaySpecial, setAddItemsDaySpecial] =
     useState<DailySpecial | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  // "HH:mm" strings compare correctly as text.
+  const sortedDays = useMemo(
+    () =>
+      dailySpecials.slice().sort(
+        (a, b) =>
+          WEEK_ORDER.indexOf(a.dayOfWeek) - WEEK_ORDER.indexOf(b.dayOfWeek) ||
+          a.timeRange.startTime.localeCompare(b.timeRange.startTime),
+      ),
+    [dailySpecials],
+  );
 
   async function handleDelete(daySpecial: DailySpecial) {
     if (
@@ -44,14 +69,16 @@ export default function DaySpecial() {
     setDeletingId(daySpecial.id);
     try {
       await deleteDailySpecial(daySpecial.id);
-      for (const item of specialItems) {
-        if (item.dayOfWeekIds?.includes(daySpecial.id)) {
-          const next = (item.dayOfWeekIds ?? []).filter(
-            (did) => did !== daySpecial.id,
-          );
-          await updateSpecialItemDayOfWeekIds(item.id, next);
-        }
-      }
+      await updateSpecialItemsBatch(
+        specialItems
+          .filter((item) => item.dayOfWeekIds?.includes(daySpecial.id))
+          .map((item) => ({
+            id: item.id,
+            data: {
+              dayOfWeekIds: (item.dayOfWeekIds ?? []).filter((did) => did !== daySpecial.id),
+            },
+          })),
+      );
     } finally {
       setDeletingId(null);
     }
@@ -78,24 +105,18 @@ export default function DaySpecial() {
 
     await updateDailySpecialItemIds(daySpecialId, itemIds);
 
-    for (const itemId of removed) {
-      const item = specialItems.find((m) => m.id === itemId);
-      if (item) {
-        const next = (item.dayOfWeekIds ?? []).filter(
-          (did) => did !== daySpecialId,
-        );
-        await updateSpecialItemDayOfWeekIds(itemId, next);
-      }
-    }
-    for (const itemId of added) {
-      const item = specialItems.find((m) => m.id === itemId);
-      if (item) {
-        const next = (item.dayOfWeekIds ?? []).includes(daySpecialId)
-          ? item.dayOfWeekIds!
-          : [...(item.dayOfWeekIds ?? []), daySpecialId];
-        await updateSpecialItemDayOfWeekIds(itemId, next);
-      }
-    }
+    await updateSpecialItemsBatch(
+      specialItems
+        .filter((m) => removed.includes(m.id) || added.includes(m.id))
+        .map((m) => ({
+          id: m.id,
+          data: {
+            dayOfWeekIds: removed.includes(m.id)
+              ? (m.dayOfWeekIds ?? []).filter((did) => did !== daySpecialId)
+              : [...new Set([...(m.dayOfWeekIds ?? []), daySpecialId])],
+          },
+        })),
+    );
 
     setAddItemsDaySpecial(null);
   }
@@ -118,7 +139,7 @@ export default function DaySpecial() {
         </p>
       )}
 
-      {loading ? (
+      {loading && dailySpecials.length === 0 ? (
         <p className="text-foreground/60 text-sm">Loading…</p>
       ) : dailySpecials.length === 0 ? (
         <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.02] p-6">
@@ -131,7 +152,7 @@ export default function DaySpecial() {
         </div>
       ) : (
         <ul className="space-y-3">
-          {dailySpecials.map((daySpecial) => (
+          {sortedDays.map((daySpecial) => (
             <DailySpecialRow
               key={daySpecial.id}
               daySpecial={daySpecial}

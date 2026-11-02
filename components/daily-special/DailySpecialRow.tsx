@@ -103,10 +103,10 @@ export function DailySpecialRow({
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-medium font-semibold text-foreground truncate">
+                      <span className="text-base font-semibold text-foreground truncate">
                         {item.name}
                       </span>
-                      <span className="text-medium font-semibold text-foreground/80 rounded-full border border-foreground/15 bg-foreground/5 px-2 py-0.5">
+                      <span className="text-base font-semibold text-foreground/80 rounded-full border border-foreground/15 bg-foreground/5 px-2 py-0.5">
                         ${item.price.toFixed(2)}
                       </span>
                     </div>
@@ -115,7 +115,7 @@ export function DailySpecialRow({
                         {item.options.slice(0, 4).map((opt) => (
                           <span
                             key={opt}
-                            className="text-medium leading-5 rounded-full border border-foreground/10 bg-foreground/[0.03] px-2 text-foreground/70"
+                            className="text-base leading-5 rounded-full border border-foreground/10 bg-foreground/[0.03] px-2 text-foreground/70"
                           >
                             {opt}
                           </span>

@@ -9,6 +9,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { batchUpdateDocs, type DocUpdate } from "@/lib/batch-update";
 import type { DayOfWeek } from "@/types/enum";
 
 interface DailySpecialsState {
@@ -29,6 +30,8 @@ interface DailySpecialsState {
   ) => Promise<void>;
   deleteDailySpecial: (id: string) => Promise<void>;
   updateDailySpecialItemIds: (id: string, itemIds: string[]) => Promise<void>;
+  /** Many updates in one batch, then a single re-fetch. */
+  updateDailySpecialsBatch: (updates: DocUpdate[]) => Promise<void>;
   reset: () => void;
 }
 
@@ -116,6 +119,19 @@ export const useDailySpecialsStore = create<DailySpecialsState>((set, get) => ({
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete daily special";
+      set({ error: message });
+      throw err;
+    }
+  },
+
+  updateDailySpecialsBatch: async (updates) => {
+    if (updates.length === 0) return;
+    set({ error: null });
+    try {
+      await batchUpdateDocs("dailySpecials", updates);
+      await get().fetchDailySpecials();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to update daily specials";
       set({ error: message });
       throw err;
     }
