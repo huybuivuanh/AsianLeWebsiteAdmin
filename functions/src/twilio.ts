@@ -1,4 +1,5 @@
 import twilio from "twilio";
+import { toE164 } from "./phone";
 
 interface PlaceConfirmationCallArgs {
   to: string;
@@ -33,7 +34,7 @@ export async function placeConfirmationCall({
 }: PlaceConfirmationCallArgs): Promise<void> {
   const client = twilio(accountSid, authToken);
   await client.calls.create({
-    to,
+    to: toE164(to),
     from: fromNumber,
     twiml: buildTwiml(orderNumber),
   });

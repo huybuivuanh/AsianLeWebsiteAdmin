@@ -1,5 +1,6 @@
 import twilio from "twilio";
 import { OrderDetails } from "./orderStatusEmail";
+import { toE164 } from "./phone";
 
 const RESTAURANT_NAME = "Asian Le Restaurant";
 
@@ -20,7 +21,7 @@ export async function sendOrderStatusSms({
   fromNumber,
 }: SendOrderStatusSmsArgs): Promise<void> {
   const client = twilio(accountSid, authToken);
-  await client.messages.create({ to, from: fromNumber, body });
+  await client.messages.create({ to: toE164(to), from: fromNumber, body });
 }
 
 function formatScheduledPickup(date: Date, timeZone: string): string {
