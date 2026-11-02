@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { useUpdatesStore } from "@/stores/updatesStore";
 import { AddUpdatesItemModal } from "@/components/updates/AddUpdatesItemModal";
 import { EditUpdatesItemModal } from "@/components/updates/EditUpdatesItemModal";
-import { confirmDialog } from "@/stores/modalStore";
+import { ImageGrid } from "@/components/ImageGrid";
+import { MenuPageHeader, primaryButtonClass } from "@/components/menu/MenuPageHeader";
+import { alertDialog, confirmDialog } from "@/stores/modalStore";
 
 export default function UpdatesPage() {
   const {
@@ -17,83 +18,65 @@ export default function UpdatesPage() {
     deleteUpdatesItem,
   } = useUpdatesStore();
   const [addModalOpen, setAddModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<
-    (typeof items)[number] | null
-  >(null);
+  const [editingItem, setEditingItem] = useState<ImageItem | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  async function handleDelete(item: (typeof items)[number]) {
-    if (await confirmDialog(`Delete "${item.name}"?`, { danger: true, confirmLabel: "Delete" })) {
-      void deleteUpdatesItem(item.id as string);
+  async function handleDelete(item: ImageItem) {
+    if (!item.id) return;
+    if (
+      !(await confirmDialog(`Delete "${item.name}"? This cannot be undone.`, {
+        danger: true,
+        confirmLabel: "Delete",
+      }))
+    )
+      return;
+    setDeletingId(item.id);
+    try {
+      await deleteUpdatesItem(item.id);
+    } catch {
+      await alertDialog(`Couldn't delete "${item.name}". Try again.`);
+    } finally {
+      setDeletingId(null);
     }
   }
 
   return (
     <div className="min-w-0">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
-          Updates
-        </h1>
+      <MenuPageHeader
+        title="Updates"
+        count={loading && items.length === 0 ? undefined : items.length}
+      >
         <button
           type="button"
           onClick={() => setAddModalOpen(true)}
-          className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+          className={primaryButtonClass}
         >
-          Upload image
+          + Upload update
         </button>
-      </div>
+      </MenuPageHeader>
 
       {error && (
-        <p className="text-red-600 dark:text-red-400 text-sm mb-4" role="alert">
+        <p className="text-red-600 text-sm mb-4" role="alert">
           {error}
         </p>
       )}
 
-      {loading ? (
+      {loading && items.length === 0 ? (
         <p className="text-foreground/60 text-sm">Loading updates…</p>
       ) : items.length === 0 ? (
-        <p className="text-foreground/70 text-sm sm:text-base">
-          No images yet. Upload an image to get started.
-        </p>
+        <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.02] p-6">
+          <p className="text-foreground text-sm font-medium">No updates yet.</p>
+          <p className="mt-1 text-foreground/60 text-sm">
+            Upload an image to post an update on the website.
+          </p>
+        </div>
       ) : (
-        <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {items.map((item) => (
-            <li
-              key={item.id}
-              className="rounded-lg border border-foreground/10 bg-foreground/[0.02] overflow-hidden"
-            >
-              <div className="aspect-square relative">
-                <Image
-                  src={item.url}
-                  alt={item.name}
-                  fill
-                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
-                  className="object-cover"
-                />
-              </div>
-              <div className="p-2 space-y-2">
-                <p className="text-sm font-medium text-foreground truncate">
-                  {item.name}
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditingItem(item)}
-                    className="rounded-lg border border-foreground/20 px-3 py-1.5 text-sm font-medium text-foreground hover:bg-foreground/5"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(item)}
-                    className="rounded-lg border border-red-600 text-red-600 px-3 py-1.5 text-sm font-medium hover:bg-red-600 hover:text-white"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <ImageGrid
+          items={items}
+          deletingId={deletingId}
+          onEdit={setEditingItem}
+          onDelete={handleDelete}
+        />
       )}
 
       <AddUpdatesItemModal

@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { useGalleryStore } from "@/stores/galleryStore";
 import { AddGalleryItemModal } from "@/components/gallery/AddGalleryItemModal";
 import { EditGalleryItemModal } from "@/components/gallery/EditGalleryItemModal";
 import { MenuPageHeader, primaryButtonClass } from "@/components/menu/MenuPageHeader";
-import { RowActions, rowCardClass } from "@/components/menu/RowParts";
+import { ImageGrid } from "@/components/ImageGrid";
 import { alertDialog, confirmDialog } from "@/stores/modalStore";
 
 export default function GalleryPage() {
@@ -72,41 +71,12 @@ export default function GalleryPage() {
           </p>
         </div>
       ) : (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4">
-          {items.map((item) => {
-            const deleting = deletingId === item.id;
-            return (
-              <li
-                key={item.id}
-                className={`${rowCardClass} overflow-hidden ${deleting ? "opacity-50" : ""}`}
-              >
-                <div className="relative aspect-square bg-foreground/[0.03]">
-                  <Image
-                    src={item.url}
-                    alt={item.name}
-                    fill
-                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
-                    className="object-cover"
-                  />
-                </div>
-                <div className="flex items-center gap-2 py-2 pl-3 pr-1.5">
-                  <p
-                    className="min-w-0 flex-1 truncate text-sm font-medium text-foreground"
-                    title={item.name}
-                  >
-                    {item.name}
-                  </p>
-                  <RowActions
-                    name={item.name}
-                    onEdit={() => setEditingItem(item)}
-                    onDelete={() => handleDelete(item)}
-                    deleting={deleting}
-                  />
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+        <ImageGrid
+          items={items}
+          deletingId={deletingId}
+          onEdit={setEditingItem}
+          onDelete={handleDelete}
+        />
       )}
 
       <AddGalleryItemModal

@@ -107,7 +107,7 @@ export function EditUpdatesItemModal({
                 width={64}
                 height={64}
                 sizes="64px"
-                className="w-16 h-16 object-cover rounded-md"
+                className="w-16 h-16 object-contain rounded-md bg-foreground/[0.04]"
               />
               <p className="text-xs text-foreground/60">
                 Current image. Choose a file to replace it.
