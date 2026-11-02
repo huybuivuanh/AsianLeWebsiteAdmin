@@ -16,6 +16,9 @@ const SETTINGS_DOC = doc(db, "settings", "store");
 
 const defaultHours: DayHours = { isOpen: true, open: "11:00", close: "21:00" };
 
+/** First booking 1 PM (after the lunch rush), last booking 8 PM. */
+export const DEFAULT_RESERVATION_DAY: DayHours = { isOpen: true, open: "13:00", close: "20:00" };
+
 const DEFAULTS: StoreSettings = {
   pausedUntil: INDEFINITE_PAUSE,
   timezone: "America/Edmonton",
@@ -29,6 +32,15 @@ const DEFAULTS: StoreSettings = {
     fri: defaultHours,
     sat: { ...defaultHours, isOpen: false },
     sun: { ...defaultHours, isOpen: false },
+  },
+  reservationHours: {
+    mon: DEFAULT_RESERVATION_DAY,
+    tue: DEFAULT_RESERVATION_DAY,
+    wed: DEFAULT_RESERVATION_DAY,
+    thu: DEFAULT_RESERVATION_DAY,
+    fri: DEFAULT_RESERVATION_DAY,
+    sat: { ...DEFAULT_RESERVATION_DAY, isOpen: false },
+    sun: { ...DEFAULT_RESERVATION_DAY, isOpen: false },
   },
   holidays: [],
 };

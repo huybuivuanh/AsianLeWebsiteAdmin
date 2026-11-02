@@ -104,6 +104,18 @@ declare global {
     close: string;
   }
 
+  /** Open/close times for each weekday — store (online ordering) hours and reservation
+   * hours both use this shape. */
+  interface WeeklyHours {
+    mon: DayHours;
+    tue: DayHours;
+    wed: DayHours;
+    thu: DayHours;
+    fri: DayHours;
+    sat: DayHours;
+    sun: DayHours;
+  }
+
   interface Holiday {
     id: string;
     from: string; // YYYY-MM-DD
@@ -116,15 +128,11 @@ declare global {
     waitTime: number;
     /** E.164, e.g. "+13065551234" — who the confirm-call Cloud Function calls. */
     restaurantPhoneNumber: string;
-    hours: {
-      mon: DayHours;
-      tue: DayHours;
-      wed: DayHours;
-      thu: DayHours;
-      fri: DayHours;
-      sat: DayHours;
-      sun: DayHours;
-    };
+    hours: WeeklyHours;
+    /** When tables can be booked online, per weekday. `close` is the LAST bookable time
+     * (e.g. 13:00–20:00 = first booking 1 PM, last 8 PM). Holidays and the pause switch
+     * apply to reservations too. Missing on docs saved before reservation hours existed. */
+    reservationHours?: WeeklyHours;
     holidays: Holiday[];
   }
 

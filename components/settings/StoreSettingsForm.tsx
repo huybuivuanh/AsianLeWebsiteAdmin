@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useStoreSettingsStore } from "@/stores/storeSettingsStore";
+import { DEFAULT_RESERVATION_DAY, useStoreSettingsStore } from "@/stores/storeSettingsStore";
 
 type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
@@ -61,6 +61,87 @@ function formatNanpPhone(digits: string): string {
   return `+1 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
 }
 
+
+/** One row per weekday: on/off switch + from/to times. Shared by Store Hours and
+ * Reservation Hours. */
+function WeeklyHoursRows({
+  hours,
+  onChange,
+  toLabel = "to",
+  closedLabel = "Closed",
+}: {
+  hours: WeeklyHours;
+  onChange: (key: DayKey, patch: Partial<DayHours>) => void;
+  toLabel?: string;
+  closedLabel?: string;
+}) {
+  return (
+    <>
+      {DAY_LABELS.map(({ key, label }, i) => {
+        const day = hours[key];
+        return (
+          <div
+            key={key}
+            className={`flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 ${i > 0 ? "border-t border-foreground/8" : ""} ${!day.isOpen ? "bg-foreground/[0.015]" : ""}`}
+          >
+            <span className={`w-24 shrink-0 text-sm font-medium ${day.isOpen ? "text-foreground" : "text-foreground/35"}`}>
+              {label}
+            </span>
+
+            <button
+              type="button"
+              role="switch"
+              aria-checked={day.isOpen}
+              aria-label={label}
+              onClick={() => onChange(key, { isOpen: !day.isOpen })}
+              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-foreground/20 ${
+                day.isOpen ? "bg-green-500" : "bg-foreground/20"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                  day.isOpen ? "translate-x-4" : "translate-x-0"
+                }`}
+              />
+            </button>
+
+            {day.isOpen ? (
+              <div className="flex flex-wrap items-center justify-end gap-2 ml-auto">
+                <input
+                  type="time"
+                  value={day.open}
+                  onChange={(e) => onChange(key, { open: e.target.value })}
+                  className="rounded-lg border border-foreground/15 bg-background px-2.5 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
+                />
+                <span className="text-xs text-foreground/40">{toLabel}</span>
+                <input
+                  type="time"
+                  value={day.close}
+                  onChange={(e) => onChange(key, { close: e.target.value })}
+                  className="rounded-lg border border-foreground/15 bg-background px-2.5 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
+                />
+              </div>
+            ) : (
+              <span className="ml-auto text-sm text-foreground/30">{closedLabel}</span>
+            )}
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+/** Reservation hours to edit: the saved ones or, if never saved, 1 PM to 8 PM on the days
+ * the store is open. */
+function initialReservationHours(settings: StoreSettings): WeeklyHours {
+  if (settings.reservationHours) return structuredClone(settings.reservationHours);
+  const result = {} as WeeklyHours;
+  for (const { key } of DAY_LABELS) {
+    result[key] = { ...DEFAULT_RESERVATION_DAY, isOpen: settings.hours[key]?.isOpen ?? false };
+  }
+  return result;
+}
+
 export function StoreSettingsForm() {
   const { settings, loading, error, updateSettings, fetchStoreSettings } =
     useStoreSettingsStore();
@@ -72,7 +153,7 @@ export function StoreSettingsForm() {
   const [editedTimezone, setEditedTimezone] = useState(
     () => settings?.timezone ?? "",
   );
-  const [editedHours, setEditedHours] = useState<StoreSettings["hours"] | null>(
+  const [editedHours, setEditedHours] = useState<WeeklyHours | null>(
     () => (settings ? structuredClone(settings.hours) : null),
   );
   const [saving, setSaving] = useState(false);
@@ -81,6 +162,16 @@ export function StoreSettingsForm() {
   const hasHoursChanges =
     editedTimezone !== (settings?.timezone ?? "") ||
     JSON.stringify(editedHours) !== JSON.stringify(settings?.hours ?? null);
+
+  const [editedReservationHours, setEditedReservationHours] = useState<WeeklyHours | null>(
+    () => (settings ? initialReservationHours(settings) : null),
+  );
+  const [savingReservationHours, setSavingReservationHours] = useState(false);
+  const [reservationHoursError, setReservationHoursError] = useState<string | null>(null);
+
+  const hasReservationHoursChanges =
+    JSON.stringify(editedReservationHours) !==
+    JSON.stringify(settings?.reservationHours ?? null);
 
   const [editedWaitTime, setEditedWaitTime] = useState(
     () => settings?.waitTime ?? 0,
@@ -110,6 +201,7 @@ export function StoreSettingsForm() {
     if (settings) {
       setEditedTimezone(settings.timezone);
       setEditedHours(structuredClone(settings.hours));
+      setEditedReservationHours(initialReservationHours(settings));
       setEditedWaitTime(settings.waitTime ?? 0);
       setEditedRestaurantPhone(extractTenDigitPhone(settings.restaurantPhoneNumber ?? ""));
     }
@@ -134,6 +226,36 @@ export function StoreSettingsForm() {
       setSaveError("Failed to save hours.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  function updateReservationDay(key: DayKey, patch: Partial<DayHours>) {
+    setEditedReservationHours((prev) =>
+      prev ? { ...prev, [key]: { ...prev[key], ...patch } } : prev,
+    );
+  }
+
+  async function handleSaveReservationHours(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editedReservationHours) return;
+    const badDay = DAY_LABELS.find(({ key }) => {
+      const day = editedReservationHours[key];
+      return day.isOpen && (!day.open || !day.close || day.open > day.close);
+    });
+    if (badDay) {
+      setReservationHoursError(
+        `${badDay.label}: the first booking time must be before the last booking time.`,
+      );
+      return;
+    }
+    setReservationHoursError(null);
+    setSavingReservationHours(true);
+    try {
+      await updateSettings({ reservationHours: editedReservationHours });
+    } catch {
+      setReservationHoursError("Failed to save reservation hours.");
+    } finally {
+      setSavingReservationHours(false);
     }
   }
 
@@ -213,7 +335,7 @@ export function StoreSettingsForm() {
     return <p className="text-red-500 text-sm" role="alert">{error}</p>;
   }
 
-  if (!settings || !editedHours) {
+  if (!settings || !editedHours || !editedReservationHours) {
     return <p className="text-foreground/50 text-sm">No settings found.</p>;
   }
 
@@ -244,55 +366,7 @@ export function StoreSettingsForm() {
 
           {/* Days */}
           <div className="rounded-xl border border-foreground/10 overflow-hidden">
-            {DAY_LABELS.map(({ key, label }, i) => {
-              const day = editedHours[key];
-              return (
-                <div
-                  key={key}
-                  className={`flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 ${i > 0 ? "border-t border-foreground/8" : ""} ${!day.isOpen ? "bg-foreground/[0.015]" : ""}`}
-                >
-                  <span className={`w-24 shrink-0 text-sm font-medium ${day.isOpen ? "text-foreground" : "text-foreground/35"}`}>
-                    {label}
-                  </span>
-
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={day.isOpen}
-                    onClick={() => updateDay(key, { isOpen: !day.isOpen })}
-                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-foreground/20 ${
-                      day.isOpen ? "bg-green-500" : "bg-foreground/20"
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
-                        day.isOpen ? "translate-x-4" : "translate-x-0"
-                      }`}
-                    />
-                  </button>
-
-                  {day.isOpen ? (
-                    <div className="flex flex-wrap items-center justify-end gap-2 ml-auto">
-                      <input
-                        type="time"
-                        value={day.open}
-                        onChange={(e) => updateDay(key, { open: e.target.value })}
-                        className="rounded-lg border border-foreground/15 bg-background px-2.5 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
-                      />
-                      <span className="text-xs text-foreground/40">to</span>
-                      <input
-                        type="time"
-                        value={day.close}
-                        onChange={(e) => updateDay(key, { close: e.target.value })}
-                        className="rounded-lg border border-foreground/15 bg-background px-2.5 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
-                      />
-                    </div>
-                  ) : (
-                    <span className="ml-auto text-sm text-foreground/30">Closed</span>
-                  )}
-                </div>
-              );
-            })}
+            <WeeklyHoursRows hours={editedHours} onChange={updateDay} />
           </div>
 
           {saveError && <p className="text-red-500 text-sm" role="alert">{saveError}</p>}
@@ -304,6 +378,44 @@ export function StoreSettingsForm() {
               className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
             >
               {saving ? "Saving…" : "Save Hours"}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      {/* Reservation Hours */}
+      <section>
+        <h2 className="text-base font-semibold text-foreground mb-1">Reservation Hours</h2>
+        <p className="text-sm text-foreground/50 mb-4">
+          When customers can book a table on the website, from the first booking time to the
+          last booking time. Holidays and Pause Online Ordering also stop reservations.
+        </p>
+        {!settings.reservationHours && (
+          <p className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            Not saved yet. These are suggested hours; press Save Reservation Hours to use them.
+          </p>
+        )}
+        <form onSubmit={handleSaveReservationHours} className="space-y-4">
+          <div className="rounded-xl border border-foreground/10 overflow-hidden">
+            <WeeklyHoursRows
+              hours={editedReservationHours}
+              onChange={updateReservationDay}
+              toLabel="last booking"
+              closedLabel="No reservations"
+            />
+          </div>
+
+          {reservationHoursError && (
+            <p className="text-red-500 text-sm" role="alert">{reservationHoursError}</p>
+          )}
+
+          <div className="flex items-center justify-end gap-3">
+            <button
+              type="submit"
+              disabled={savingReservationHours || !hasReservationHoursChanges}
+              className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
+            >
+              {savingReservationHours ? "Saving…" : "Save Reservation Hours"}
             </button>
           </div>
         </form>
