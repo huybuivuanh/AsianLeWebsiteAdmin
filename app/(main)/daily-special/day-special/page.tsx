@@ -9,6 +9,7 @@ import { DailySpecialRow } from "@/components/daily-special/DailySpecialRow";
 import { AddDayItemsModal } from "@/components/daily-special/AddDayItemsModal";
 import { compareDailySpecials, dayLabel, formatTimeRange } from "@/lib/daily-special";
 import { confirmDialog } from "@/stores/modalStore";
+import { MenuPageHeader, primaryButtonClass } from "@/components/menu/MenuPageHeader";
 
 export default function DaySpecial() {
   const {
@@ -102,15 +103,18 @@ export default function DaySpecial() {
 
   return (
     <div className="min-w-0">
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
+      <MenuPageHeader
+        title="Days"
+        count={loading && dailySpecials.length === 0 ? undefined : dailySpecials.length}
+      >
         <button
           type="button"
           onClick={() => setAddModalOpen(true)}
-          className="rounded-xl bg-foreground text-background px-4 py-2 text-sm font-semibold hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+          className={primaryButtonClass}
         >
-          Add Day
+          + Add day
         </button>
-      </div>
+      </MenuPageHeader>
 
       {error && (
         <p className="text-red-600 dark:text-red-400 text-sm mb-4" role="alert">
@@ -130,7 +134,7 @@ export default function DaySpecial() {
           </p>
         </div>
       ) : (
-        <ul className="space-y-3">
+        <ul className="space-y-2">
           {sortedDays.map((daySpecial) => (
             <DailySpecialRow
               key={daySpecial.id}

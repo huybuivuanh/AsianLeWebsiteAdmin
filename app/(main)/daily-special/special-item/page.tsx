@@ -6,8 +6,13 @@ import { useDailySpecialsStore } from "@/stores/dailySpecialsStore";
 import { AddSpecialItemModal } from "@/components/daily-special/AddSpecialItemModal";
 import { EditSpecialItemModal } from "@/components/daily-special/EditSpecialItemModal";
 import { confirmDialog } from "@/stores/modalStore";
-import { UnusedFilterButton } from "@/components/menu/MenuPageHeader";
-import { UnusedBadge } from "@/components/menu/RowParts";
+import {
+  MenuPageHeader,
+  UnusedFilterButton,
+  primaryButtonClass,
+} from "@/components/menu/MenuPageHeader";
+import { RowActions, UnusedBadge, rowCardClass } from "@/components/menu/RowParts";
+import { formatPriceCAD } from "@/lib/utils";
 import { WEEK_ORDER, shortDayLabel } from "@/lib/daily-special";
 import type { DayOfWeek } from "@/types/enum";
 
@@ -71,21 +76,24 @@ export default function SpecialItemPage() {
 
   return (
     <div className="min-w-0">
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
-        <button
-          type="button"
-          onClick={() => setAddModalOpen(true)}
-          className="rounded-xl bg-foreground text-background px-4 py-2 text-sm font-semibold hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20"
-        >
-          Add Item
-        </button>
+      <MenuPageHeader
+        title="Special items"
+        count={loading && items.length === 0 ? undefined : items.length}
+      >
         <UnusedFilterButton
           active={unusedOnly}
           count={unusedCount}
           onToggle={() => setUnusedOnly((v) => !v)}
           title="Special items not on any day"
         />
-      </div>
+        <button
+          type="button"
+          onClick={() => setAddModalOpen(true)}
+          className={primaryButtonClass}
+        >
+          + Add item
+        </button>
+      </MenuPageHeader>
 
       {error && (
         <p className="text-red-600 dark:text-red-400 text-sm mb-4" role="alert">
@@ -112,64 +120,41 @@ export default function SpecialItemPage() {
           </p>
         </div>
       ) : (
-        <ul className="grid grid-cols-1 gap-3">
+        <ul className="space-y-2">
           {visibleItems.map((item: DailySpecialItem) => {
             const days = daysByItemId.get(item.id);
             return (
-            <li
-              key={item.id}
-              className="rounded-2xl border border-foreground/10 bg-foreground/[0.02] px-4 py-3 space-y-3"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-base font-semibold text-foreground truncate">
-                      {item.name}
+              <li
+                key={item.id}
+                className={`${rowCardClass} flex items-center gap-3 px-3 py-3 sm:px-4`}
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                      <span className="font-semibold text-foreground break-words">
+                        {item.name}
+                      </span>
+                      {!days && <UnusedBadge />}
+                    </div>
+                    <span className="shrink-0 font-semibold tabular-nums text-foreground">
+                      {formatPriceCAD(item.price)}
                     </span>
-                    {!days && <UnusedBadge />}
                   </div>
                   {days && (
                     <p className="mt-0.5 text-sm text-foreground/60">{days.join(", ")}</p>
                   )}
-                </div>
-                <span className="text-base font-semibold text-foreground/80 rounded-full border border-foreground/15 bg-foreground/5 px-2 py-0.5">
-                  ${item.price.toFixed(2)}
-                </span>
-              </div>
-              {item.options && item.options.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {item.options.slice(0, 6).map((opt) => (
-                    <span
-                      key={opt}
-                      className="text-base leading-5 rounded-full border border-foreground/10 bg-foreground/[0.03] px-2 text-foreground/70"
-                    >
-                      {opt}
-                    </span>
-                  ))}
-                  {item.options.length > 6 && (
-                    <span className="text-base leading-5 text-foreground/50">
-                      +{item.options.length - 6} more
-                    </span>
+                  {item.options && item.options.length > 0 && (
+                    <p className="mt-0.5 line-clamp-2 text-sm text-foreground/60">
+                      Options: {item.options.join(", ")}
+                    </p>
                   )}
                 </div>
-              )}
-              <div className="flex gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setEditingItem(item)}
-                  className="rounded-xl border border-foreground/20 px-3.5 py-2 text-base font-semibold text-foreground hover:bg-foreground/5"
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleDelete(item)}
-                  className="rounded-xl border border-red-600 text-red-600 px-3.5 py-2 text-base font-semibold hover:bg-red-600 hover:text-white"
-                >
-                  Delete
-                </button>
-              </div>
-            </li>
+                <RowActions
+                  name={item.name}
+                  onEdit={() => setEditingItem(item)}
+                  onDelete={() => handleDelete(item)}
+                />
+              </li>
             );
           })}
         </ul>
