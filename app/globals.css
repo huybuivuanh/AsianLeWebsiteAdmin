@@ -8,21 +8,21 @@
   color-scheme: light;
   --background: #ffffff;
   --foreground: #171717;
-  --nav-bg: #1e293b;
-  --nav-foreground: #f1f5f9;
-  --nav-foreground-muted: #94a3b8;
-  --nav-border: #334155;
-  --nav-hover: rgba(255, 255, 255, 0.08);
-  --nav-active: rgba(255, 255, 255, 0.12);
+}
+
+/* Brand colors shared with the public website (asian-le-website). */
+@theme {
+  --color-ink: #141210;
+  --color-ink-raised: #1d1a17;
+  --color-ink-line: #2e2925;
+  --color-on-ink: #f3eee6;
+  --color-on-ink-muted: #b8b0a4;
+  --color-gold: #d4b26a;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-nav-bg: var(--nav-bg);
-  --color-nav-foreground: var(--nav-foreground);
-  --color-nav-foreground-muted: var(--nav-foreground-muted);
-  --color-nav-border: var(--nav-border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
