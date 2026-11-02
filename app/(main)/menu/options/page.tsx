@@ -17,7 +17,7 @@ export default function OptionsPage() {
     updateOption,
     deleteOption,
   } = useOptionsStore();
-  const { optionGroups, updateOptionGroup } = useOptionGroupsStore();
+  const { optionGroups, updateOptionGroupsBatch } = useOptionGroupsStore();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -31,15 +31,16 @@ export default function OptionsPage() {
     if (!(await confirmDialog(`Delete "${option.name}"? This cannot be undone.`, { danger: true, confirmLabel: "Delete" })))
       return;
     try {
-      await Promise.all(
+      await updateOptionGroupsBatch(
         optionGroups
           .filter((g) => g.optionIds?.includes(option.id))
-          .map((g) =>
-            updateOptionGroup(g.id, {
+          .map((g) => ({
+            id: g.id,
+            data: {
               optionIds: (g.optionIds ?? []).filter((id) => id !== option.id),
               ...patchClearDefaultIfOptionRemoved(g, option.id),
-            }),
-          ),
+            },
+          })),
       );
       await deleteOption(option.id);
     } catch {
@@ -74,7 +75,7 @@ export default function OptionsPage() {
         </p>
       )}
 
-      {loading ? (
+      {loading && options.length === 0 ? (
         <p className="text-foreground/60 text-sm">Loading options…</p>
       ) : options.length === 0 ? (
         <p className="text-foreground/70 text-sm">

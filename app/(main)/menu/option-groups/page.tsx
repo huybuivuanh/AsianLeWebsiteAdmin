@@ -19,8 +19,8 @@ export default function OptionGroupsPage() {
     updateOptionGroup,
     deleteOptionGroup,
   } = useOptionGroupsStore();
-  const { options, updateOption } = useOptionsStore();
-  const { items: menuItems, updateMenuItemField } = useMenuItemsStore();
+  const { options, updateOption, updateOptionsBatch } = useOptionsStore();
+  const { items: menuItems, updateMenuItemsBatch } = useMenuItemsStore();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [query, setQuery] = useState("");
 
@@ -35,20 +35,22 @@ export default function OptionGroupsPage() {
       return;
     try {
       await Promise.all([
-        ...menuItems
-          .filter((item) => itemReferencesOptionGroup(item, group.id))
-          .map((item) =>
-            updateMenuItemField(item.id, {
-              optionGroupIds: removeOptionGroupRef(item, group.id),
-            }),
-          ),
-        ...options
-          .filter((opt) => opt.groupIds?.includes(group.id))
-          .map((opt) =>
-            updateOption(opt.id, {
-              groupIds: (opt.groupIds ?? []).filter((id) => id !== group.id),
-            }),
-          ),
+        updateMenuItemsBatch(
+          menuItems
+            .filter((item) => itemReferencesOptionGroup(item, group.id))
+            .map((item) => ({
+              id: item.id,
+              data: { optionGroupIds: removeOptionGroupRef(item, group.id) },
+            })),
+        ),
+        updateOptionsBatch(
+          options
+            .filter((opt) => opt.groupIds?.includes(group.id))
+            .map((opt) => ({
+              id: opt.id,
+              data: { groupIds: (opt.groupIds ?? []).filter((id) => id !== group.id) },
+            })),
+        ),
       ]);
       await deleteOptionGroup(group.id);
     } catch {
@@ -67,22 +69,18 @@ export default function OptionGroupsPage() {
       ...(group ? patchClearDefaultIfNotInOptionIds(group, optionIds) : {}),
     });
 
-    for (const optionId of removed) {
-      const option = options.find((o) => o.id === optionId);
-      if (option) {
-        const nextGroupIds = (option.groupIds ?? []).filter((id) => id !== groupId);
-        await updateOption(optionId, { groupIds: nextGroupIds });
-      }
-    }
-    for (const optionId of added) {
-      const option = options.find((o) => o.id === optionId);
-      if (option) {
-        const nextGroupIds = (option.groupIds ?? []).includes(groupId)
-          ? option.groupIds!
-          : [...(option.groupIds ?? []), groupId];
-        await updateOption(optionId, { groupIds: nextGroupIds });
-      }
-    }
+    await updateOptionsBatch(
+      options
+        .filter((o) => removed.includes(o.id) || added.includes(o.id))
+        .map((o) => ({
+          id: o.id,
+          data: {
+            groupIds: removed.includes(o.id)
+              ? (o.groupIds ?? []).filter((id) => id !== groupId)
+              : [...new Set([...(o.groupIds ?? []), groupId])],
+          },
+        })),
+    );
   }
 
   return (
@@ -112,7 +110,7 @@ export default function OptionGroupsPage() {
         </p>
       )}
 
-      {loading ? (
+      {loading && optionGroups.length === 0 ? (
         <p className="text-foreground/60 text-sm">Loading option groups…</p>
       ) : optionGroups.length === 0 ? (
         <p className="text-foreground/70 text-sm">

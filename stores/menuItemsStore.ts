@@ -15,6 +15,7 @@ import {
   deleteObject,
 } from "firebase/storage";
 import { db, storage } from "@/lib/firebase";
+import { batchUpdateDocs, type DocUpdate } from "@/lib/batch-update";
 import { uploadImage } from "@/lib/imageUpload";
 import { KitchenType } from "@/types/enum";
 
@@ -45,6 +46,8 @@ interface MenuItemsState {
   addMenuItem: (input: MenuItemInput) => Promise<void>;
   updateMenuItem: (id: string, input: MenuItemInput) => Promise<void>;
   updateMenuItemField: (id: string, data: Record<string, unknown>) => Promise<void>;
+  /** Many updates in one batch, then a single re-fetch. */
+  updateMenuItemsBatch: (updates: DocUpdate[]) => Promise<void>;
   deleteMenuItem: (id: string) => Promise<void>;
   reset: () => void;
 }
@@ -145,6 +148,19 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
       await get().fetchMenuItems();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to update menu item";
+      set({ error: message });
+      throw err;
+    }
+  },
+
+  updateMenuItemsBatch: async (updates) => {
+    if (updates.length === 0) return;
+    set({ error: null });
+    try {
+      await batchUpdateDocs("menuItems", updates);
+      await get().fetchMenuItems();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to update menu items";
       set({ error: message });
       throw err;
     }

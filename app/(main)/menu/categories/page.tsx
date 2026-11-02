@@ -21,7 +21,7 @@ export default function CategoriesPage() {
     updateCategoryItemIds,
     reorderCategories,
   } = useCategoriesStore();
-  const { items, updateMenuItemField } = useMenuItemsStore();
+  const { items, updateMenuItemField, updateMenuItemsBatch } = useMenuItemsStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<FoodCategory | null>(
     null,
@@ -53,14 +53,16 @@ export default function CategoriesPage() {
     setDeletingId(category.id);
     try {
       await deleteCategory(category.id);
-      for (const item of items) {
-        if (item.categoryIds?.includes(category.id)) {
-          const nextCategoryIds = (item.categoryIds ?? []).filter(
-            (cid) => cid !== category.id,
-          );
-          await updateMenuItemField(item.id, { categoryIds: nextCategoryIds });
-        }
-      }
+      await updateMenuItemsBatch(
+        items
+          .filter((item) => item.categoryIds?.includes(category.id))
+          .map((item) => ({
+            id: item.id,
+            data: {
+              categoryIds: (item.categoryIds ?? []).filter((cid) => cid !== category.id),
+            },
+          })),
+      );
     } finally {
       setDeletingId(null);
     }
@@ -90,24 +92,18 @@ export default function CategoriesPage() {
 
     await updateCategoryItemIds(categoryId, itemIds);
 
-    for (const itemId of removed) {
-      const item = items.find((m) => m.id === itemId);
-      if (item) {
-        const nextCategoryIds = (item.categoryIds ?? []).filter(
-          (cid) => cid !== categoryId,
-        );
-        await updateMenuItemField(itemId, { categoryIds: nextCategoryIds });
-      }
-    }
-    for (const itemId of added) {
-      const item = items.find((m) => m.id === itemId);
-      if (item) {
-        const nextCategoryIds = (item.categoryIds ?? []).includes(categoryId)
-          ? item.categoryIds!
-          : [...(item.categoryIds ?? []), categoryId];
-        await updateMenuItemField(itemId, { categoryIds: nextCategoryIds });
-      }
-    }
+    await updateMenuItemsBatch(
+      items
+        .filter((m) => removed.includes(m.id) || added.includes(m.id))
+        .map((m) => ({
+          id: m.id,
+          data: {
+            categoryIds: removed.includes(m.id)
+              ? (m.categoryIds ?? []).filter((cid) => cid !== categoryId)
+              : [...new Set([...(m.categoryIds ?? []), categoryId])],
+          },
+        })),
+    );
 
     setAddItemsCategory(null);
   }
@@ -148,7 +144,7 @@ export default function CategoriesPage() {
         </p>
       )}
 
-      {loading ? (
+      {loading && categories.length === 0 ? (
         <p className="text-foreground/60 text-sm">Loading categories…</p>
       ) : categories.length === 0 ? (
         <p className="text-foreground/70 text-sm sm:text-base">

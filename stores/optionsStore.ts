@@ -10,6 +10,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { batchUpdateDocs, type DocUpdate } from "@/lib/batch-update";
 
 interface OptionsState {
   options: ItemOption[];
@@ -18,6 +19,8 @@ interface OptionsState {
   fetchOptions: () => Promise<void>;
   addOption: (data: Omit<ItemOption, "id" | "createdAt">) => Promise<string>;
   updateOption: (id: string, data: Record<string, unknown>) => Promise<void>;
+  /** Many updates in one batch, then a single re-fetch. */
+  updateOptionsBatch: (updates: DocUpdate[]) => Promise<void>;
   deleteOption: (id: string) => Promise<void>;
   reset: () => void;
 }
@@ -68,6 +71,19 @@ export const useOptionsStore = create<OptionsState>((set, get) => ({
       return ref.id;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to add option";
+      set({ error: message });
+      throw err;
+    }
+  },
+
+  updateOptionsBatch: async (updates) => {
+    if (updates.length === 0) return;
+    set({ error: null });
+    try {
+      await batchUpdateDocs("options", updates);
+      await get().fetchOptions();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to update options";
       set({ error: message });
       throw err;
     }

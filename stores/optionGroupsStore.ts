@@ -9,6 +9,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { batchUpdateDocs, type DocUpdate } from "@/lib/batch-update";
 
 interface OptionGroupsState {
   optionGroups: OptionGroup[];
@@ -17,6 +18,8 @@ interface OptionGroupsState {
   fetchOptionGroups: () => Promise<void>;
   addOptionGroup: (data: Omit<OptionGroup, "id" | "createdAt">) => Promise<string>;
   updateOptionGroup: (id: string, data: Record<string, unknown>) => Promise<void>;
+  /** Many updates in one batch, then a single re-fetch. */
+  updateOptionGroupsBatch: (updates: DocUpdate[]) => Promise<void>;
   deleteOptionGroup: (id: string) => Promise<void>;
   reset: () => void;
 }
@@ -69,6 +72,19 @@ export const useOptionGroupsStore = create<OptionGroupsState>((set, get) => ({
       return ref.id;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to add option group";
+      set({ error: message });
+      throw err;
+    }
+  },
+
+  updateOptionGroupsBatch: async (updates) => {
+    if (updates.length === 0) return;
+    set({ error: null });
+    try {
+      await batchUpdateDocs("optionGroups", updates);
+      await get().fetchOptionGroups();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to update option groups";
       set({ error: message });
       throw err;
     }

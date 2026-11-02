@@ -32,8 +32,8 @@ export function MenuItemRow({
   onDelete,
   deleting = false,
 }: MenuItemRowProps) {
-  const { optionGroups, updateOptionGroup } = useOptionGroupsStore();
-  const { options, updateOption } = useOptionsStore();
+  const { optionGroups, updateOptionGroup, updateOptionGroupsBatch } = useOptionGroupsStore();
+  const { options, updateOption, updateOptionsBatch } = useOptionsStore();
   const { updateMenuItemField } = useMenuItemsStore();
 
   const [expanded, setExpanded] = useState(false);
@@ -64,7 +64,12 @@ export function MenuItemRow({
   }
 
   async function handleRemoveOption(group: OptionGroup, option: ItemOption) {
-    if (!(await confirmDialog(`Remove "${option.name}" from this group?`, { danger: true, confirmLabel: "Remove" })))
+    const otherItems = (group.itemIds ?? []).filter((id) => id !== item.id).length;
+    const message =
+      otherItems > 0
+        ? `Remove "${option.name}" from "${group.name}"? This also removes it from the ${otherItems} other item${otherItems === 1 ? "" : "s"} that use this group.`
+        : `Remove "${option.name}" from "${group.name}"?`;
+    if (!(await confirmDialog(message, { danger: true, confirmLabel: "Remove" })))
       return;
     try {
       await Promise.all([
@@ -92,37 +97,36 @@ export function MenuItemRow({
       ...(group ? patchClearDefaultIfNotInOptionIds(group, optionIds) : {}),
     });
 
-    for (const optionId of removed) {
-      const option = options.find((o) => o.id === optionId);
-      if (option) {
-        const nextGroupIds = (option.groupIds ?? []).filter((id) => id !== groupId);
-        await updateOption(optionId, { groupIds: nextGroupIds });
-      }
-    }
-    for (const optionId of added) {
-      const option = options.find((o) => o.id === optionId);
-      if (option) {
-        const nextGroupIds = (option.groupIds ?? []).includes(groupId)
-          ? option.groupIds!
-          : [...(option.groupIds ?? []), groupId];
-        await updateOption(optionId, { groupIds: nextGroupIds });
-      }
-    }
+    await updateOptionsBatch(
+      options
+        .filter((o) => removed.includes(o.id) || added.includes(o.id))
+        .map((o) => ({
+          id: o.id,
+          data: {
+            groupIds: removed.includes(o.id)
+              ? (o.groupIds ?? []).filter((id) => id !== groupId)
+              : [...new Set([...(o.groupIds ?? []), groupId])],
+          },
+        })),
+    );
   }
 
   async function handleSaveOptionGroups(optionGroupIds: OptionGroupId[]) {
     const selectedIds = new Set(optionGroupIds.map((r) => r.optionGroupId));
     await Promise.all([
       updateMenuItemField(item.id, { optionGroupIds }),
-      ...optionGroups.map((group) => {
-        const isSelected = selectedIds.has(group.id);
-        const hasItem = (group.itemIds ?? []).includes(item.id);
-        if (isSelected === hasItem) return Promise.resolve();
-        const nextItemIds = isSelected
-          ? [...(group.itemIds ?? []), item.id]
-          : (group.itemIds ?? []).filter((id) => id !== item.id);
-        return updateOptionGroup(group.id, { itemIds: nextItemIds });
-      }),
+      updateOptionGroupsBatch(
+        optionGroups
+          .filter((group) => selectedIds.has(group.id) !== (group.itemIds ?? []).includes(item.id))
+          .map((group) => ({
+            id: group.id,
+            data: {
+              itemIds: selectedIds.has(group.id)
+                ? [...(group.itemIds ?? []), item.id]
+                : (group.itemIds ?? []).filter((id) => id !== item.id),
+            },
+          })),
+      ),
     ]);
   }
 

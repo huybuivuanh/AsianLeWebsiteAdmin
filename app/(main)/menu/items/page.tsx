@@ -65,7 +65,7 @@ export default function MenuItemsPage() {
         <p className="text-red-600 dark:text-red-400 text-sm mb-4" role="alert">{error}</p>
       )}
 
-      {loading ? (
+      {loading && items.length === 0 ? (
         <p className="text-foreground/60 text-sm">Loading items…</p>
       ) : items.length === 0 ? (
         <div className="rounded-2xl border border-foreground/10 bg-foreground/[0.02] p-6">
