@@ -1,9 +1,8 @@
 import { TakeOutFulfillmentKind } from "@/types/enum";
 import { formatOrderedAt, formatPhone, formatPriceCAD } from "@/lib/utils";
+import { orderTotalLines } from "@/lib/order-totals";
 
 export function PrintableReceipt({ order }: { order: Order }) {
-  const tb = order.taxBreakDown;
-
   return (
     <div className="p-6 text-black">
       <div className="text-center mb-4">
@@ -50,22 +49,18 @@ export function PrintableReceipt({ order }: { order: Order }) {
       </div>
 
       <div className="border-t border-black/40 pt-2 text-sm space-y-0.5">
-        <div className="flex justify-between">
-          <span>Subtotal</span>
-          <span>{formatPriceCAD(tb.subTotal ?? 0)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>PST (6%)</span>
-          <span>{formatPriceCAD(tb.pst ?? 0)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>GST (5%)</span>
-          <span>{formatPriceCAD(tb.gst ?? 0)}</span>
-        </div>
-        <div className="flex justify-between font-bold text-base">
-          <span>Total</span>
-          <span>{formatPriceCAD(tb.total ?? 0)}</span>
-        </div>
+        {orderTotalLines(order).map((line) => (
+          <div
+            key={line.label}
+            className={`flex justify-between ${line.kind === "total" ? "font-bold text-base" : ""}`}
+          >
+            <span>{line.label}</span>
+            <span>
+              {line.negative ? "-" : ""}
+              {formatPriceCAD(line.amount)}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

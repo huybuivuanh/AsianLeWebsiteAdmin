@@ -61,6 +61,23 @@ function normalizeFulfillment(raw: DocumentData["fulfillment"]): OrderFulfillmen
   };
 }
 
+function numberOrUndefined(value: unknown): number | undefined {
+  return typeof value === "number" ? value : undefined;
+}
+
+function normalizeLoyalty(raw: unknown): OrderLoyalty | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const l = raw as DocumentData;
+  if (typeof l.memberId !== "string" || !l.memberId) return undefined;
+  return {
+    memberId: l.memberId,
+    memberName: typeof l.memberName === "string" ? l.memberName : "",
+    pointsToRedeem: numberOrUndefined(l.pointsToRedeem),
+    pointsRedeemed: numberOrUndefined(l.pointsRedeemed),
+    pointsEarned: numberOrUndefined(l.pointsEarned),
+  };
+}
+
 function normalizeOrderDoc(id: string, data: DocumentData): Order {
   return {
     id,
@@ -72,6 +89,7 @@ function normalizeOrderDoc(id: string, data: DocumentData): Order {
     customerEmail: (data.customerEmail as string) ?? "",
     orderItems: Array.isArray(data.orderItems) ? data.orderItems : [],
     taxBreakDown: data.taxBreakDown ?? { subTotal: 0, pst: 0, gst: 0, total: 0 },
+    loyalty: normalizeLoyalty(data.loyalty),
     paid: Boolean(data.paid),
     printed: Boolean(data.printed),
     createdAt: data.createdAt?.toDate?.() ?? new Date(0),

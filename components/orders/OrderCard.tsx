@@ -3,6 +3,7 @@
 import { OrderStatus, TakeOutFulfillmentKind } from "@/types/enum";
 import { formatOrderedAt, formatPhone, formatPriceCAD } from "@/lib/utils";
 import { OrderItemBlock } from "./OrderItemBlock";
+import { orderTotalLines } from "@/lib/order-totals";
 
 function orderCardSurface(status: OrderStatus, scheduled: boolean): string {
   if (status === OrderStatus.Cancelled) return "bg-red-100 border-red-200";
@@ -139,30 +140,27 @@ export function OrderCard({
           )}
 
           <div className="mt-2 border-t border-gray-200 p-2">
-            <div className="mb-1 flex justify-between">
-              <span className="text-base text-gray-700">Subtotal</span>
-              <span className="text-base text-gray-700">
-                {formatPriceCAD(tb.subTotal ?? 0)}
-              </span>
-            </div>
-            <div className="mb-1 flex justify-between">
-              <span className="text-base text-gray-700">PST (6%)</span>
-              <span className="text-base text-gray-700">
-                {formatPriceCAD(tb.pst ?? 0)}
-              </span>
-            </div>
-            <div className="mb-1 flex justify-between">
-              <span className="text-base text-gray-700">GST (5%)</span>
-              <span className="text-base text-gray-700">
-                {formatPriceCAD(tb.gst ?? 0)}
-              </span>
-            </div>
-            <div className="mb-1 flex justify-between">
-              <span className="text-base font-semibold text-gray-800">Total</span>
-              <span className="text-base font-bold text-gray-900">
-                {formatPriceCAD(tb.total ?? 0)}
-              </span>
-            </div>
+            {orderTotalLines(order).map((line) => {
+              const textClass =
+                line.kind === "total"
+                  ? "font-semibold text-gray-800"
+                  : "text-gray-700";
+              return (
+                <div key={line.label} className="mb-1 flex justify-between">
+                  <span
+                    className={`text-base ${line.kind === "discount" ? "text-gray-600" : textClass}`}
+                  >
+                    {line.label}
+                  </span>
+                  <span
+                    className={`text-base ${line.kind === "total" ? "font-bold text-gray-900" : textClass}`}
+                  >
+                    {line.negative ? "-" : ""}
+                    {formatPriceCAD(line.amount)}
+                  </span>
+                </div>
+              );
+            })}
           </div>
 
           <div className="mt-3">

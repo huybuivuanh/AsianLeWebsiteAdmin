@@ -113,6 +113,25 @@ function orderItemsRowsHtml(orderItems: OrderDetails["orderItems"]): string {
     .join("");
 }
 
+/** Discount rows worded like the POS (taken off before tax), or "" when there's none. */
+function discountRowsHtml(taxBreakDown: OrderTaxBreakDown): string {
+  const discount = taxBreakDown.discount;
+  if (!discount || !(discount.discountAmount > 0)) return "";
+  const label =
+    discount.discountType === "Percent"
+      ? `Discount (${discount.discountValue}%)`
+      : `Discount (${formatCurrency(discount.discountValue)})`;
+  return `
+        <tr>
+          <td style="padding:2px 0;">${label}</td>
+          <td style="padding:2px 0;text-align:right;">-${formatCurrency(discount.discountAmount)}</td>
+        </tr>
+        <tr>
+          <td style="padding:2px 0;">Taxable Subtotal</td>
+          <td style="padding:2px 0;text-align:right;">${formatCurrency(discount.taxableSubtotal)}</td>
+        </tr>`;
+}
+
 function orderDetailsHtml({ orderItems, taxBreakDown }: OrderDetails): string {
   return `
     <table style="width:100%;border-collapse:collapse;font-family:sans-serif;font-size:14px;color:#222;margin-top:16px;">
@@ -124,6 +143,7 @@ function orderDetailsHtml({ orderItems, taxBreakDown }: OrderDetails): string {
           <td style="padding:8px 0 0;">Subtotal</td>
           <td style="padding:8px 0 0;text-align:right;">${formatCurrency(taxBreakDown.subTotal)}</td>
         </tr>
+        ${discountRowsHtml(taxBreakDown)}
         <tr>
           <td style="padding:2px 0;">GST</td>
           <td style="padding:2px 0;text-align:right;">${formatCurrency(taxBreakDown.gst)}</td>

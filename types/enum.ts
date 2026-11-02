@@ -26,6 +26,14 @@ export enum OrderStatus {
   Cancelled = "Cancelled",
 }
 
+/** Same values as the website's / POS's DiscountType. Online orders only use Amount
+ * (rewards points). */
+export enum DiscountType {
+  None = "None",
+  Amount = "Amount",
+  Percent = "Percent",
+}
+
 export enum TakeOutFulfillmentKind {
   Immediate = "immediate",
   Scheduled = "scheduled",

@@ -1,5 +1,6 @@
 import type {
   DayOfWeek,
+  DiscountType,
   KitchenType,
   OrderStatus,
   TakeOutFulfillmentKind,
@@ -155,11 +156,32 @@ declare global {
     kitchenType: KitchenType;
   }
 
+  /** Same shape as the website's / POS's Discount. Online orders only get an Amount
+   * discount, from rewards points, taken off before tax (taxes are on `taxableSubtotal`). */
+  interface OrderDiscount {
+    discountType: DiscountType;
+    discountValue: number;
+    discountAmount: number;
+    taxableSubtotal: number;
+  }
+
   interface OrderTaxBreakDown {
     subTotal: number;
+    discount?: OrderDiscount;
     pst: number;
     gst: number;
     total: number;
+  }
+
+  /** Rewards member linked at checkout (website's `order.loyalty`) — the fields shown here. */
+  interface OrderLoyalty {
+    memberId: string;
+    memberName: string;
+    /** Points chosen at checkout; the Orders app takes them on Complete. */
+    pointsToRedeem?: number;
+    /** Set by the Orders app once the points were actually taken. */
+    pointsRedeemed?: number;
+    pointsEarned?: number;
   }
 
   type OrderFulfillment =
@@ -176,6 +198,7 @@ declare global {
     customerEmail: string;
     orderItems: OrderItem[];
     taxBreakDown: OrderTaxBreakDown;
+    loyalty?: OrderLoyalty;
     paid: boolean;
     printed: boolean;
     createdAt: Date;
