@@ -3,6 +3,11 @@
 import { useState, useEffect, useRef } from "react";
 import { DEFAULT_RESERVATION_DAY, useStoreSettingsStore } from "@/stores/storeSettingsStore";
 import { dateToLocalKey } from "@/lib/orders-firestore";
+import {
+  primaryButtonClass,
+  secondaryButtonClass,
+} from "@/components/menu/MenuPageHeader";
+import { RemoveButton } from "@/components/menu/RowParts";
 
 type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 type HolidayStatus = "upcoming" | "now" | "past";
@@ -130,6 +135,71 @@ function WeeklyHoursRows({
         );
       })}
     </>
+  );
+}
+
+const inputClass =
+  "rounded-lg border border-foreground/15 bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20";
+
+/** One white card per settings section. */
+function SettingsCard({
+  title,
+  description,
+  action,
+  children,
+}: {
+  title: string;
+  description?: React.ReactNode;
+  /** Optional button on the right of the title. */
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-xl border border-foreground/10 bg-background">
+      <div className="flex flex-wrap items-start justify-between gap-3 px-4 pt-4 sm:px-5">
+        <div className="min-w-0">
+          <h2 className="text-base font-semibold text-foreground">{title}</h2>
+          {description && (
+            <p className="mt-0.5 text-sm text-foreground/60">{description}</p>
+          )}
+        </div>
+        {action}
+      </div>
+      <div className="px-4 py-4 sm:px-5">{children}</div>
+    </section>
+  );
+}
+
+/** Card footer: error on the left, "Unsaved changes" + Save on the right. */
+function SaveFooter({
+  error,
+  dirty,
+  saving,
+  label,
+}: {
+  error: string | null;
+  dirty: boolean;
+  saving: boolean;
+  label: string;
+}) {
+  return (
+    <div className="-mx-4 -mb-4 mt-4 flex flex-wrap items-center justify-end gap-3 rounded-b-xl border-t border-foreground/10 bg-foreground/[0.02] px-4 py-3 sm:-mx-5 sm:px-5">
+      {error && (
+        <p className="mr-auto text-sm text-red-600" role="alert">
+          {error}
+        </p>
+      )}
+      {dirty && !saving && (
+        <span className="text-sm text-foreground/50">Unsaved changes</span>
+      )}
+      <button
+        type="submit"
+        disabled={saving || !dirty}
+        className={`${primaryButtonClass} disabled:opacity-50`}
+      >
+        {saving ? "Saving…" : label}
+      </button>
+    </div>
   );
 }
 
@@ -374,61 +444,50 @@ export function StoreSettingsForm() {
     });
 
   return (
-    <div className="space-y-10 max-w-2xl">
-
-      {/* Store Hours */}
-      <section>
-        <h2 className="text-base font-semibold text-foreground mb-4">Store Hours</h2>
-        <form onSubmit={handleSaveHours} className="space-y-4">
-
-          {/* Timezone */}
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-foreground/60 shrink-0 w-24">Timezone</span>
+    <div className="max-w-2xl space-y-4">
+      {/* Store hours */}
+      <SettingsCard
+        title="Store hours"
+        description="When customers can place online orders."
+      >
+        <form onSubmit={handleSaveHours}>
+          <label className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <span className="w-24 shrink-0 text-sm text-foreground/60">Timezone</span>
             <select
               id="settings-timezone"
               value={editedTimezone}
               onChange={(e) => setEditedTimezone(e.target.value)}
-              className="flex-1 rounded-lg border border-foreground/15 bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
+              className={`${inputClass} min-w-0 flex-1`}
             >
               {CANADA_TIMEZONES.map(({ value, label }) => (
                 <option key={value} value={value}>{label}</option>
               ))}
             </select>
-          </div>
-
-          {/* Days */}
-          <div className="rounded-xl border border-foreground/10 overflow-hidden">
+          </label>
+          <div className="overflow-hidden rounded-lg border border-foreground/10">
             <WeeklyHoursRows hours={editedHours} onChange={updateDay} />
           </div>
-
-          {saveError && <p className="text-red-500 text-sm" role="alert">{saveError}</p>}
-
-          <div className="flex items-center justify-end gap-3">
-            <button
-              type="submit"
-              disabled={saving || !hasHoursChanges}
-              className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
-            >
-              {saving ? "Saving…" : "Save Hours"}
-            </button>
-          </div>
+          <SaveFooter
+            error={saveError}
+            dirty={hasHoursChanges}
+            saving={saving}
+            label="Save hours"
+          />
         </form>
-      </section>
+      </SettingsCard>
 
-      {/* Reservation Hours */}
-      <section>
-        <h2 className="text-base font-semibold text-foreground mb-1">Reservation Hours</h2>
-        <p className="text-sm text-foreground/50 mb-4">
-          When customers can book a table on the website, from the first booking time to the
-          last booking time. Holidays and Pause Online Ordering also stop reservations.
-        </p>
+      {/* Reservation hours */}
+      <SettingsCard
+        title="Reservation hours"
+        description="When customers can book a table on the website, from the first booking time to the last. Holidays and Pause Online Ordering also stop reservations."
+      >
         {!settings.reservationHours && (
           <p className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-            Not saved yet. These are suggested hours; press Save Reservation Hours to use them.
+            Not saved yet. These are suggested hours; press Save reservation hours to use them.
           </p>
         )}
-        <form onSubmit={handleSaveReservationHours} className="space-y-4">
-          <div className="rounded-xl border border-foreground/10 overflow-hidden">
+        <form onSubmit={handleSaveReservationHours}>
+          <div className="overflow-hidden rounded-lg border border-foreground/10">
             <WeeklyHoursRows
               hours={editedReservationHours}
               onChange={updateReservationDay}
@@ -436,63 +495,50 @@ export function StoreSettingsForm() {
               closedLabel="No reservations"
             />
           </div>
-
-          {reservationHoursError && (
-            <p className="text-red-500 text-sm" role="alert">{reservationHoursError}</p>
-          )}
-
-          <div className="flex items-center justify-end gap-3">
-            <button
-              type="submit"
-              disabled={savingReservationHours || !hasReservationHoursChanges}
-              className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
-            >
-              {savingReservationHours ? "Saving…" : "Save Reservation Hours"}
-            </button>
-          </div>
+          <SaveFooter
+            error={reservationHoursError}
+            dirty={hasReservationHoursChanges}
+            saving={savingReservationHours}
+            label="Save reservation hours"
+          />
         </form>
-      </section>
+      </SettingsCard>
 
-      {/* Wait Time */}
-      <section>
-        <h2 className="text-base font-semibold text-foreground mb-4">Order Wait Time</h2>
-        <form onSubmit={handleSaveWaitTime} className="space-y-4">
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-foreground/60 shrink-0 w-24">Wait time</span>
+      {/* Wait time */}
+      <SettingsCard
+        title="Order wait time"
+        description="Shown at checkout as &ldquo;Ready in about … min&rdquo; for ASAP orders."
+      >
+        <form onSubmit={handleSaveWaitTime}>
+          <label className="flex items-center gap-3">
+            <span className="w-24 shrink-0 text-sm text-foreground/60">Wait time</span>
             <input
               type="number"
               min={0}
               step={1}
               value={editedWaitTime}
               onChange={(e) => setEditedWaitTime(Math.max(0, Number(e.target.value)))}
-              className="w-28 rounded-lg border border-foreground/15 bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
+              className={`${inputClass} w-28`}
             />
-            <span className="text-sm text-foreground/40">minutes</span>
-          </div>
-
-          {waitTimeError && <p className="text-red-500 text-sm" role="alert">{waitTimeError}</p>}
-
-          <div className="flex items-center justify-end gap-3">
-            <button
-              type="submit"
-              disabled={savingWaitTime || !hasWaitTimeChanges}
-              className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
-            >
-              {savingWaitTime ? "Saving…" : "Save Wait Time"}
-            </button>
-          </div>
+            <span className="text-sm text-foreground/50">minutes</span>
+          </label>
+          <SaveFooter
+            error={waitTimeError}
+            dirty={hasWaitTimeChanges}
+            saving={savingWaitTime}
+            label="Save wait time"
+          />
         </form>
-      </section>
+      </SettingsCard>
 
-      {/* Restaurant Phone (confirmation-call alert) */}
-      <section>
-        <h2 className="text-base font-semibold text-foreground mb-1">Restaurant Phone</h2>
-        <p className="text-sm text-foreground/50 mb-4">
-          Called automatically if a new order sits unconfirmed for 15 seconds.
-        </p>
-        <form onSubmit={handleSaveRestaurantPhone} className="space-y-4">
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-foreground/60 shrink-0 w-24">Phone number</span>
+      {/* Restaurant phone (confirmation-call alert) */}
+      <SettingsCard
+        title="Restaurant phone"
+        description="Called automatically if a new order sits unconfirmed for 15 seconds."
+      >
+        <form onSubmit={handleSaveRestaurantPhone}>
+          <label className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <span className="w-24 shrink-0 text-sm text-foreground/60">Phone number</span>
             <input
               type="tel"
               inputMode="numeric"
@@ -505,79 +551,66 @@ export function StoreSettingsForm() {
                 );
               }}
               placeholder="+1 (306) 764-7799"
-              className="flex-1 rounded-lg border border-foreground/15 bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/35 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+              className={`${inputClass} min-w-0 flex-1 placeholder:text-foreground/35`}
             />
-          </div>
-
-          {restaurantPhoneError && (
-            <p className="text-red-500 text-sm" role="alert">{restaurantPhoneError}</p>
-          )}
-
-          <div className="flex items-center justify-end gap-3">
-            <button
-              type="submit"
-              disabled={savingRestaurantPhone || !hasRestaurantPhoneChanges}
-              className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
-            >
-              {savingRestaurantPhone ? "Saving…" : "Save Phone Number"}
-            </button>
-          </div>
+          </label>
+          <SaveFooter
+            error={restaurantPhoneError}
+            dirty={hasRestaurantPhoneChanges}
+            saving={savingRestaurantPhone}
+            label="Save phone number"
+          />
         </form>
-      </section>
+      </SettingsCard>
 
       {/* Holidays */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-foreground">Holidays</h2>
-          {!showHolidayForm && (
+      <SettingsCard
+        title="Holidays"
+        description="Days the restaurant is closed. Online orders and reservations are off on these days."
+        action={
+          !showHolidayForm && (
             <button
               type="button"
               onClick={() => setShowHolidayForm(true)}
-              className="rounded-lg bg-foreground text-background px-3 py-1.5 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+              className={secondaryButtonClass}
             >
-              + Add Holiday
+              + Add holiday
             </button>
-          )}
-        </div>
-
+          )
+        }
+      >
         {showHolidayForm && (
           <form
             onSubmit={handleAddHoliday}
-            className="mb-4 rounded-xl border border-foreground/10 bg-foreground/[0.02] p-4 space-y-4"
+            className="mb-4 space-y-4 rounded-lg border border-foreground/10 bg-foreground/[0.02] p-4"
           >
-            <div className="flex flex-col sm:flex-row sm:items-end gap-2 sm:gap-3">
-              <div className="flex-1">
-                <label className="block text-xs font-medium text-foreground/60 mb-1.5">
-                  From <span className="text-red-500">*</span>
-                </label>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
+              <label className="flex-1">
+                <span className="mb-1.5 block text-xs font-medium text-foreground/60">From</span>
                 <input
                   type="date"
                   value={holidayFrom}
                   onChange={(e) => setHolidayFrom(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-foreground/15 bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
+                  className={`${inputClass} w-full`}
                 />
-              </div>
+              </label>
               <span className="text-sm text-foreground/40 sm:pb-2.5">to</span>
-              <div className="flex-1">
-                <label className="block text-xs font-medium text-foreground/60 mb-1.5">
-                  To <span className="text-foreground/35">(optional)</span>
-                </label>
+              <label className="flex-1">
+                <span className="mb-1.5 block text-xs font-medium text-foreground/60">
+                  To <span className="text-foreground/40">(optional)</span>
+                </span>
                 <input
                   type="date"
                   value={holidayTo}
                   min={holidayFrom || undefined}
                   onChange={(e) => setHolidayTo(e.target.value)}
-                  className="w-full rounded-lg border border-foreground/15 bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
+                  className={`${inputClass} w-full`}
                 />
-              </div>
+              </label>
             </div>
 
-            {holidayError && (
-              <p className="text-red-500 text-sm" role="alert">{holidayError}</p>
-            )}
-
-            <div className="flex gap-2 justify-end">
+            <div className="flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => {
@@ -587,31 +620,35 @@ export function StoreSettingsForm() {
                   setHolidayError(null);
                 }}
                 disabled={addingHoliday}
-                className="rounded-lg border border-foreground/20 px-3 py-1.5 text-sm font-medium text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
+                className={`${secondaryButtonClass} disabled:opacity-50`}
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={addingHoliday || !holidayFrom}
-                className="rounded-lg bg-foreground text-background px-3 py-1.5 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
+                className={`${primaryButtonClass} disabled:opacity-50`}
               >
-                {addingHoliday ? "Adding…" : "Add"}
+                {addingHoliday ? "Adding…" : "Add holiday"}
               </button>
             </div>
           </form>
         )}
 
+        {holidayError && (
+          <p className="mb-3 text-sm text-red-600" role="alert">{holidayError}</p>
+        )}
+
         {holidays.length === 0 ? (
-          <div className="rounded-xl border border-foreground/10 bg-foreground/[0.02] px-4 py-6 text-center">
-            <p className="text-sm text-foreground/40">No holidays added yet.</p>
-          </div>
+          <p className="text-sm text-foreground/50">No holidays added yet.</p>
         ) : (
-          <div className="rounded-xl border border-foreground/10 overflow-hidden">
-            {holidays.map((h, i) => (
-              <div
+          <ul className="divide-y divide-foreground/10 overflow-hidden rounded-lg border border-foreground/10">
+            {holidays.map((h) => (
+              <li
                 key={h.id}
-                className={`flex items-center justify-between gap-4 px-4 py-3 ${i > 0 ? "border-t border-foreground/8" : ""} ${h.status === "past" ? "bg-foreground/[0.015]" : ""}`}
+                className={`flex items-center justify-between gap-4 px-3 py-2 ${
+                  h.status === "past" ? "bg-foreground/[0.015]" : ""
+                } ${deletingHolidayId === h.id ? "opacity-50" : ""}`}
               >
                 <div className="flex min-w-0 flex-wrap items-center gap-2">
                   <p
@@ -634,19 +671,17 @@ export function StoreSettingsForm() {
                     </span>
                   )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteHoliday(h.id)}
-                  disabled={deletingHolidayId === h.id}
-                  className="shrink-0 rounded-lg border border-foreground/15 px-2.5 py-1 text-xs font-medium text-foreground/50 hover:border-red-300 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50 transition-colors"
-                >
-                  {deletingHolidayId === h.id ? "…" : "Remove"}
-                </button>
-              </div>
+                <RemoveButton
+                  onClick={() => {
+                    if (deletingHolidayId !== h.id) void handleDeleteHoliday(h.id);
+                  }}
+                  label={`Remove holiday ${formatDateDisplay(h.from)}`}
+                />
+              </li>
             ))}
-          </div>
+          </ul>
         )}
-      </section>
+      </SettingsCard>
     </div>
   );
 }
