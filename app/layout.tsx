@@ -3,11 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AppModal } from "@/components/AppModal";
 
-export const metadata: Metadata = {
-  icons: {
-    icon: "/favicon.png",
-  },
-};
+export const metadata: Metadata = {};
 
 export const viewport: Viewport = {
   colorScheme: "light",
