@@ -14,16 +14,7 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { useCategoriesStore } from "@/stores/categoriesStore";
-import { useMenuItemsStore } from "@/stores/menuItemsStore";
-import { useGalleryStore } from "@/stores/galleryStore";
-import { useUpdatesStore } from "@/stores/updatesStore";
-import { useDailySpecialsStore } from "@/stores/dailySpecialsStore";
-import { useSpecialItemsStore } from "@/stores/dailySpecialItemsStore";
-import { useOptionGroupsStore } from "@/stores/optionGroupsStore";
-import { useOptionsStore } from "@/stores/optionsStore";
-import { useStoreSettingsStore } from "@/stores/storeSettingsStore";
-import { useHoursStore } from "@/stores/hoursStore";
+import { loadAllStores, resetAllStores } from "@/stores/allStores";
 
 type AuthContextValue = {
   user: User | null;
@@ -48,27 +39,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (user) {
         // Load once after login / session restore; kept in Zustand for all pages
-        void useCategoriesStore.getState().fetchCategories();
-        void useMenuItemsStore.getState().fetchMenuItems();
-        void useGalleryStore.getState().fetchGallery();
-        void useUpdatesStore.getState().fetchUpdates();
-        void useDailySpecialsStore.getState().fetchDailySpecials();
-        void useSpecialItemsStore.getState().fetchSpecialItems();
-        void useOptionGroupsStore.getState().fetchOptionGroups();
-        void useOptionsStore.getState().fetchOptions();
-        void useStoreSettingsStore.getState().fetchStoreSettings();
-        void useHoursStore.getState().fetchHours();
+        loadAllStores();
       } else {
-        useCategoriesStore.getState().reset();
-        useMenuItemsStore.getState().reset();
-        useGalleryStore.getState().reset();
-        useUpdatesStore.getState().reset();
-        useDailySpecialsStore.getState().reset();
-        useSpecialItemsStore.getState().reset();
-        useOptionGroupsStore.getState().reset();
-        useOptionsStore.getState().reset();
-        useStoreSettingsStore.getState().reset();
-        useHoursStore.getState().reset();
+        resetAllStores();
       }
     });
     return () => unsubscribe();
@@ -100,16 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     setError(null);
     await signOut(auth);
-    useCategoriesStore.getState().reset();
-    useMenuItemsStore.getState().reset();
-    useGalleryStore.getState().reset();
-    useUpdatesStore.getState().reset();
-    useDailySpecialsStore.getState().reset();
-    useSpecialItemsStore.getState().reset();
-    useOptionGroupsStore.getState().reset();
-    useOptionsStore.getState().reset();
-    useStoreSettingsStore.getState().reset();
-    useHoursStore.getState().reset();
+    resetAllStores();
   }, []);
 
   const clearError = useCallback(() => setError(null), []);
