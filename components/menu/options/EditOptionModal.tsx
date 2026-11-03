@@ -43,7 +43,7 @@ export function EditOptionModal({
       setFormError(null);
       setSubmitting(false);
     }
-  }, [open, option?.id]);
+  }, [open, option]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

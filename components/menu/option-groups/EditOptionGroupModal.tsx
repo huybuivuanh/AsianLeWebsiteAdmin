@@ -41,7 +41,7 @@ export function EditOptionGroupModal({
       setFormError(null);
       setSubmitting(false);
     }
-  }, [open, group?.id]);
+  }, [open, group]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

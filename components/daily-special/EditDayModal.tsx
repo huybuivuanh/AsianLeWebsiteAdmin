@@ -47,7 +47,7 @@ export function EditDayModal({
       setFormError(null);
       setSubmitting(false);
     }
-  }, [open, item?.id]);
+  }, [open, item]);
 
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();

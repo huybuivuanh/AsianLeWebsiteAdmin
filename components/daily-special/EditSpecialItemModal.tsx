@@ -46,7 +46,7 @@ export function EditSpecialItemModal({
       setFormError(null);
       setSubmitting(false);
     }
-  }, [open, item?.id]);
+  }, [open, item]);
 
   function parsePrice(): number {
     const s = priceInput.trim();

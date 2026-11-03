@@ -35,7 +35,7 @@ export function EditCategoryModal({
       setFormError(null);
       setSubmitting(false);
     }
-  }, [open, category?.id]);
+  }, [open, category]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

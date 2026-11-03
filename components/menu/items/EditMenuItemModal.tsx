@@ -64,7 +64,7 @@ export function EditMenuItemModal({ open, item, onClose, onSave }: EditMenuItemM
       setSubmitting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
-  }, [open, item?.id]);
+  }, [open, item]);
 
   function parsePrice(): number {
     const n = parseFloat(priceInput.trim());
