@@ -1,4 +1,4 @@
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { storage } from "@/lib/firebase";
 
 /** Photos are resized to fit this many pixels on their longest side — sharp on any
@@ -71,4 +71,13 @@ export async function uploadImage(folder: string, file: File): Promise<string> {
     cacheControl: CACHE_CONTROL,
   });
   return getDownloadURL(storageRef);
+}
+
+/** Deletes the Storage file behind a Firebase download URL. Does nothing for URLs it can't parse. */
+export function deleteImageByUrl(imageUrl: string): Promise<void> {
+  const url = new URL(imageUrl);
+  const pathMatch = url.pathname.match(/\/o\/(.+?)(\?|$)/);
+  if (!pathMatch?.[1]) return Promise.resolve();
+  const storagePath = decodeURIComponent(pathMatch[1]);
+  return deleteObject(ref(storage, storagePath));
 }

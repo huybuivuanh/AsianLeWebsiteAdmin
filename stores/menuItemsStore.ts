@@ -10,13 +10,9 @@ import {
   serverTimestamp,
   deleteField,
 } from "firebase/firestore";
-import {
-  ref,
-  deleteObject,
-} from "firebase/storage";
-import { db, storage } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 import { batchUpdateDocs, type DocUpdate } from "@/lib/batch-update";
-import { uploadImage } from "@/lib/imageUpload";
+import { deleteImageByUrl, uploadImage } from "@/lib/image-upload";
 import { KitchenType } from "@/types/enum";
 
 export type MenuItemInput = {
@@ -29,14 +25,6 @@ export type MenuItemInput = {
   categoryIds?: string[];
   removeImage?: boolean;
 };
-
-function deleteStorageImageByUrl(imageUrl: string): Promise<void> {
-  const url = new URL(imageUrl);
-  const pathMatch = url.pathname.match(/\/o\/(.+?)(\?|$)/);
-  if (!pathMatch?.[1]) return Promise.resolve();
-  const storagePath = decodeURIComponent(pathMatch[1]);
-  return deleteObject(ref(storage, storagePath));
-}
 
 interface MenuItemsState {
   items: MenuItem[];
@@ -134,11 +122,11 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
       if (categoryIds !== undefined) payload.categoryIds = categoryIds;
 
       if (removeImage && item?.image) {
-        try { await deleteStorageImageByUrl(item.image.url); } catch { /* ignore */ }
+        try { await deleteImageByUrl(item.image.url); } catch { /* ignore */ }
         payload.image = deleteField();
       } else if (imageFile && imageFile.size > 0) {
         if (item?.image) {
-          try { await deleteStorageImageByUrl(item.image.url); } catch { /* ignore */ }
+          try { await deleteImageByUrl(item.image.url); } catch { /* ignore */ }
         }
         const url = await uploadImage("menuItems", imageFile);
         payload.image = { name: imageFile.name, url };
@@ -183,7 +171,7 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
     try {
       const item = get().items.find((m) => m.id === id);
       if (item?.image) {
-        try { await deleteStorageImageByUrl(item.image.url); } catch { /* ignore */ }
+        try { await deleteImageByUrl(item.image.url); } catch { /* ignore */ }
       }
       await deleteDoc(doc(db, "menuItems", id));
       await get().fetchMenuItems();

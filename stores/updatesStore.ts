@@ -7,20 +7,8 @@ import {
   deleteDoc,
   doc,
 } from "firebase/firestore";
-import {
-  ref,
-  deleteObject,
-} from "firebase/storage";
-import { db, storage } from "@/lib/firebase";
-import { uploadImage } from "@/lib/imageUpload";
-
-function deleteStorageByUrl(imageUrl: string): Promise<void> {
-  const url = new URL(imageUrl);
-  const pathMatch = url.pathname.match(/\/o\/(.+?)(\?|$)/);
-  if (!pathMatch?.[1]) return Promise.resolve();
-  const storagePath = decodeURIComponent(pathMatch[1]);
-  return deleteObject(ref(storage, storagePath));
-}
+import { db } from "@/lib/firebase";
+import { deleteImageByUrl, uploadImage } from "@/lib/image-upload";
 
 interface UpdatesState {
   items: ImageItem[];
@@ -94,7 +82,7 @@ export const useUpdatesStore = create<UpdatesState>((set, get) => ({
       let url = item.url;
       if (imageFile && imageFile.size > 0) {
         try {
-          await deleteStorageByUrl(item.url);
+          await deleteImageByUrl(item.url);
         } catch {
           // Ignore; upload new image anyway
         }
@@ -120,7 +108,7 @@ export const useUpdatesStore = create<UpdatesState>((set, get) => ({
       const item = get().items.find((i) => i.id === id);
       if (item?.url) {
         try {
-          await deleteStorageByUrl(item.url);
+          await deleteImageByUrl(item.url);
         } catch {
           // Ignore; still delete the doc
         }

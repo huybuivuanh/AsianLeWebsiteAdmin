@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { Timestamp, doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { INDEFINITE_PAUSE } from "@/utils/storeSettingsHelpers";
+import { INDEFINITE_PAUSE } from "@/lib/store-settings";
 
 interface StoreSettingsState {
   settings: StoreSettings | null;
