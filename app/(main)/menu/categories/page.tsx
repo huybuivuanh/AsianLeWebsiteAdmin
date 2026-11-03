@@ -8,11 +8,9 @@ import { EditCategoryModal } from "@/components/menu/categories/EditCategoryModa
 import { AddCategoryItemsModal } from "@/components/menu/categories/AddCategoryItemsModal";
 import { CategoryRow } from "@/components/menu/categories/CategoryRow";
 import { SortCategoriesModal } from "@/components/menu/categories/SortCategoriesModal";
-import {
-  MenuPageHeader,
-  primaryButtonClass,
-  secondaryButtonClass,
-} from "@/components/menu/MenuPageHeader";
+import { searchInputClass } from "@/components/ui/form";
+import { MenuPageHeader } from "@/components/menu/MenuPageHeader";
+import { primaryButtonClass, secondaryButtonClass } from "@/components/ui/Button";
 import { confirmDialog } from "@/stores/modalStore";
 
 export default function CategoriesPage() {
@@ -141,7 +139,7 @@ export default function CategoriesPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search categories…"
-          className="w-full rounded-xl border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+          className={searchInputClass}
           aria-label="Search categories"
         />
       </div>

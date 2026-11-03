@@ -1,11 +1,5 @@
 import type { ReactNode } from "react";
 
-/** Shared button styles for menu page headers. */
-export const primaryButtonClass =
-  "inline-flex min-h-10 items-center rounded-lg bg-foreground px-4 text-sm font-medium text-background hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30 focus-visible:ring-offset-2";
-export const secondaryButtonClass =
-  "inline-flex min-h-10 items-center rounded-lg border border-foreground/20 px-4 text-sm font-medium text-foreground hover:bg-foreground/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30";
-
 /** Toggle next to a menu page's search box that shows only unused entries. */
 export function UnusedFilterButton({
   active,

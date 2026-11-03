@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useGalleryStore } from "@/stores/galleryStore";
-import { AddGalleryItemModal } from "@/components/gallery/AddGalleryItemModal";
-import { EditGalleryItemModal } from "@/components/gallery/EditGalleryItemModal";
-import { MenuPageHeader, primaryButtonClass } from "@/components/menu/MenuPageHeader";
-import { ImageGrid } from "@/components/ImageGrid";
+import { AddImageItemModal } from "@/components/image-items/AddImageItemModal";
+import { EditImageItemModal } from "@/components/image-items/EditImageItemModal";
+import { MenuPageHeader } from "@/components/menu/MenuPageHeader";
+import { primaryButtonClass } from "@/components/ui/Button";
+import { ImageGrid } from "@/components/image-items/ImageGrid";
 import { alertDialog, confirmDialog } from "@/stores/modalStore";
 
 export default function GalleryPage() {
@@ -79,16 +80,18 @@ export default function GalleryPage() {
         />
       )}
 
-      <AddGalleryItemModal
+      <AddImageItemModal
         open={addModalOpen}
         onClose={() => setAddModalOpen(false)}
         onAdd={addGalleryItem}
+        namePlaceholder="e.g. Restaurant interior"
       />
-      <EditGalleryItemModal
+      <EditImageItemModal
         open={!!editingItem}
         item={editingItem}
         onClose={() => setEditingItem(null)}
         onSave={updateGalleryItem}
+        namePlaceholder="e.g. Restaurant interior"
       />
     </div>
   );

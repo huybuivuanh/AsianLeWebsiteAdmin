@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { useUpdatesStore } from "@/stores/updatesStore";
-import { AddUpdatesItemModal } from "@/components/updates/AddUpdatesItemModal";
-import { EditUpdatesItemModal } from "@/components/updates/EditUpdatesItemModal";
-import { ImageGrid } from "@/components/ImageGrid";
-import { MenuPageHeader, primaryButtonClass } from "@/components/menu/MenuPageHeader";
+import { AddImageItemModal } from "@/components/image-items/AddImageItemModal";
+import { EditImageItemModal } from "@/components/image-items/EditImageItemModal";
+import { ImageGrid } from "@/components/image-items/ImageGrid";
+import { MenuPageHeader } from "@/components/menu/MenuPageHeader";
+import { primaryButtonClass } from "@/components/ui/Button";
 import { alertDialog, confirmDialog } from "@/stores/modalStore";
 
 export default function UpdatesPage() {
@@ -79,16 +80,18 @@ export default function UpdatesPage() {
         />
       )}
 
-      <AddUpdatesItemModal
+      <AddImageItemModal
         open={addModalOpen}
         onClose={() => setAddModalOpen(false)}
         onAdd={addUpdatesItem}
+        namePlaceholder="e.g. New menu launch"
       />
-      <EditUpdatesItemModal
+      <EditImageItemModal
         open={!!editingItem}
         item={editingItem}
         onClose={() => setEditingItem(null)}
         onSave={updateUpdatesItem}
+        namePlaceholder="e.g. New menu launch"
       />
     </div>
   );

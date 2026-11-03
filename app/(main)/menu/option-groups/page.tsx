@@ -8,11 +8,9 @@ import { OptionGroupRow } from "@/components/menu/option-groups/OptionGroupRow";
 import { AddOptionGroupModal } from "@/components/menu/option-groups/AddOptionGroupModal";
 import { itemReferencesOptionGroup, removeOptionGroupRef } from "@/lib/menu-item-option-groups";
 import { patchClearDefaultIfNotInOptionIds } from "@/lib/option-group-updates";
-import {
-  MenuPageHeader,
-  UnusedFilterButton,
-  primaryButtonClass,
-} from "@/components/menu/MenuPageHeader";
+import { searchInputClass } from "@/components/ui/form";
+import { MenuPageHeader, UnusedFilterButton } from "@/components/menu/MenuPageHeader";
+import { primaryButtonClass } from "@/components/ui/Button";
 import { confirmDialog, alertDialog } from "@/stores/modalStore";
 
 /** Same rule as the "Unused" badge on OptionGroupRow. */
@@ -121,7 +119,7 @@ export default function OptionGroupsPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search option groups…"
-          className="min-w-0 flex-1 rounded-xl border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+          className={`${searchInputClass} min-w-0 flex-1`}
           aria-label="Search option groups"
         />
         <UnusedFilterButton

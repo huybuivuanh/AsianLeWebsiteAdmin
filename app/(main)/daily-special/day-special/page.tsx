@@ -9,7 +9,8 @@ import { DailySpecialRow } from "@/components/daily-special/DailySpecialRow";
 import { AddDayItemsModal } from "@/components/daily-special/AddDayItemsModal";
 import { compareDailySpecials, dayLabel, formatTimeRange } from "@/lib/daily-special";
 import { confirmDialog } from "@/stores/modalStore";
-import { MenuPageHeader, primaryButtonClass } from "@/components/menu/MenuPageHeader";
+import { MenuPageHeader } from "@/components/menu/MenuPageHeader";
+import { primaryButtonClass } from "@/components/ui/Button";
 
 export default function DaySpecial() {
   const {

@@ -6,11 +6,8 @@ import { useDailySpecialsStore } from "@/stores/dailySpecialsStore";
 import { AddSpecialItemModal } from "@/components/daily-special/AddSpecialItemModal";
 import { EditSpecialItemModal } from "@/components/daily-special/EditSpecialItemModal";
 import { confirmDialog } from "@/stores/modalStore";
-import {
-  MenuPageHeader,
-  UnusedFilterButton,
-  primaryButtonClass,
-} from "@/components/menu/MenuPageHeader";
+import { MenuPageHeader, UnusedFilterButton } from "@/components/menu/MenuPageHeader";
+import { primaryButtonClass } from "@/components/ui/Button";
 import { RowActions, UnusedBadge, rowCardClass } from "@/components/menu/RowParts";
 import { formatPriceCAD } from "@/lib/utils";
 import { WEEK_ORDER, shortDayLabel } from "@/lib/daily-special";

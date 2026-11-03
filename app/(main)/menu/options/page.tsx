@@ -6,11 +6,9 @@ import { useOptionGroupsStore } from "@/stores/optionGroupsStore";
 import { OptionRow } from "@/components/menu/options/OptionRow";
 import { AddOptionModal } from "@/components/menu/options/AddOptionModal";
 import { patchClearDefaultIfOptionRemoved } from "@/lib/option-group-updates";
-import {
-  MenuPageHeader,
-  UnusedFilterButton,
-  primaryButtonClass,
-} from "@/components/menu/MenuPageHeader";
+import { searchInputClass } from "@/components/ui/form";
+import { MenuPageHeader, UnusedFilterButton } from "@/components/menu/MenuPageHeader";
+import { primaryButtonClass } from "@/components/ui/Button";
 import { confirmDialog, alertDialog } from "@/stores/modalStore";
 
 export default function OptionsPage() {
@@ -86,7 +84,7 @@ export default function OptionsPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search options…"
-          className="min-w-0 flex-1 rounded-xl border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+          className={`${searchInputClass} min-w-0 flex-1`}
           aria-label="Search options"
         />
         <UnusedFilterButton

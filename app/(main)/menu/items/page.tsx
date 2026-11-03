@@ -5,11 +5,9 @@ import { useMenuItemsStore } from "@/stores/menuItemsStore";
 import { MenuItemRow } from "@/components/menu/items/MenuItemRow";
 import { AddMenuItemModal } from "@/components/menu/items/AddMenuItemModal";
 import { EditMenuItemModal } from "@/components/menu/items/EditMenuItemModal";
-import {
-  MenuPageHeader,
-  UnusedFilterButton,
-  primaryButtonClass,
-} from "@/components/menu/MenuPageHeader";
+import { searchInputClass } from "@/components/ui/form";
+import { MenuPageHeader, UnusedFilterButton } from "@/components/menu/MenuPageHeader";
+import { primaryButtonClass } from "@/components/ui/Button";
 import { confirmDialog } from "@/stores/modalStore";
 
 /** Items not in any category don't show on the website menu. */
@@ -75,7 +73,7 @@ export default function MenuItemsPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search items…"
-          className="min-w-0 flex-1 rounded-xl border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
+          className={`${searchInputClass} min-w-0 flex-1`}
           aria-label="Search items"
         />
         <UnusedFilterButton

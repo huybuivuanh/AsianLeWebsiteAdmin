@@ -3,10 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { DEFAULT_RESERVATION_DAY, useStoreSettingsStore } from "@/stores/storeSettingsStore";
 import { dateToLocalKey } from "@/lib/orders-firestore";
-import {
-  primaryButtonClass,
-  secondaryButtonClass,
-} from "@/components/menu/MenuPageHeader";
+import { primaryButtonClass, secondaryButtonClass } from "@/components/ui/Button";
 import { RemoveButton } from "@/components/menu/RowParts";
 
 type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";

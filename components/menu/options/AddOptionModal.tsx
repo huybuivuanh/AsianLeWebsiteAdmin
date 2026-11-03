@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { WeeklyAvailabilityEditor } from "@/components/menu/items/WeeklyAvailabilityEditor";
+import { Modal } from "@/components/ui/Modal";
+import { CheckboxField, Field, FormActions, FormError, Input } from "@/components/ui/form";
 
 type AddOptionModalProps = {
   open: boolean;
@@ -55,103 +57,50 @@ export function AddOptionModal({ open, onClose, onAdd }: AddOptionModalProps) {
     }
   }
 
-  function handleBackdropClose() {
-    if (!submitting) onClose();
-  }
-
-  useEffect(() => {
-    if (!open) return;
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape" && !submitting) onClose();
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, submitting, onClose]);
-
-  if (!open) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
-      aria-modal="true"
-      role="dialog"
-      aria-labelledby="add-option-title"
-    >
-      <div className="absolute inset-0" onClick={handleBackdropClose} aria-hidden="true" />
-      <div className="relative w-full max-w-md rounded-xl bg-background border border-foreground/10 shadow-lg p-6">
-        <h2 id="add-option-title" className="text-lg font-semibold text-foreground mb-4">
-          Add Option
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {formError && (
-            <p className="text-red-600 dark:text-red-400 text-sm" role="alert">{formError}</p>
+    <Modal open={open} onClose={onClose} busy={submitting} title="Add Option">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <FormError message={formError} />
+        <Field label="Name" htmlFor="add-option-name" required>
+          <Input
+            id="add-option-name"
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            autoFocus
+            placeholder="e.g. Extra Spicy"
+          />
+        </Field>
+        <Field
+          label="Price (CAD)"
+          htmlFor="add-option-price"
+          hint="Leave blank or enter 0 if no price."
+        >
+          <Input
+            id="add-option-price"
+            type="number"
+            min={0}
+            step={0.01}
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            placeholder="0.00"
+          />
+        </Field>
+        <div>
+          <CheckboxField
+            label="Restrict to a weekly schedule"
+            checked={restrictAvailability}
+            onChange={(e) => setRestrictAvailability(e.target.checked)}
+          />
+          {restrictAvailability && (
+            <div className="mt-2">
+              <WeeklyAvailabilityEditor value={availability} onChange={setAvailability} />
+            </div>
           )}
-          <div>
-            <label htmlFor="add-option-name" className="block text-sm font-medium text-foreground mb-1">
-              Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="add-option-name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              autoFocus
-              className="w-full rounded-lg border border-foreground/20 bg-background px-3 py-2 text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
-              placeholder="e.g. Extra Spicy"
-            />
-          </div>
-          <div>
-            <label htmlFor="add-option-price" className="block text-sm font-medium text-foreground mb-1">
-              Price (CAD)
-            </label>
-            <input
-              id="add-option-price"
-              type="number"
-              min={0}
-              step={0.01}
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              className="w-full rounded-lg border border-foreground/20 bg-background px-3 py-2 text-foreground placeholder:text-foreground/50 focus:outline-none focus:ring-2 focus:ring-foreground/20"
-              placeholder="0.00"
-            />
-            <p className="mt-1 text-xs text-foreground/50">Leave blank or enter 0 if no price.</p>
-          </div>
-          <div>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={restrictAvailability}
-                onChange={(e) => setRestrictAvailability(e.target.checked)}
-                className="h-4 w-4 rounded border-foreground/30"
-              />
-              <span className="text-sm font-medium text-foreground">Restrict to a weekly schedule</span>
-            </label>
-            {restrictAvailability && (
-              <div className="mt-2">
-                <WeeklyAvailabilityEditor value={availability} onChange={setAvailability} />
-              </div>
-            )}
-          </div>
-          <div className="flex gap-2 justify-end pt-2">
-            <button
-              type="button"
-              onClick={handleBackdropClose}
-              disabled={submitting}
-              className="rounded-lg border border-foreground/20 px-4 py-2 text-sm font-medium text-foreground hover:bg-foreground/5 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-lg bg-foreground text-background px-4 py-2 text-sm font-medium hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-foreground/20 disabled:opacity-50"
-            >
-              {submitting ? "Saving…" : "Save"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+        <FormActions onCancel={onClose} submitting={submitting} />
+      </form>
+    </Modal>
   );
 }

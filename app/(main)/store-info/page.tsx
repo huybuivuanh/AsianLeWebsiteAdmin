@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useHoursStore } from "@/stores/hoursStore";
 import { AddHourModal } from "@/components/store-info/AddHourModal";
 import { EditHourModal } from "@/components/store-info/EditHourModal";
-import { MenuPageHeader, primaryButtonClass } from "@/components/menu/MenuPageHeader";
+import { MenuPageHeader } from "@/components/menu/MenuPageHeader";
+import { primaryButtonClass } from "@/components/ui/Button";
 import { RowActions, rowCardClass } from "@/components/menu/RowParts";
 import { alertDialog, confirmDialog } from "@/stores/modalStore";
 

@@ -47,6 +47,13 @@ Each Firestore collection maps 1:1 to a Zustand store. Every store follows the s
 
 Pages live in `app/(main)/<section>/page.tsx`. They consume the relevant Zustand store and wire modal open/close state. Modals live in `components/<section>/` and receive `open`, `onClose`, and an async action prop — they own their own form state and call `onClose()` after the action resolves.
 
+Build modals and forms from the shared pieces in `components/ui/`, not hand-written markup:
+- `Modal` (`ui/Modal.tsx`) handles the backdrop, Escape key and ARIA. Use `layout="form"` for short forms and `layout="panel"` (with `ModalToolbar` / `ModalBody` / `ModalFooter`) for long pick/sort lists. Pass `busy={submitting}` so it can't be closed mid-save.
+- `Field`, `Input`, `Textarea`, `Select`, `CheckboxField`, `FormError`, `FormActions` (`ui/form.tsx`).
+- `Button` and `primaryButtonClass` / `secondaryButtonClass` (`ui/Button.tsx`).
+
+Gallery and Updates share `components/image-items/` (`ImageGrid`, `AddImageItemModal`, `EditImageItemModal`).
+
 ### Global types (`types/global.d.ts`)
 
 All shared interfaces are declared globally here (no import needed). Add new Firestore entity shapes here. `types/enum.ts` holds enums (imported explicitly where needed).
