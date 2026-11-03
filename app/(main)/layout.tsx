@@ -1,20 +1,20 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navbar } from "@/components/Navbar";
-import { MenuSidebar } from "@/app/(main)/menu/MenuSidebar";
-import { DailySpecialSidebar } from "@/app/(main)/daily-special/DailySpecialSidebar";
 
+/**
+ * Signed-in area: redirects to /login when logged out and shows the navbar.
+ * Each section supplies its own body layout: `menu/` and `daily-special/` add a
+ * sidebar, and `(standard)/` is a single centered column.
+ */
 export default function MainLayout({
   children,
 }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
-  const isMenuSection = pathname?.startsWith("/menu");
-  const isDailySpecialSection = pathname?.startsWith("/daily-special");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -34,40 +34,10 @@ export default function MainLayout({
     return null;
   }
 
-  if (isMenuSection) {
-    return (
-      <>
-        <Navbar />
-        <div className="flex min-w-0 flex-1">
-          <MenuSidebar />
-          <main className="min-w-0 flex-1 px-4 sm:px-6 py-4 sm:py-6">
-            {children}
-          </main>
-        </div>
-      </>
-    );
-  }
-
-  if (isDailySpecialSection) {
-    return (
-      <>
-        <Navbar />
-        <div className="flex min-w-0 flex-1">
-          <DailySpecialSidebar />
-          <main className="min-w-0 flex-1 px-4 sm:px-6 py-4 sm:py-6">
-            {children}
-          </main>
-        </div>
-      </>
-    );
-  }
-
   return (
     <>
       <Navbar />
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6 min-w-0">
-        {children}
-      </main>
+      {children}
     </>
   );
 }
