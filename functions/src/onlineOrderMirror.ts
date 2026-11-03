@@ -28,17 +28,26 @@ export function posDb(): Firestore {
   return posDbInstance;
 }
 
+const num = (v: unknown) => (typeof v === "number" ? v : undefined);
+const ts = (v: unknown) => (v instanceof Timestamp ? v : undefined);
+
 /** Rewards fields the POS needs to check a member's points: points promised on an
  * online order (`pointsToRedeem`) aren't taken from the balance until the Orders app
- * completes it (`pointsRedeemed`), so the POS subtracts the pending ones. */
+ * completes it (`pointsRedeemed`), so the POS subtracts the pending ones. The rest
+ * drive the rewards badge on the POS order card (redeem + collect status). */
 function toPosLoyalty(loyalty: unknown) {
   if (!loyalty || typeof loyalty !== "object") return undefined;
   const l = loyalty as DocumentData;
   if (typeof l.memberId !== "string" || !l.memberId) return undefined;
   return {
     memberId: l.memberId,
-    pointsToRedeem: typeof l.pointsToRedeem === "number" ? l.pointsToRedeem : undefined,
-    pointsRedeemed: typeof l.pointsRedeemed === "number" ? l.pointsRedeemed : undefined,
+    memberName: typeof l.memberName === "string" ? l.memberName : undefined,
+    pointsToRedeem: num(l.pointsToRedeem),
+    pointsRedeemed: num(l.pointsRedeemed),
+    redeemWaived: l.redeemWaived === true ? true : undefined,
+    pointsEarned: num(l.pointsEarned),
+    collectedAt: ts(l.collectedAt),
+    reversedAt: ts(l.reversedAt),
   };
 }
 
