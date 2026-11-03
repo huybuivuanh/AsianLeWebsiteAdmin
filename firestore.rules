@@ -1,0 +1,24 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Everything except `orders` — public read, must be logged in to write
+    // (admin app requires login already, so this is your staff gate).
+    match /{collection}/{docId} {
+      allow read: if collection != 'orders';
+      allow write: if request.auth != null;
+    }
+
+    // Orders hold PII (name/phone/email) — `get` (fetch one known order by ID)
+    // stays public so the customer can poll their own order's status, but
+    // `list` (enumerate every order) requires login. Writes go through the
+    // Admin SDK anyway (/api/orders, /api/orders/[orderId]/cancel), which
+    // bypasses rules entirely — this `write` line is just a safety net for
+    // any direct client-side attempt.
+    match /orders/{orderId} {
+      allow get: if true;
+      allow list: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+  }
+}
