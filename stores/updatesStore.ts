@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import {
   collection,
-  getDocs,
+  onSnapshot,
+  type Unsubscribe,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -14,7 +15,8 @@ interface UpdatesState {
   items: ImageItem[];
   loading: boolean;
   error: string | null;
-  fetchUpdates: () => Promise<void>;
+  /** Starts a live listener; returns a function that stops it. */
+  listen: () => Unsubscribe;
   addUpdatesItem: (name: string, imageFile: File) => Promise<void>;
   updateUpdatesItem: (
     id: string,
@@ -34,25 +36,23 @@ export const useUpdatesStore = create<UpdatesState>((set, get) => ({
     set({ items: [], loading: false, error: null });
   },
 
-  fetchUpdates: async () => {
+  listen: () => {
     set({ loading: true, error: null });
-    try {
-      const snapshot = await getDocs(collection(db, "updates"));
-      const items: ImageItem[] = snapshot.docs.map((doc) => {
-        const d = doc.data();
-        return {
-          id: doc.id,
-          name: (d.name as string) ?? "",
-          url: (d.url as string) ?? "",
-        };
-      });
-      set({ items, loading: false });
-    } catch (err) {
-      set({
-        error: err instanceof Error ? err.message : "Failed to fetch updates",
-        loading: false,
-      });
-    }
+    return onSnapshot(
+      collection(db, "updates"),
+      (snapshot) => {
+        const items: ImageItem[] = snapshot.docs.map((doc) => {
+          const d = doc.data();
+          return {
+            id: doc.id,
+            name: (d.name as string) ?? "",
+            url: (d.url as string) ?? "",
+          };
+        });
+        set({ items, loading: false, error: null });
+      },
+      (err) => set({ error: err.message || "Failed to fetch updates", loading: false }),
+    );
   },
 
   addUpdatesItem: async (name, imageFile) => {
@@ -64,7 +64,6 @@ export const useUpdatesStore = create<UpdatesState>((set, get) => ({
         name: name.trim(),
         url,
       });
-      await get().fetchUpdates();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to add update";
@@ -93,7 +92,6 @@ export const useUpdatesStore = create<UpdatesState>((set, get) => ({
         name: name.trim(),
         url,
       });
-      await get().fetchUpdates();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to update item";
@@ -114,7 +112,6 @@ export const useUpdatesStore = create<UpdatesState>((set, get) => ({
         }
       }
       await deleteDoc(doc(db, "updates", id));
-      await get().fetchUpdates();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete item";

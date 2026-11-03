@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import {
   collection,
-  getDocs,
+  onSnapshot,
+  type Unsubscribe,
   addDoc,
   updateDoc,
   doc,
@@ -14,7 +15,8 @@ interface DailySpecialsState {
   dailySpecials: DailySpecial[];
   loading: boolean;
   error: string | null;
-  fetchDailySpecials: () => Promise<void>;
+  /** Starts a live listener; returns a function that stops it. */
+  listen: () => Unsubscribe;
   addDailySpecial: (
     dayOfWeek: DayOfWeek,
     startTime: string,
@@ -29,7 +31,7 @@ interface DailySpecialsState {
   reset: () => void;
 }
 
-export const useDailySpecialsStore = create<DailySpecialsState>((set, get) => ({
+export const useDailySpecialsStore = create<DailySpecialsState>((set) => ({
   dailySpecials: [],
   loading: false,
   error: null,
@@ -38,37 +40,34 @@ export const useDailySpecialsStore = create<DailySpecialsState>((set, get) => ({
     set({ dailySpecials: [], loading: false, error: null });
   },
 
-  fetchDailySpecials: async () => {
+  listen: () => {
     set({ loading: true, error: null });
-    try {
-      const snapshot = await getDocs(collection(db, "dailySpecials"));
-      const dailySpecials: DailySpecial[] = snapshot.docs.map((docSnap) => {
-        const d = docSnap.data();
-        const startStr = d.timeRange?.startTime ?? "00:00";
-        const endStr = d.timeRange?.endTime ?? "23:59";
-        const rawItemIds = d.itemIds;
-        const itemIds: string[] = Array.isArray(rawItemIds)
-          ? rawItemIds.filter((x): x is string => typeof x === "string")
-          : [];
-        return {
-          id: docSnap.id,
-          dayOfWeek: (d.dayOfWeek as DayOfWeek) ?? "MONDAY",
-          timeRange: {
-            startTime: startStr,
-            endTime: endStr,
-          },
-          itemIds: itemIds.length ? itemIds : undefined,
-          createdAt: d.createdAt?.toDate?.() ?? new Date(0),
-        };
-      });
-      set({ dailySpecials, loading: false });
-    } catch (err) {
-      set({
-        error:
-          err instanceof Error ? err.message : "Failed to fetch daily specials",
-        loading: false,
-      });
-    }
+    return onSnapshot(
+      collection(db, "dailySpecials"),
+      (snapshot) => {
+        const dailySpecials: DailySpecial[] = snapshot.docs.map((docSnap) => {
+          const d = docSnap.data();
+          const startStr = d.timeRange?.startTime ?? "00:00";
+          const endStr = d.timeRange?.endTime ?? "23:59";
+          const rawItemIds = d.itemIds;
+          const itemIds: string[] = Array.isArray(rawItemIds)
+            ? rawItemIds.filter((x): x is string => typeof x === "string")
+            : [];
+          return {
+            id: docSnap.id,
+            dayOfWeek: (d.dayOfWeek as DayOfWeek) ?? "MONDAY",
+            timeRange: {
+              startTime: startStr,
+              endTime: endStr,
+            },
+            itemIds: itemIds.length ? itemIds : undefined,
+            createdAt: d.createdAt?.toDate?.() ?? new Date(0),
+          };
+        });
+        set({ dailySpecials, loading: false, error: null });
+      },
+      (err) => set({ error: err.message || "Failed to fetch daily specials", loading: false }),
+    );
   },
 
   addDailySpecial: async (dayOfWeek, startTime, endTime) => {
@@ -79,7 +78,6 @@ export const useDailySpecialsStore = create<DailySpecialsState>((set, get) => ({
         timeRange: { startTime: startTime.trim(), endTime: endTime.trim() },
         createdAt: serverTimestamp(),
       });
-      await get().fetchDailySpecials();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to add daily special";
@@ -96,7 +94,6 @@ export const useDailySpecialsStore = create<DailySpecialsState>((set, get) => ({
         startTime: startTime.trim(),
         endTime: endTime.trim(),
       });
-      await get().fetchDailySpecials();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to update daily special";

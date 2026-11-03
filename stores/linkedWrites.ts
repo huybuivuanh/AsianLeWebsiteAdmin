@@ -1,8 +1,8 @@
 /**
  * Changes that touch two collections at once, e.g. a category and the menu items that
  * point back to it. Each one is a single Firestore batch, so it either fully succeeds or
- * changes nothing; the two sides can't end up disagreeing. Afterwards the affected
- * stores are re-fetched.
+ * changes nothing; the two sides can't end up disagreeing. The stores' live listeners
+ * pick up the result, so nothing needs re-fetching.
  *
  * Use these instead of calling two store actions one after another.
  */
@@ -31,22 +31,20 @@ type Write =
 /** Firestore allows at most 500 writes per batch. */
 const MAX_BATCH_WRITES = 500;
 
-async function commit(writes: Write[], refresh: Array<() => Promise<void>>) {
+async function commit(writes: Write[]) {
   if (writes.length > MAX_BATCH_WRITES) {
     // Far beyond what this restaurant's data can produce; refuse rather than split
     // into several batches and lose the all-or-nothing guarantee.
     throw new Error(`Too many changes at once (${writes.length}).`);
   }
-  if (writes.length > 0) {
-    const batch = writeBatch(db);
-    for (const w of writes) {
-      const ref = doc(db, w.collection, w.id);
-      if (w.kind === "update") batch.update(ref, w.data);
-      else batch.delete(ref);
-    }
-    await batch.commit();
+  if (writes.length === 0) return;
+  const batch = writeBatch(db);
+  for (const w of writes) {
+    const ref = doc(db, w.collection, w.id);
+    if (w.kind === "update") batch.update(ref, w.data);
+    else batch.delete(ref);
   }
-  await Promise.all(refresh.map((fetch) => fetch()));
+  await batch.commit();
 }
 
 function without(list: string[] | undefined, id: string): string[] {
@@ -104,7 +102,6 @@ export async function setCategoryItems(categoryId: string, itemIds: string[]) {
         itemIds,
       ),
     ],
-    [categories().fetchCategories, menuItems().fetchMenuItems],
   );
 }
 
@@ -127,7 +124,6 @@ export async function deleteCategory(categoryId: string) {
           data: { categoryIds: without(item.categoryIds, categoryId) },
         })),
     ],
-    [categories().fetchCategories, menuItems().fetchMenuItems],
   );
 }
 
@@ -158,7 +154,6 @@ export async function setMenuItemOptionGroups(itemId: string, optionGroupIds: Op
           },
         })),
     ],
-    [menuItems().fetchMenuItems, optionGroups().fetchOptionGroups],
   );
 }
 
@@ -194,7 +189,6 @@ export async function deleteMenuItem(itemId: string) {
           data: { itemIds: without(g.itemIds, itemId) },
         })),
     ],
-    [menuItems().fetchMenuItems, categories().fetchCategories, optionGroups().fetchOptionGroups],
   );
   if (item?.image) {
     try {
@@ -233,7 +227,6 @@ export async function setOptionGroupOptions(groupId: string, optionIds: string[]
         optionIds,
       ),
     ],
-    [optionGroups().fetchOptionGroups, options().fetchOptions],
   );
 }
 
@@ -264,7 +257,6 @@ export async function deleteOptionGroup(groupId: string) {
           data: { groupIds: without(o.groupIds, groupId) },
         })),
     ],
-    [optionGroups().fetchOptionGroups, menuItems().fetchMenuItems, options().fetchOptions],
   );
 }
 
@@ -285,7 +277,6 @@ export async function deleteOption(optionId: string) {
           },
         })),
     ],
-    [options().fetchOptions, optionGroups().fetchOptionGroups],
   );
 }
 
@@ -309,7 +300,6 @@ export async function setDailySpecialItems(daySpecialId: string, itemIds: string
         itemIds,
       ),
     ],
-    [dailySpecials().fetchDailySpecials, specialItems().fetchSpecialItems],
   );
 }
 
@@ -332,7 +322,6 @@ export async function deleteDailySpecial(daySpecialId: string) {
           data: { dayOfWeekIds: without(item.dayOfWeekIds, daySpecialId) },
         })),
     ],
-    [dailySpecials().fetchDailySpecials, specialItems().fetchSpecialItems],
   );
 }
 
@@ -350,6 +339,5 @@ export async function deleteSpecialItem(itemId: string) {
           data: { itemIds: without(s.itemIds, itemId) },
         })),
     ],
-    [specialItems().fetchSpecialItems, dailySpecials().fetchDailySpecials],
   );
 }

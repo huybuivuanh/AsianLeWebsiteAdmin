@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Timestamp, doc, getDoc, setDoc } from "firebase/firestore";
+import { Timestamp, doc, onSnapshot, setDoc, type Unsubscribe } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { INDEFINITE_PAUSE } from "@/lib/store-settings";
 
@@ -7,7 +7,8 @@ interface StoreSettingsState {
   settings: StoreSettings | null;
   loading: boolean;
   error: string | null;
-  fetchStoreSettings: () => Promise<void>;
+  /** Starts a live listener; returns a function that stops it. */
+  listen: () => Unsubscribe;
   updateSettings: (patch: Partial<StoreSettings>) => Promise<void>;
   reset: () => void;
 }
@@ -45,7 +46,7 @@ const DEFAULTS: StoreSettings = {
   holidays: [],
 };
 
-export const useStoreSettingsStore = create<StoreSettingsState>((set, get) => ({
+export const useStoreSettingsStore = create<StoreSettingsState>((set) => ({
   settings: null,
   loading: false,
   error: null,
@@ -54,29 +55,28 @@ export const useStoreSettingsStore = create<StoreSettingsState>((set, get) => ({
     set({ settings: null, loading: false, error: null });
   },
 
-  fetchStoreSettings: async () => {
+  listen: () => {
     set({ loading: true, error: null });
-    try {
-      const snapshot = await getDoc(SETTINGS_DOC);
-      if (snapshot.exists()) {
-        const d = snapshot.data();
-        set({
-          settings: {
-            ...d,
-            pausedUntil:
-              d.pausedUntil instanceof Timestamp ? d.pausedUntil.toDate() : null,
-          } as StoreSettings,
-          loading: false,
-        });
-      } else {
-        set({ settings: DEFAULTS, loading: false });
-      }
-    } catch (err) {
-      set({
-        error: err instanceof Error ? err.message : "Failed to fetch store settings",
-        loading: false,
-      });
-    }
+    return onSnapshot(
+      SETTINGS_DOC,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const d = snapshot.data();
+          set({
+            settings: {
+              ...d,
+              pausedUntil:
+                d.pausedUntil instanceof Timestamp ? d.pausedUntil.toDate() : null,
+            } as StoreSettings,
+            loading: false,
+            error: null,
+          });
+        } else {
+          set({ settings: DEFAULTS, loading: false, error: null });
+        }
+      },
+      (err) => set({ error: err.message || "Failed to fetch store settings", loading: false }),
+    );
   },
 
   updateSettings: async (patch) => {
@@ -89,7 +89,6 @@ export const useStoreSettingsStore = create<StoreSettingsState>((set, get) => ({
           : null;
       }
       await setDoc(SETTINGS_DOC, firestorePatch, { merge: true });
-      await get().fetchStoreSettings();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to update settings";
       set({ error: message });

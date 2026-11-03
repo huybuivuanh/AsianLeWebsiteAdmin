@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import {
   collection,
-  getDocs,
+  onSnapshot,
+  type Unsubscribe,
   addDoc,
   updateDoc,
   doc,
@@ -14,7 +15,8 @@ interface CategoriesState {
   categories: FoodCategory[];
   loading: boolean;
   error: string | null;
-  fetchCategories: () => Promise<void>;
+  /** Starts a live listener; returns a function that stops it. */
+  listen: () => Unsubscribe;
   addCategory: (name: string, description: string) => Promise<void>;
   updateCategory: (
     id: string,
@@ -26,7 +28,7 @@ interface CategoriesState {
   reset: () => void;
 }
 
-export const useCategoriesStore = create<CategoriesState>((set, get) => ({
+export const useCategoriesStore = create<CategoriesState>((set) => ({
   categories: [],
   loading: false,
   error: null,
@@ -35,32 +37,29 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
     set({ categories: [], loading: false, error: null });
   },
 
-  fetchCategories: async () => {
+  listen: () => {
     set({ loading: true, error: null });
-    try {
-      const snapshot = await getDocs(collection(db, "categories"));
-      const categories: FoodCategory[] = snapshot.docs.map((doc) => {
-        const d = doc.data();
-        return {
-          id: doc.id,
-          name: (d.name as string) ?? "",
-          description: d.description as string | undefined,
-          itemIds: d.itemIds as string[] | undefined,
-          order: (d.order as number) ?? 0,
-          createdAt: d.createdAt?.toDate?.() ?? undefined,
-        };
-      });
-      categories.sort(
-        (a, b) => (a.order ?? 0) - (b.order ?? 0) || a.name.localeCompare(b.name),
-      );
-      set({ categories, loading: false });
-    } catch (err) {
-      set({
-        error:
-          err instanceof Error ? err.message : "Failed to fetch categories",
-        loading: false,
-      });
-    }
+    return onSnapshot(
+      collection(db, "categories"),
+      (snapshot) => {
+        const categories: FoodCategory[] = snapshot.docs.map((doc) => {
+          const d = doc.data();
+          return {
+            id: doc.id,
+            name: (d.name as string) ?? "",
+            description: d.description as string | undefined,
+            itemIds: d.itemIds as string[] | undefined,
+            order: (d.order as number) ?? 0,
+            createdAt: d.createdAt?.toDate?.() ?? undefined,
+          };
+        });
+        categories.sort(
+          (a, b) => (a.order ?? 0) - (b.order ?? 0) || a.name.localeCompare(b.name),
+        );
+        set({ categories, loading: false, error: null });
+      },
+      (err) => set({ error: err.message || "Failed to fetch categories", loading: false }),
+    );
   },
 
   addCategory: async (name: string, description: string) => {
@@ -72,7 +71,6 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
         order: Date.now(),
         createdAt: serverTimestamp(),
       });
-      await get().fetchCategories();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to add category";
@@ -88,7 +86,6 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
         name: name.trim(),
         description: (description ?? "").trim(),
       });
-      await get().fetchCategories();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to update category";
@@ -106,7 +103,6 @@ export const useCategoriesStore = create<CategoriesState>((set, get) => ({
         batch.update(ref, { order: index });
       });
       await batch.commit();
-      await get().fetchCategories();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to reorder categories";

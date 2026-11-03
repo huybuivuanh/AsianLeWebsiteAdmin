@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import {
   collection,
-  getDocs,
+  onSnapshot,
+  type Unsubscribe,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -14,7 +15,8 @@ interface GalleryState {
   items: ImageItem[];
   loading: boolean;
   error: string | null;
-  fetchGallery: () => Promise<void>;
+  /** Starts a live listener; returns a function that stops it. */
+  listen: () => Unsubscribe;
   addGalleryItem: (name: string, imageFile: File) => Promise<void>;
   updateGalleryItem: (
     id: string,
@@ -34,25 +36,23 @@ export const useGalleryStore = create<GalleryState>((set, get) => ({
     set({ items: [], loading: false, error: null });
   },
 
-  fetchGallery: async () => {
+  listen: () => {
     set({ loading: true, error: null });
-    try {
-      const snapshot = await getDocs(collection(db, "gallery"));
-      const items: ImageItem[] = snapshot.docs.map((doc) => {
-        const d = doc.data();
-        return {
-          id: doc.id,
-          name: (d.name as string) ?? "",
-          url: (d.url as string) ?? "",
-        };
-      });
-      set({ items, loading: false });
-    } catch (err) {
-      set({
-        error: err instanceof Error ? err.message : "Failed to fetch gallery",
-        loading: false,
-      });
-    }
+    return onSnapshot(
+      collection(db, "gallery"),
+      (snapshot) => {
+        const items: ImageItem[] = snapshot.docs.map((doc) => {
+          const d = doc.data();
+          return {
+            id: doc.id,
+            name: (d.name as string) ?? "",
+            url: (d.url as string) ?? "",
+          };
+        });
+        set({ items, loading: false, error: null });
+      },
+      (err) => set({ error: err.message || "Failed to fetch gallery", loading: false }),
+    );
   },
 
   addGalleryItem: async (name, imageFile) => {
@@ -64,7 +64,6 @@ export const useGalleryStore = create<GalleryState>((set, get) => ({
         name: name.trim(),
         url,
       });
-      await get().fetchGallery();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to add gallery item";
@@ -93,7 +92,6 @@ export const useGalleryStore = create<GalleryState>((set, get) => ({
         name: name.trim(),
         url,
       });
-      await get().fetchGallery();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to update gallery item";
@@ -114,7 +112,6 @@ export const useGalleryStore = create<GalleryState>((set, get) => ({
         }
       }
       await deleteDoc(doc(db, "gallery", id));
-      await get().fetchGallery();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete gallery item";

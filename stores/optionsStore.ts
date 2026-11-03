@@ -2,7 +2,8 @@ import { create } from "zustand";
 import {
   Timestamp,
   collection,
-  getDocs,
+  onSnapshot,
+  type Unsubscribe,
   addDoc,
   updateDoc,
   doc,
@@ -14,13 +15,14 @@ interface OptionsState {
   options: ItemOption[];
   loading: boolean;
   error: string | null;
-  fetchOptions: () => Promise<void>;
+  /** Starts a live listener; returns a function that stops it. */
+  listen: () => Unsubscribe;
   addOption: (data: Omit<ItemOption, "id" | "createdAt">) => Promise<string>;
   updateOption: (id: string, data: Record<string, unknown>) => Promise<void>;
   reset: () => void;
 }
 
-export const useOptionsStore = create<OptionsState>((set, get) => ({
+export const useOptionsStore = create<OptionsState>((set) => ({
   options: [],
   loading: false,
   error: null,
@@ -29,30 +31,28 @@ export const useOptionsStore = create<OptionsState>((set, get) => ({
     set({ options: [], loading: false, error: null });
   },
 
-  fetchOptions: async () => {
+  listen: () => {
     set({ loading: true, error: null });
-    try {
-      const snapshot = await getDocs(collection(db, "options"));
-      const options: ItemOption[] = snapshot.docs.map((doc) => {
-        const d = doc.data();
-        return {
-          id: doc.id,
-          name: (d.name as string) ?? "",
-          price: (d.price as number) ?? 0,
-          groupIds: d.groupIds as string[] | undefined,
-          availability: d.availability as ItemOption["availability"] | undefined,
-          soldOutUntil: d.soldOutUntil instanceof Timestamp ? d.soldOutUntil.toDate() : undefined,
-          createdAt: d.createdAt?.toDate?.() ?? new Date(),
-        };
-      });
-      options.sort((a, b) => a.name.localeCompare(b.name));
-      set({ options, loading: false });
-    } catch (err) {
-      set({
-        error: err instanceof Error ? err.message : "Failed to fetch options",
-        loading: false,
-      });
-    }
+    return onSnapshot(
+      collection(db, "options"),
+      (snapshot) => {
+        const options: ItemOption[] = snapshot.docs.map((doc) => {
+          const d = doc.data();
+          return {
+            id: doc.id,
+            name: (d.name as string) ?? "",
+            price: (d.price as number) ?? 0,
+            groupIds: d.groupIds as string[] | undefined,
+            availability: d.availability as ItemOption["availability"] | undefined,
+            soldOutUntil: d.soldOutUntil instanceof Timestamp ? d.soldOutUntil.toDate() : undefined,
+            createdAt: d.createdAt?.toDate?.() ?? new Date(),
+          };
+        });
+        options.sort((a, b) => a.name.localeCompare(b.name));
+        set({ options, loading: false, error: null });
+      },
+      (err) => set({ error: err.message || "Failed to fetch options", loading: false }),
+    );
   },
 
   addOption: async (data) => {
@@ -62,7 +62,6 @@ export const useOptionsStore = create<OptionsState>((set, get) => ({
         ...data,
         createdAt: serverTimestamp(),
       });
-      await get().fetchOptions();
       return ref.id;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to add option";
@@ -75,7 +74,6 @@ export const useOptionsStore = create<OptionsState>((set, get) => ({
     set({ error: null });
     try {
       await updateDoc(doc(db, "options", id), data);
-      await get().fetchOptions();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to update option";
       set({ error: message });

@@ -1,6 +1,7 @@
 /**
- * The one place that lists every data store. AuthContext calls `loadAllStores` after
- * login / session restore and `resetAllStores` on logout. Register new stores here.
+ * The one place that lists every data store. AuthContext calls `listenToAllStores`
+ * after login / session restore and stops the listeners + `resetAllStores` on logout.
+ * Register new stores here.
  */
 import { useCategoriesStore } from "@/stores/categoriesStore";
 import { useMenuItemsStore } from "@/stores/menuItemsStore";
@@ -13,25 +14,36 @@ import { useOptionsStore } from "@/stores/optionsStore";
 import { useStoreSettingsStore } from "@/stores/storeSettingsStore";
 import { useHoursStore } from "@/stores/hoursStore";
 
-const stores = [
-  { store: useCategoriesStore, load: () => useCategoriesStore.getState().fetchCategories() },
-  { store: useMenuItemsStore, load: () => useMenuItemsStore.getState().fetchMenuItems() },
-  { store: useGalleryStore, load: () => useGalleryStore.getState().fetchGallery() },
-  { store: useUpdatesStore, load: () => useUpdatesStore.getState().fetchUpdates() },
-  { store: useDailySpecialsStore, load: () => useDailySpecialsStore.getState().fetchDailySpecials() },
-  { store: useSpecialItemsStore, load: () => useSpecialItemsStore.getState().fetchSpecialItems() },
-  { store: useOptionGroupsStore, load: () => useOptionGroupsStore.getState().fetchOptionGroups() },
-  { store: useOptionsStore, load: () => useOptionsStore.getState().fetchOptions() },
-  { store: useStoreSettingsStore, load: () => useStoreSettingsStore.getState().fetchStoreSettings() },
-  { store: useHoursStore, load: () => useHoursStore.getState().fetchHours() },
+type DataStore = {
+  getState: () => { listen: () => () => void; reset: () => void };
+};
+
+const stores: DataStore[] = [
+  useCategoriesStore,
+  useMenuItemsStore,
+  useGalleryStore,
+  useUpdatesStore,
+  useDailySpecialsStore,
+  useSpecialItemsStore,
+  useOptionGroupsStore,
+  useOptionsStore,
+  useStoreSettingsStore,
+  useHoursStore,
 ];
 
-/** Starts every store's fetch; each store tracks its own loading/error state. */
-export function loadAllStores() {
-  for (const { load } of stores) void load();
+/**
+ * Starts a live Firestore listener for every store, so each one stays in sync with
+ * the database (including changes made by other staff or the website).
+ * Returns a function that stops them all.
+ */
+export function listenToAllStores(): () => void {
+  const stops = stores.map((store) => store.getState().listen());
+  return () => {
+    for (const stop of stops) stop();
+  };
 }
 
 /** Clears every store's cached data (on logout). */
 export function resetAllStores() {
-  for (const { store } of stores) store.getState().reset();
+  for (const store of stores) store.getState().reset();
 }

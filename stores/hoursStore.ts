@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import {
   collection,
-  getDocs,
+  onSnapshot,
+  type Unsubscribe,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -14,7 +15,8 @@ interface HoursState {
   hours: StoreHour[];
   loading: boolean;
   error: string | null;
-  fetchHours: () => Promise<void>;
+  /** Starts a live listener; returns a function that stops it. */
+  listen: () => Unsubscribe;
   addHour: (days: string, time: string) => Promise<void>;
   updateHour: (id: string, days: string, time: string) => Promise<void>;
   deleteHour: (id: string) => Promise<void>;
@@ -23,7 +25,7 @@ interface HoursState {
   reset: () => void;
 }
 
-export const useHoursStore = create<HoursState>((set, get) => ({
+export const useHoursStore = create<HoursState>((set) => ({
   hours: [],
   loading: false,
   error: null,
@@ -32,27 +34,25 @@ export const useHoursStore = create<HoursState>((set, get) => ({
     set({ hours: [], loading: false, error: null });
   },
 
-  fetchHours: async () => {
+  listen: () => {
     set({ loading: true, error: null });
-    try {
-      const snapshot = await getDocs(collection(db, "hours"));
-      const hours: StoreHour[] = snapshot.docs.map((doc) => {
-        const d = doc.data();
-        return {
-          id: doc.id,
-          days: (d.days as string) ?? "",
-          time: (d.time as string) ?? "",
-          order: (d.order as number) ?? 0,
-        };
-      });
-      hours.sort((a, b) => a.order - b.order);
-      set({ hours, loading: false });
-    } catch (err) {
-      set({
-        error: err instanceof Error ? err.message : "Failed to fetch hours",
-        loading: false,
-      });
-    }
+    return onSnapshot(
+      collection(db, "hours"),
+      (snapshot) => {
+        const hours: StoreHour[] = snapshot.docs.map((doc) => {
+          const d = doc.data();
+          return {
+            id: doc.id,
+            days: (d.days as string) ?? "",
+            time: (d.time as string) ?? "",
+            order: (d.order as number) ?? 0,
+          };
+        });
+        hours.sort((a, b) => a.order - b.order);
+        set({ hours, loading: false, error: null });
+      },
+      (err) => set({ error: err.message || "Failed to fetch hours", loading: false }),
+    );
   },
 
   addHour: async (days, time) => {
@@ -63,7 +63,6 @@ export const useHoursStore = create<HoursState>((set, get) => ({
         time: time.trim(),
         order: Date.now(),
       });
-      await get().fetchHours();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to add hour";
@@ -79,7 +78,6 @@ export const useHoursStore = create<HoursState>((set, get) => ({
         days: days.trim(),
         time: time.trim(),
       });
-      await get().fetchHours();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to update hour";
@@ -95,7 +93,6 @@ export const useHoursStore = create<HoursState>((set, get) => ({
         "hours",
         orderedIds.map((id, index) => ({ id, data: { order: index } })),
       );
-      await get().fetchHours();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to reorder hours";
@@ -108,7 +105,6 @@ export const useHoursStore = create<HoursState>((set, get) => ({
     set({ error: null });
     try {
       await deleteDoc(doc(db, "hours", id));
-      await get().fetchHours();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to delete hour";

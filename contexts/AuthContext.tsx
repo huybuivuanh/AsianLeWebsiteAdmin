@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import {
@@ -14,7 +15,7 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { loadAllStores, resetAllStores } from "@/stores/allStores";
+import { listenToAllStores, resetAllStores } from "@/stores/allStores";
 
 type AuthContextValue = {
   user: User | null;
@@ -31,21 +32,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  /** Stops the live store listeners; set while someone is signed in. */
+  const stopListeningRef = useRef<(() => void) | null>(null);
+
+  const stopListening = useCallback(() => {
+    stopListeningRef.current?.();
+    stopListeningRef.current = null;
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
 
+      stopListening();
       if (user) {
-        // Load once after login / session restore; kept in Zustand for all pages
-        loadAllStores();
+        // Live listeners keep every store in sync for as long as staff are signed in.
+        stopListeningRef.current = listenToAllStores();
       } else {
         resetAllStores();
       }
     });
-    return () => unsubscribe();
-  }, []);
+    return () => {
+      unsubscribe();
+      stopListening();
+    };
+  }, [stopListening]);
 
   const login = useCallback(async (email: string, password: string) => {
     setError(null);
@@ -72,9 +84,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     setError(null);
+    // Stop listening before signing out, or the listeners would hit permission errors.
+    stopListening();
     await signOut(auth);
     resetAllStores();
-  }, []);
+  }, [stopListening]);
 
   const clearError = useCallback(() => setError(null), []);
 
