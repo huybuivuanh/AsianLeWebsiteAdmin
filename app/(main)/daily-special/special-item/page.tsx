@@ -5,7 +5,8 @@ import { useSpecialItemsStore } from "@/stores/dailySpecialItemsStore";
 import { useDailySpecialsStore } from "@/stores/dailySpecialsStore";
 import { AddSpecialItemModal } from "@/components/daily-special/AddSpecialItemModal";
 import { EditSpecialItemModal } from "@/components/daily-special/EditSpecialItemModal";
-import { confirmDialog } from "@/stores/modalStore";
+import { alertDialog, confirmDialog } from "@/stores/modalStore";
+import { deleteSpecialItem } from "@/stores/linkedWrites";
 import { MenuPageHeader, UnusedFilterButton } from "@/components/menu/MenuPageHeader";
 import { primaryButtonClass } from "@/components/ui/Button";
 import { RowActions, UnusedBadge, rowCardClass } from "@/components/menu/RowParts";
@@ -20,9 +21,8 @@ export default function SpecialItemPage() {
     error,
     addSpecialItem,
     updateSpecialItem,
-    deleteSpecialItem,
   } = useSpecialItemsStore();
-  const { dailySpecials, updateDailySpecialsBatch } = useDailySpecialsStore();
+  const { dailySpecials } = useDailySpecialsStore();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DailySpecialItem | null>(null);
   const [unusedOnly, setUnusedOnly] = useState(false);
@@ -58,16 +58,8 @@ export default function SpecialItemPage() {
       return;
     try {
       await deleteSpecialItem(item.id);
-      await updateDailySpecialsBatch(
-        dailySpecials
-          .filter((daySpecial) => daySpecial.itemIds?.includes(item.id))
-          .map((daySpecial) => ({
-            id: daySpecial.id,
-            data: { itemIds: (daySpecial.itemIds ?? []).filter((id) => id !== item.id) },
-          })),
-      );
     } catch {
-      // Error already set in store
+      await alertDialog(`Couldn't delete "${item.name}". Try again.`);
     }
   }
 

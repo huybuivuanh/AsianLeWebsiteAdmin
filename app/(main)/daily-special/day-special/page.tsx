@@ -2,13 +2,17 @@
 
 import { useMemo, useState } from "react";
 import { useDailySpecialsStore } from "@/stores/dailySpecialsStore";
-import { useSpecialItemsStore } from "@/stores/dailySpecialItemsStore";
+import {
+  deleteDailySpecial,
+  removeItemFromDailySpecial,
+  setDailySpecialItems,
+} from "@/stores/linkedWrites";
 import { AddDayModal } from "@/components/daily-special/AddDayModal";
 import { EditDayModal } from "@/components/daily-special/EditDayModal";
 import { DailySpecialRow } from "@/components/daily-special/DailySpecialRow";
 import { AddDayItemsModal } from "@/components/daily-special/AddDayItemsModal";
 import { compareDailySpecials, dayLabel, formatTimeRange } from "@/lib/daily-special";
-import { confirmDialog } from "@/stores/modalStore";
+import { alertDialog, confirmDialog } from "@/stores/modalStore";
 import { MenuPageHeader } from "@/components/menu/MenuPageHeader";
 import { primaryButtonClass } from "@/components/ui/Button";
 
@@ -19,14 +23,7 @@ export default function DaySpecial() {
     error,
     addDailySpecial,
     updateDailySpecial,
-    deleteDailySpecial,
-    updateDailySpecialItemIds,
   } = useDailySpecialsStore();
-  const {
-    items: specialItems,
-    updateSpecialItemDayOfWeekIds,
-    updateSpecialItemsBatch,
-  } = useSpecialItemsStore();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DailySpecial | null>(null);
   const [addItemsDaySpecial, setAddItemsDaySpecial] =
@@ -50,55 +47,23 @@ export default function DaySpecial() {
     setDeletingId(daySpecial.id);
     try {
       await deleteDailySpecial(daySpecial.id);
-      await updateSpecialItemsBatch(
-        specialItems
-          .filter((item) => item.dayOfWeekIds?.includes(daySpecial.id))
-          .map((item) => ({
-            id: item.id,
-            data: {
-              dayOfWeekIds: (item.dayOfWeekIds ?? []).filter((did) => did !== daySpecial.id),
-            },
-          })),
-      );
+    } catch {
+      await alertDialog("Couldn't delete this day. Try again.");
     } finally {
       setDeletingId(null);
     }
   }
 
   async function handleRemoveItem(daySpecial: DailySpecial, itemId: string) {
-    const next = (daySpecial.itemIds ?? []).filter((id) => id !== itemId);
-    await updateDailySpecialItemIds(daySpecial.id, next);
-    const item = specialItems.find((m) => m.id === itemId);
-    if (item) {
-      const nextDayIds = (item.dayOfWeekIds ?? []).filter(
-        (did) => did !== daySpecial.id,
-      );
-      await updateSpecialItemDayOfWeekIds(itemId, nextDayIds);
+    try {
+      await removeItemFromDailySpecial(daySpecial.id, itemId);
+    } catch {
+      await alertDialog("Couldn't remove the item. Try again.");
     }
   }
 
   async function handleSaveDayItems(daySpecialId: string, itemIds: string[]) {
-    const daySpecial =
-      addItemsDaySpecial ?? dailySpecials.find((s) => s.id === daySpecialId);
-    const previousItemIds = daySpecial?.itemIds ?? [];
-    const added = itemIds.filter((id) => !previousItemIds.includes(id));
-    const removed = previousItemIds.filter((id) => !itemIds.includes(id));
-
-    await updateDailySpecialItemIds(daySpecialId, itemIds);
-
-    await updateSpecialItemsBatch(
-      specialItems
-        .filter((m) => removed.includes(m.id) || added.includes(m.id))
-        .map((m) => ({
-          id: m.id,
-          data: {
-            dayOfWeekIds: removed.includes(m.id)
-              ? (m.dayOfWeekIds ?? []).filter((did) => did !== daySpecialId)
-              : [...new Set([...(m.dayOfWeekIds ?? []), daySpecialId])],
-          },
-        })),
-    );
-
+    await setDailySpecialItems(daySpecialId, itemIds);
     setAddItemsDaySpecial(null);
   }
 

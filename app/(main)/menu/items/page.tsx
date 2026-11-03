@@ -8,7 +8,8 @@ import { EditMenuItemModal } from "@/components/menu/items/EditMenuItemModal";
 import { searchInputClass } from "@/components/ui/form";
 import { MenuPageHeader, UnusedFilterButton } from "@/components/menu/MenuPageHeader";
 import { primaryButtonClass } from "@/components/ui/Button";
-import { confirmDialog } from "@/stores/modalStore";
+import { alertDialog, confirmDialog } from "@/stores/modalStore";
+import { deleteMenuItem } from "@/stores/linkedWrites";
 
 /** Items not in any category don't show on the website menu. */
 function isUnused(m: MenuItem) {
@@ -22,7 +23,6 @@ export default function MenuItemsPage() {
     error,
     addMenuItem,
     updateMenuItem,
-    deleteMenuItem,
   } = useMenuItemsStore();
 
   const [addModalOpen, setAddModalOpen] = useState(false);
@@ -48,6 +48,8 @@ export default function MenuItemsPage() {
     setDeletingId(item.id);
     try {
       await deleteMenuItem(item.id);
+    } catch {
+      await alertDialog(`Couldn't delete "${item.name}". Try again.`);
     } finally {
       setDeletingId(null);
     }

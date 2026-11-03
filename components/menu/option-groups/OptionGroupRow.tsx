@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { deleteField } from "firebase/firestore";
 import { formatPriceCAD } from "@/lib/utils";
-import { patchClearDefaultIfOptionRemoved } from "@/lib/option-group-updates";
+import { removeOptionFromGroup } from "@/stores/linkedWrites";
 import { confirmDialog, alertDialog } from "@/stores/modalStore";
 import { EditOptionGroupModal } from "./EditOptionGroupModal";
 import { AddOptionToGroupModal } from "./AddOptionToGroupModal";
@@ -23,7 +23,6 @@ type OptionGroupRowProps = {
   onUpdate: (id: string, data: Record<string, unknown>) => Promise<void>;
   onDelete: (group: OptionGroup) => Promise<void>;
   onSaveGroupOptions: (groupId: string, optionIds: string[]) => Promise<void>;
-  onUpdateOption: (id: string, data: Record<string, unknown>) => Promise<void>;
 };
 
 export function OptionGroupRow({
@@ -32,7 +31,6 @@ export function OptionGroupRow({
   onUpdate,
   onDelete,
   onSaveGroupOptions,
-  onUpdateOption,
 }: OptionGroupRowProps) {
   const [expanded, setExpanded] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -46,15 +44,7 @@ export function OptionGroupRow({
     if (!(await confirmDialog(`Remove "${option.name}" from this group?`, { danger: true, confirmLabel: "Remove" })))
       return;
     try {
-      await Promise.all([
-        onUpdate(group.id, {
-          optionIds: (group.optionIds ?? []).filter((id) => id !== option.id),
-          ...patchClearDefaultIfOptionRemoved(group, option.id),
-        }),
-        onUpdateOption(option.id, {
-          groupIds: (option.groupIds ?? []).filter((id) => id !== group.id),
-        }),
-      ]);
+      await removeOptionFromGroup(group.id, option.id);
     } catch {
       await alertDialog("Failed to remove option.");
     }

@@ -5,15 +5,13 @@ import Image from "next/image";
 import { formatPriceCAD } from "@/lib/utils";
 import { useOptionGroupsStore } from "@/stores/optionGroupsStore";
 import { useOptionsStore } from "@/stores/optionsStore";
-import { useMenuItemsStore } from "@/stores/menuItemsStore";
+import { getOrderedOptionGroupRefs } from "@/lib/menu-item-option-groups";
 import {
-  getOrderedOptionGroupRefs,
-  removeOptionGroupRef,
-} from "@/lib/menu-item-option-groups";
-import {
-  patchClearDefaultIfOptionRemoved,
-  patchClearDefaultIfNotInOptionIds,
-} from "@/lib/option-group-updates";
+  removeOptionFromGroup,
+  removeOptionGroupFromItem,
+  setMenuItemOptionGroups,
+  setOptionGroupOptions,
+} from "@/stores/linkedWrites";
 import { AddOptionToGroupModal } from "@/components/menu/option-groups/AddOptionToGroupModal";
 import { AddItemOptionGroupsModal } from "@/components/menu/items/AddItemOptionGroupsModal";
 import { SortItemOptionGroupsModal } from "@/components/menu/items/SortItemOptionGroupsModal";
@@ -42,9 +40,8 @@ export function MenuItemRow({
   onDelete,
   deleting = false,
 }: MenuItemRowProps) {
-  const { optionGroups, updateOptionGroup, updateOptionGroupsBatch } = useOptionGroupsStore();
-  const { options, updateOption, updateOptionsBatch } = useOptionsStore();
-  const { updateMenuItemField } = useMenuItemsStore();
+  const { optionGroups } = useOptionGroupsStore();
+  const { options } = useOptionsStore();
 
   const [expanded, setExpanded] = useState(false);
   const [addOptionForGroup, setAddOptionForGroup] = useState<OptionGroup | null>(null);
@@ -60,14 +57,7 @@ export function MenuItemRow({
     if (!(await confirmDialog(`Remove "${group.name}" from this item?`, { danger: true, confirmLabel: "Remove" })))
       return;
     try {
-      await Promise.all([
-        updateMenuItemField(item.id, {
-          optionGroupIds: removeOptionGroupRef(item, group.id),
-        }),
-        updateOptionGroup(group.id, {
-          itemIds: (group.itemIds ?? []).filter((id) => id !== item.id),
-        }),
-      ]);
+      await removeOptionGroupFromItem(item.id, group.id);
     } catch {
       await alertDialog("Failed to remove option group.");
     }
@@ -82,62 +72,14 @@ export function MenuItemRow({
     if (!(await confirmDialog(message, { danger: true, confirmLabel: "Remove" })))
       return;
     try {
-      await Promise.all([
-        updateOptionGroup(group.id, {
-          optionIds: (group.optionIds ?? []).filter((id) => id !== option.id),
-          ...patchClearDefaultIfOptionRemoved(group, option.id),
-        }),
-        updateOption(option.id, {
-          groupIds: (option.groupIds ?? []).filter((id) => id !== group.id),
-        }),
-      ]);
+      await removeOptionFromGroup(group.id, option.id);
     } catch {
       await alertDialog("Failed to remove option.");
     }
   }
 
-  async function handleSaveGroupOptions(groupId: string, optionIds: string[]) {
-    const group = optionGroups.find((g) => g.id === groupId);
-    const previousOptionIds = group?.optionIds ?? [];
-    const added = optionIds.filter((id) => !previousOptionIds.includes(id));
-    const removed = previousOptionIds.filter((id) => !optionIds.includes(id));
-
-    await updateOptionGroup(groupId, {
-      optionIds,
-      ...(group ? patchClearDefaultIfNotInOptionIds(group, optionIds) : {}),
-    });
-
-    await updateOptionsBatch(
-      options
-        .filter((o) => removed.includes(o.id) || added.includes(o.id))
-        .map((o) => ({
-          id: o.id,
-          data: {
-            groupIds: removed.includes(o.id)
-              ? (o.groupIds ?? []).filter((id) => id !== groupId)
-              : [...new Set([...(o.groupIds ?? []), groupId])],
-          },
-        })),
-    );
-  }
-
   async function handleSaveOptionGroups(optionGroupIds: OptionGroupId[]) {
-    const selectedIds = new Set(optionGroupIds.map((r) => r.optionGroupId));
-    await Promise.all([
-      updateMenuItemField(item.id, { optionGroupIds }),
-      updateOptionGroupsBatch(
-        optionGroups
-          .filter((group) => selectedIds.has(group.id) !== (group.itemIds ?? []).includes(item.id))
-          .map((group) => ({
-            id: group.id,
-            data: {
-              itemIds: selectedIds.has(group.id)
-                ? [...(group.itemIds ?? []), item.id]
-                : (group.itemIds ?? []).filter((id) => id !== item.id),
-            },
-          })),
-      ),
-    ]);
+    await setMenuItemOptionGroups(item.id, optionGroupIds);
   }
 
   return (
@@ -285,7 +227,7 @@ export function MenuItemRow({
         group={addOptionForGroup}
         options={options}
         onClose={() => setAddOptionForGroup(null)}
-        onSave={handleSaveGroupOptions}
+        onSave={setOptionGroupOptions}
       />
       <AddItemOptionGroupsModal
         open={addGroupsOpen}

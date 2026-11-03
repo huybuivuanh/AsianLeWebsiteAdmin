@@ -2,7 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { useCategoriesStore } from "@/stores/categoriesStore";
-import { useMenuItemsStore } from "@/stores/menuItemsStore";
+import {
+  deleteCategory,
+  removeItemFromCategory,
+  setCategoryItems,
+} from "@/stores/linkedWrites";
 import { AddCategoryModal } from "@/components/menu/categories/AddCategoryModal";
 import { EditCategoryModal } from "@/components/menu/categories/EditCategoryModal";
 import { AddCategoryItemsModal } from "@/components/menu/categories/AddCategoryItemsModal";
@@ -11,7 +15,7 @@ import { SortCategoriesModal } from "@/components/menu/categories/SortCategories
 import { searchInputClass } from "@/components/ui/form";
 import { MenuPageHeader } from "@/components/menu/MenuPageHeader";
 import { primaryButtonClass, secondaryButtonClass } from "@/components/ui/Button";
-import { confirmDialog } from "@/stores/modalStore";
+import { alertDialog, confirmDialog } from "@/stores/modalStore";
 
 export default function CategoriesPage() {
   const {
@@ -20,11 +24,8 @@ export default function CategoriesPage() {
     error,
     addCategory,
     updateCategory,
-    deleteCategory,
-    updateCategoryItemIds,
     reorderCategories,
   } = useCategoriesStore();
-  const { items, updateMenuItemField, updateMenuItemsBatch } = useMenuItemsStore();
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<FoodCategory | null>(
     null,
@@ -56,58 +57,23 @@ export default function CategoriesPage() {
     setDeletingId(category.id);
     try {
       await deleteCategory(category.id);
-      await updateMenuItemsBatch(
-        items
-          .filter((item) => item.categoryIds?.includes(category.id))
-          .map((item) => ({
-            id: item.id,
-            data: {
-              categoryIds: (item.categoryIds ?? []).filter((cid) => cid !== category.id),
-            },
-          })),
-      );
+    } catch {
+      await alertDialog(`Couldn't delete "${category.name}". Try again.`);
     } finally {
       setDeletingId(null);
     }
   }
 
   async function handleRemoveItem(category: FoodCategory, itemId: string) {
-    const next = (category.itemIds ?? []).filter((id) => id !== itemId);
-    await updateCategoryItemIds(category.id, next);
-    const item = items.find((m) => m.id === itemId);
-    if (item) {
-      const nextCategoryIds = (item.categoryIds ?? []).filter(
-        (cid) => cid !== category.id,
-      );
-      await updateMenuItemField(itemId, { categoryIds: nextCategoryIds });
+    try {
+      await removeItemFromCategory(category.id, itemId);
+    } catch {
+      await alertDialog("Couldn't remove the item. Try again.");
     }
   }
 
-  async function handleSaveCategoryItems(
-    categoryId: string,
-    itemIds: string[],
-  ) {
-    const category =
-      addItemsCategory ?? categories.find((c) => c.id === categoryId);
-    const previousItemIds = category?.itemIds ?? [];
-    const added = itemIds.filter((id) => !previousItemIds.includes(id));
-    const removed = previousItemIds.filter((id) => !itemIds.includes(id));
-
-    await updateCategoryItemIds(categoryId, itemIds);
-
-    await updateMenuItemsBatch(
-      items
-        .filter((m) => removed.includes(m.id) || added.includes(m.id))
-        .map((m) => ({
-          id: m.id,
-          data: {
-            categoryIds: removed.includes(m.id)
-              ? (m.categoryIds ?? []).filter((cid) => cid !== categoryId)
-              : [...new Set([...(m.categoryIds ?? []), categoryId])],
-          },
-        })),
-    );
-
+  async function handleSaveCategoryItems(categoryId: string, itemIds: string[]) {
+    await setCategoryItems(categoryId, itemIds);
     setAddItemsCategory(null);
   }
 

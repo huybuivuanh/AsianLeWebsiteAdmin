@@ -5,13 +5,11 @@ import {
   getDocs,
   addDoc,
   updateDoc,
-  deleteDoc,
   doc,
   serverTimestamp,
   deleteField,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { batchUpdateDocs, type DocUpdate } from "@/lib/batch-update";
 import { deleteImageByUrl, uploadImage } from "@/lib/image-upload";
 import { KitchenType } from "@/types/enum";
 
@@ -33,10 +31,6 @@ interface MenuItemsState {
   fetchMenuItems: () => Promise<void>;
   addMenuItem: (input: MenuItemInput) => Promise<void>;
   updateMenuItem: (id: string, input: MenuItemInput) => Promise<void>;
-  updateMenuItemField: (id: string, data: Record<string, unknown>) => Promise<void>;
-  /** Many updates in one batch, then a single re-fetch. */
-  updateMenuItemsBatch: (updates: DocUpdate[]) => Promise<void>;
-  deleteMenuItem: (id: string) => Promise<void>;
   reset: () => void;
 }
 
@@ -141,44 +135,4 @@ export const useMenuItemsStore = create<MenuItemsState>((set, get) => ({
     }
   },
 
-  updateMenuItemsBatch: async (updates) => {
-    if (updates.length === 0) return;
-    set({ error: null });
-    try {
-      await batchUpdateDocs("menuItems", updates);
-      await get().fetchMenuItems();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to update menu items";
-      set({ error: message });
-      throw err;
-    }
-  },
-
-  updateMenuItemField: async (id, data) => {
-    set({ error: null });
-    try {
-      await updateDoc(doc(db, "menuItems", id), data);
-      await get().fetchMenuItems();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to update menu item";
-      set({ error: message });
-      throw err;
-    }
-  },
-
-  deleteMenuItem: async (id) => {
-    set({ error: null });
-    try {
-      const item = get().items.find((m) => m.id === id);
-      if (item?.image) {
-        try { await deleteImageByUrl(item.image.url); } catch { /* ignore */ }
-      }
-      await deleteDoc(doc(db, "menuItems", id));
-      await get().fetchMenuItems();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to delete menu item";
-      set({ error: message });
-      throw err;
-    }
-  },
 }));

@@ -3,11 +3,9 @@
 import { useMemo, useState } from "react";
 import { useOptionGroupsStore } from "@/stores/optionGroupsStore";
 import { useOptionsStore } from "@/stores/optionsStore";
-import { useMenuItemsStore } from "@/stores/menuItemsStore";
+import { deleteOptionGroup, setOptionGroupOptions } from "@/stores/linkedWrites";
 import { OptionGroupRow } from "@/components/menu/option-groups/OptionGroupRow";
 import { AddOptionGroupModal } from "@/components/menu/option-groups/AddOptionGroupModal";
-import { itemReferencesOptionGroup, removeOptionGroupRef } from "@/lib/menu-item-option-groups";
-import { patchClearDefaultIfNotInOptionIds } from "@/lib/option-group-updates";
 import { searchInputClass } from "@/components/ui/form";
 import { MenuPageHeader, UnusedFilterButton } from "@/components/menu/MenuPageHeader";
 import { primaryButtonClass } from "@/components/ui/Button";
@@ -25,10 +23,8 @@ export default function OptionGroupsPage() {
     error,
     addOptionGroup,
     updateOptionGroup,
-    deleteOptionGroup,
   } = useOptionGroupsStore();
-  const { options, updateOption, updateOptionsBatch } = useOptionsStore();
-  const { items: menuItems, updateMenuItemsBatch } = useMenuItemsStore();
+  const { options } = useOptionsStore();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [unusedOnly, setUnusedOnly] = useState(false);
@@ -51,53 +47,10 @@ export default function OptionGroupsPage() {
     if (!(await confirmDialog(`Delete "${group.name}"? This cannot be undone.`, { danger: true, confirmLabel: "Delete" })))
       return;
     try {
-      await Promise.all([
-        updateMenuItemsBatch(
-          menuItems
-            .filter((item) => itemReferencesOptionGroup(item, group.id))
-            .map((item) => ({
-              id: item.id,
-              data: { optionGroupIds: removeOptionGroupRef(item, group.id) },
-            })),
-        ),
-        updateOptionsBatch(
-          options
-            .filter((opt) => opt.groupIds?.includes(group.id))
-            .map((opt) => ({
-              id: opt.id,
-              data: { groupIds: (opt.groupIds ?? []).filter((id) => id !== group.id) },
-            })),
-        ),
-      ]);
       await deleteOptionGroup(group.id);
     } catch {
       await alertDialog("Failed to delete option group.");
     }
-  }
-
-  async function handleSaveGroupOptions(groupId: string, optionIds: string[]) {
-    const group = optionGroups.find((g) => g.id === groupId);
-    const previousOptionIds = group?.optionIds ?? [];
-    const added = optionIds.filter((id) => !previousOptionIds.includes(id));
-    const removed = previousOptionIds.filter((id) => !optionIds.includes(id));
-
-    await updateOptionGroup(groupId, {
-      optionIds,
-      ...(group ? patchClearDefaultIfNotInOptionIds(group, optionIds) : {}),
-    });
-
-    await updateOptionsBatch(
-      options
-        .filter((o) => removed.includes(o.id) || added.includes(o.id))
-        .map((o) => ({
-          id: o.id,
-          data: {
-            groupIds: removed.includes(o.id)
-              ? (o.groupIds ?? []).filter((id) => id !== groupId)
-              : [...new Set([...(o.groupIds ?? []), groupId])],
-          },
-        })),
-    );
   }
 
   return (
@@ -162,8 +115,7 @@ export default function OptionGroupsPage() {
               options={options}
               onUpdate={updateOptionGroup}
               onDelete={handleDeleteGroup}
-              onSaveGroupOptions={handleSaveGroupOptions}
-              onUpdateOption={updateOption}
+              onSaveGroupOptions={setOptionGroupOptions}
             />
           ))}
         </ul>

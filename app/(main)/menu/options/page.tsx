@@ -5,7 +5,7 @@ import { useOptionsStore } from "@/stores/optionsStore";
 import { useOptionGroupsStore } from "@/stores/optionGroupsStore";
 import { OptionRow } from "@/components/menu/options/OptionRow";
 import { AddOptionModal } from "@/components/menu/options/AddOptionModal";
-import { patchClearDefaultIfOptionRemoved } from "@/lib/option-group-updates";
+import { deleteOption } from "@/stores/linkedWrites";
 import { searchInputClass } from "@/components/ui/form";
 import { MenuPageHeader, UnusedFilterButton } from "@/components/menu/MenuPageHeader";
 import { primaryButtonClass } from "@/components/ui/Button";
@@ -18,9 +18,8 @@ export default function OptionsPage() {
     error,
     addOption,
     updateOption,
-    deleteOption,
   } = useOptionsStore();
-  const { optionGroups, updateOptionGroupsBatch } = useOptionGroupsStore();
+  const { optionGroups } = useOptionGroupsStore();
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [unusedOnly, setUnusedOnly] = useState(false);
@@ -48,17 +47,6 @@ export default function OptionsPage() {
     if (!(await confirmDialog(`Delete "${option.name}"? This cannot be undone.`, { danger: true, confirmLabel: "Delete" })))
       return;
     try {
-      await updateOptionGroupsBatch(
-        optionGroups
-          .filter((g) => g.optionIds?.includes(option.id))
-          .map((g) => ({
-            id: g.id,
-            data: {
-              optionIds: (g.optionIds ?? []).filter((id) => id !== option.id),
-              ...patchClearDefaultIfOptionRemoved(g, option.id),
-            },
-          })),
-      );
       await deleteOption(option.id);
     } catch {
       await alertDialog("Failed to delete option.");
