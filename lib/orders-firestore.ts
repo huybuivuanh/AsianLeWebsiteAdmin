@@ -75,7 +75,24 @@ function normalizeLoyalty(raw: unknown): OrderLoyalty | undefined {
     pointsToRedeem: numberOrUndefined(l.pointsToRedeem),
     pointsRedeemed: numberOrUndefined(l.pointsRedeemed),
     pointsEarned: numberOrUndefined(l.pointsEarned),
+    collectedAt: dateOrUndefined(l.collectedAt),
+    reversedAt: dateOrUndefined(l.reversedAt),
   };
+}
+
+function dateOrUndefined(value: unknown): Date | undefined {
+  return value instanceof Timestamp ? value.toDate() : undefined;
+}
+
+/** Same text as the POS rewards badge: member name, then points used and/or
+ * collected on this order. Null when neither happened, or the points were reversed. */
+export function rewardsBadgeText(loyalty: OrderLoyalty | undefined): string | null {
+  if (!loyalty?.memberId || loyalty.reversedAt) return null;
+  const parts: string[] = [];
+  if (loyalty.pointsRedeemed != null) parts.push(`−${loyalty.pointsRedeemed} pts used`);
+  if (loyalty.collectedAt) parts.push(`+${loyalty.pointsEarned ?? 0} pts`);
+  if (parts.length === 0) return null;
+  return [loyalty.memberName || "Member", ...parts].join(" · ");
 }
 
 function normalizeOrderDoc(id: string, data: DocumentData): Order {

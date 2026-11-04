@@ -182,6 +182,10 @@ declare global {
     /** Set by the Orders app once the points were actually taken. */
     pointsRedeemed?: number;
     pointsEarned?: number;
+    /** Set by the Orders app once `pointsEarned` were added to the member. */
+    collectedAt?: Date;
+    /** Set when the redeemed/collected points were given back (e.g. order cancelled). */
+    reversedAt?: Date;
   }
 
   type OrderFulfillment =

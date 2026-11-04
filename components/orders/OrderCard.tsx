@@ -4,6 +4,7 @@ import { OrderStatus, TakeOutFulfillmentKind } from "@/types/enum";
 import { formatOrderedAt, formatPhone, formatPriceCAD } from "@/lib/utils";
 import { OrderItemBlock } from "./OrderItemBlock";
 import { orderTotalLines } from "@/lib/order-totals";
+import { rewardsBadgeText } from "@/lib/orders-firestore";
 
 function orderCardSurface(status: OrderStatus, scheduled: boolean): string {
   if (status === OrderStatus.Cancelled) return "bg-red-100 border-red-200";
@@ -59,6 +60,7 @@ export function OrderCard({
   onPrint: (order: Order) => void;
 }) {
   const tb = order.taxBreakDown;
+  const rewardsText = rewardsBadgeText(order.loyalty);
   const scheduled = order.fulfillment.kind === TakeOutFulfillmentKind.Scheduled;
 
   const showPaidPill =
@@ -98,6 +100,11 @@ export function OrderCard({
           <p className="text-base font-semibold text-gray-800">
             Ordered At: {formatOrderedAt(order.createdAt)}
           </p>
+          {rewardsText ? (
+            <span className="mt-1 inline-block rounded-md bg-amber-500 px-2 py-1 text-xs font-bold text-white">
+              {rewardsText}
+            </span>
+          ) : null}
           {order.fulfillment.kind === TakeOutFulfillmentKind.Immediate &&
           order.fulfillment.readyTimeMinutes != null ? (
             <p className="text-base font-semibold text-gray-800">
